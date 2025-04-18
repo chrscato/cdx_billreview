@@ -1,0 +1,26 @@
+{
+    "patient_info": {
+        "patient_name": "John Doe",
+        "patient_dob": "01/15/1980",
+        "patient_zip": "12345"
+    },
+    "service_lines": [
+        {
+            "date_of_service": "04/15/24 - 04/15/24",
+            "place_of_service": "11",
+            "cpt_code": "99213",
+            "modifiers": ["LT"],
+            "diagnosis_pointer": "A",
+            "charge_amount": "$150.00",
+            "units": 1
+        }
+    ],
+    "billing_info": {
+        "billing_provider_name": "Dr. Smith",
+        "billing_provider_address": "123 Medical Way, Suite 100",
+        "billing_provider_tin": "123456789",
+        "billing_provider_npi": "1234567890",
+        "total_charge": "$150.00",
+        "patient_account_no": "PAT123456"
+    }
+} 
