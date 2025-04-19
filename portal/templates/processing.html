@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block title %}Processing{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>Processing</h1>
+    <p class="lead">Manage and process your HCFA files</p>
+
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Mapped Files
+                        <span class="badge {% if mapped_count > 0 %}bg-success{% else %}bg-secondary{% endif %} ms-2">{{ mapped_count }}</span>
+                    </h5>
+                    <p class="card-text">Files ready for staging and processing.</p>
+                    <form action="{{ url_for('preprocessing.stage_mapped_files') }}" method="POST">
+                        <button type="submit" class="btn btn-primary" {% if mapped_count == 0 %}disabled{% endif %}>
+                            <i class="fas fa-play me-2"></i>Process All Mapped Files
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

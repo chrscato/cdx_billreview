@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}Home - Bill Review Portal{% endblock %}
+
+{% block content %}
+<div class="text-center">
+    <h1 class="display-4">Welcome to Bill Review Portal</h1>
+    <p class="lead">Your comprehensive solution for bill review management</p>
+    
+    <div class="row mt-5">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Preprocessing</h5>
+                    <p class="card-text">Prepare and validate your billing data before processing.</p>
+                    <a href="{{ url_for('preprocessing.preprocessing') }}" class="btn btn-primary">Go to Preprocessing</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Processing</h5>
+                    <p class="card-text">Process and analyze your billing information.</p>
+                    <a href="{{ url_for('processing.processing') }}" class="btn btn-primary">Go to Processing</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Postprocessing</h5>
+                    <p class="card-text">Review and finalize your processed bills.</p>
+                    <a href="{{ url_for('postprocessing.postprocessing') }}" class="btn btn-primary">Go to Postprocessing</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

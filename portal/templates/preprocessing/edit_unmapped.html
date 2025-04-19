@@ -1,0 +1,416 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Unmapped File - Bill Review Portal{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="d-flex align-items-center">
+            <h1 class="mb-0">{{ filename }}</h1>
+            <div class="ms-3">
+                <span class="badge bg-secondary">{{ current_index }} of {{ total_files }}</span>
+                {% if unmapped_count > 0 %}
+                <span class="badge bg-warning ms-2">{{ unmapped_count }} total</span>
+                {% endif %}
+            </div>
+        </div>
+        <div class="d-flex gap-2">
+            {% if prev_file %}
+            <a href="{{ url_for('preprocessing.view_unmapped_file', filename=prev_file) }}" 
+               class="btn btn-outline-secondary">
+                <i class="fas fa-chevron-left me-1"></i>Previous
+            </a>
+            {% endif %}
+            <a href="{{ url_for('preprocessing.list_unmapped_files') }}" class="btn btn-outline-secondary">
+                Back to List
+            </a>
+            {% if next_file %}
+            <a href="{{ url_for('preprocessing.view_unmapped_file', filename=next_file) }}" 
+               class="btn btn-outline-secondary">
+                Next<i class="fas fa-chevron-right ms-1"></i>
+            </a>
+            {% endif %}
+            <button id="view-pdf" class="btn btn-outline-primary">
+                <i class="fas fa-file-pdf me-1"></i>View PDF
+            </button>
+        </div>
+    </div>
+
+    <form method="POST" action="{{ url_for('preprocessing.submit_unmapped_file', filename=filename) }}">
+        <!-- Patient Info Section -->
+        <div class="mb-4">
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h3 class="card-title mb-0">Patient Information</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Patient Name</label>
+                            <input type="text" class="form-control" name="patient_info[patient_name]" 
+                                   value="{{ json_data.patient_info.patient_name }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Date of Birth</label>
+                            <input type="text" class="form-control" name="patient_info[patient_dob]" 
+                                   value="{{ json_data.patient_info.patient_dob }}" placeholder="MM/DD/YYYY">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">ZIP Code</label>
+                            <input type="text" class="form-control" name="patient_info[patient_zip]" 
+                                   value="{{ json_data.patient_info.patient_zip }}">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Billing Info Section -->
+        <div class="mb-4">
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h3 class="card-title mb-0">Billing Information</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Provider Name</label>
+                            <input type="text" class="form-control" name="billing_info[billing_provider_name]" 
+                                   value="{{ json_data.billing_info.billing_provider_name }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Provider NPI</label>
+                            <input type="text" class="form-control" name="billing_info[billing_provider_npi]" 
+                                   value="{{ json_data.billing_info.billing_provider_npi }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Provider Address</label>
+                            <input type="text" class="form-control" name="billing_info[billing_provider_address]" 
+                                   value="{{ json_data.billing_info.billing_provider_address }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Provider TIN</label>
+                            <input type="text" class="form-control" name="billing_info[billing_provider_tin]" 
+                                   value="{{ json_data.billing_info.billing_provider_tin }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Patient Account No</label>
+                            <input type="text" class="form-control" name="billing_info[patient_account_no]" 
+                                   value="{{ json_data.billing_info.patient_account_no }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Total Charge</label>
+                            <input type="text" class="form-control" name="billing_info[total_charge]" 
+                                   value="{{ json_data.billing_info.total_charge }}" placeholder="$0.00">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Service Lines Section -->
+        <div class="mb-4">
+            <div class="card mb-3">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h3 class="card-title mb-0">Service Lines</h3>
+                    <button type="button" class="btn btn-primary" id="add-line">Add Service Line</button>
+                </div>
+                <div class="card-body">
+                    <div id="service-lines">
+                        {% for line in json_data.service_lines %}
+                        <div class="service-line border rounded p-3 mb-3" data-index="{{ loop.index0 }}">
+                            <div class="row g-3">
+                                <div class="col-md-2">
+                                    <label class="form-label">CPT Code</label>
+                                    <input type="text" class="form-control" 
+                                           name="service_lines[{{ loop.index0 }}][cpt_code]" 
+                                           value="{{ line.cpt_code }}">
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="form-label">Charge Amount</label>
+                                    <input type="text" class="form-control" 
+                                           name="service_lines[{{ loop.index0 }}][charge_amount]" 
+                                           value="{{ line.charge_amount }}" placeholder="$0.00">
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="form-label">Date of Service</label>
+                                    <input type="text" class="form-control" 
+                                           name="service_lines[{{ loop.index0 }}][date_of_service]" 
+                                           value="{{ line.date_of_service }}" placeholder="MM/DD/YY - MM/DD/YY">
+                                </div>
+                                <div class="col-md-1">
+                                    <label class="form-label">Units</label>
+                                    <input type="text" class="form-control" 
+                                           name="service_lines[{{ loop.index0 }}][units]" 
+                                           value="{{ line.units }}">
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="form-label">Place of Service</label>
+                                    <input type="text" class="form-control" 
+                                           name="service_lines[{{ loop.index0 }}][place_of_service]" 
+                                           value="{{ line.place_of_service }}">
+                                </div>
+                                <div class="col-md-1">
+                                    <label class="form-label">Diagnosis</label>
+                                    <input type="text" class="form-control" 
+                                           name="service_lines[{{ loop.index0 }}][diagnosis_pointer]" 
+                                           value="{{ line.diagnosis_pointer }}">
+                                </div>
+                                <div class="col-md-1">
+                                    <label class="form-label">Modifiers</label>
+                                    <input type="text" class="form-control" 
+                                           name="service_lines[{{ loop.index0 }}][modifiers]" 
+                                           value="{{ line.modifiers|join(',') if line.modifiers else '' }}" 
+                                           placeholder="RT,LT">
+                                </div>
+                                <div class="col-md-1">
+                                    <label class="form-label">&nbsp;</label>
+                                    <button type="button" class="btn btn-danger d-block w-100 remove-line">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- FileMaker Match Lookup Section -->
+        <div class="mb-4">
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h3 class="card-title mb-0">FileMaker Match Lookup</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Last Name</label>
+                            <input type="text" class="form-control" id="last-name-search">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">First Name</label>
+                            <input type="text" class="form-control" id="first-name-search">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Date of Service</label>
+                            <input type="text" class="form-control" id="dos-search" placeholder="YYYY-MM-DD">
+                        </div>
+                        <div class="col-md-1 d-flex align-items-end">
+                            <button type="button" class="btn btn-primary w-100" id="search-button">
+                                Search
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div id="search-results" class="mt-3" style="display: none;">
+                        <h5 class="mb-3">Matching Orders</h5>
+                        <div class="list-group" id="matches-list">
+                            <!-- Results will be populated here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+            <input type="hidden" name="action" id="form-action" value="save">
+            <button type="submit" class="btn btn-primary me-2" onclick="document.getElementById('form-action').value='save'">
+                Save Changes
+            </button>
+            <button type="submit" class="btn btn-success" onclick="document.getElementById('form-action').value='approve'">
+                Approve & Move to Valid
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Template for new service line -->
+<template id="service-line-template">
+    <div class="service-line border rounded p-3 mb-3" data-index="INDEX">
+        <div class="row g-3">
+            <div class="col-md-2">
+                <label class="form-label">CPT Code</label>
+                <input type="text" class="form-control" 
+                       name="service_lines[INDEX][cpt_code]" 
+                       placeholder="Enter CPT Code">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Charge Amount</label>
+                <input type="text" class="form-control" 
+                       name="service_lines[INDEX][charge_amount]" 
+                       placeholder="$0.00">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Date of Service</label>
+                <input type="text" class="form-control" 
+                       name="service_lines[INDEX][date_of_service]" 
+                       placeholder="MM/DD/YY - MM/DD/YY">
+            </div>
+            <div class="col-md-1">
+                <label class="form-label">Units</label>
+                <input type="text" class="form-control" 
+                       name="service_lines[INDEX][units]" 
+                       placeholder="0">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Place of Service</label>
+                <input type="text" class="form-control" 
+                       name="service_lines[INDEX][place_of_service]" 
+                       placeholder="07">
+            </div>
+            <div class="col-md-1">
+                <label class="form-label">Diagnosis</label>
+                <input type="text" class="form-control" 
+                       name="service_lines[INDEX][diagnosis_pointer]" 
+                       placeholder="1">
+            </div>
+            <div class="col-md-1">
+                <label class="form-label">Modifiers</label>
+                <input type="text" class="form-control" 
+                       name="service_lines[INDEX][modifiers]" 
+                       placeholder="RT,LT">
+            </div>
+            <div class="col-md-1">
+                <label class="form-label">&nbsp;</label>
+                <button type="button" class="btn btn-danger d-block w-100 remove-line">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</template>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add service line functionality
+    const addLineButton = document.getElementById('add-line');
+    const serviceLinesContainer = document.getElementById('service-lines');
+    const template = document.getElementById('service-line-template');
+
+    addLineButton.addEventListener('click', function() {
+        const newLine = template.content.cloneNode(true);
+        const index = serviceLinesContainer.children.length;
+        newLine.querySelector('.service-line').dataset.index = index;
+        
+        // Update all input names with the new index
+        newLine.querySelectorAll('input').forEach(input => {
+            input.name = input.name.replace('INDEX', index);
+        });
+        
+        serviceLinesContainer.appendChild(newLine);
+    });
+
+    // Remove service line functionality
+    serviceLinesContainer.addEventListener('click', function(e) {
+        if (e.target.closest('.remove-line')) {
+            e.target.closest('.service-line').remove();
+            // Update indices of remaining lines
+            document.querySelectorAll('.service-line').forEach((line, index) => {
+                line.dataset.index = index;
+                line.querySelectorAll('input').forEach(input => {
+                    input.name = input.name.replace(/\[\d+\]/, `[${index}]`);
+                });
+            });
+        }
+    });
+
+    // PDF viewer functionality
+    const viewPdfButton = document.getElementById('view-pdf');
+    viewPdfButton.addEventListener('click', async function() {
+        try {
+            const response = await fetch(`/preprocessing/unmapped/{{ filename }}/pdf`);
+            const data = await response.json();
+            
+            if (data.url) {
+                window.open(data.url, '_blank');
+            } else {
+                alert('PDF not found or error occurred');
+            }
+        } catch (error) {
+            alert('Error fetching PDF: ' + error.message);
+        }
+    });
+
+    // FileMaker search functionality
+    const searchButton = document.getElementById('search-button');
+    const searchResults = document.getElementById('search-results');
+    const matchesList = document.getElementById('matches-list');
+
+    searchButton.addEventListener('click', async function() {
+        const lastName = document.getElementById('last-name-search').value;
+        const firstName = document.getElementById('first-name-search').value;
+        const dos = document.getElementById('dos-search').value;
+
+        try {
+            const response = await fetch(`/preprocessing/unmapped/{{ filename }}/search`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    last_name: lastName,
+                    first_name: firstName,
+                    dos: dos
+                })
+            });
+
+            const data = await response.json();
+            
+            if (data.success) {
+                matchesList.innerHTML = '';
+                if (data.matches.length === 0) {
+                    matchesList.innerHTML = '<div class="alert alert-info">No matches found</div>';
+                } else {
+                    data.matches.forEach(match => {
+                        const card = document.createElement('div');
+                        card.className = 'card mb-3';
+                        card.innerHTML = `
+                            <div class="card-body">
+                                <h5 class="card-title mb-2">Order ID: ${match.order_id}</h5>
+                                <p><strong>Patient:</strong> ${match.patient_name} (DOB: ${match.patient_dob})</p>
+                                <p><strong>Provider:</strong> ${match.provider_name || 'N/A'}</p>
+                                <p><strong>DOS:</strong> ${match.DOS_list.join(', ') || 'N/A'}</p>
+                                <p><strong>CPTs:</strong><br>${match.CPTs.map((cpt, i) => `${cpt} - ${match.CPT_descriptions[i] || 'No description available'}`).join('<br>')}</p>
+                                <button class="btn btn-success btn-sm mt-2" onclick="assignMapping('${match.order_id}')">
+                                    Assign This Order
+                                </button>
+                            </div>
+                        `;
+                        matchesList.appendChild(card);
+                    });
+                }
+                searchResults.style.display = 'block';
+            } else {
+                alert(`Error: ${data.error}\n${data.details}`);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('An error occurred while searching');
+        }
+    });
+});
+
+// Assign mapping function
+function assignMapping(orderId) {
+    fetch(`/preprocessing/unmapped/{{ filename }}/assign`, {
+        method: "POST",
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({ order_id: orderId })
+    })
+    .then(res => {
+        if (res.ok) {
+            alert("✅ Assigned successfully!");
+            window.location.href = "/preprocessing/unmapped";  // Redirect to unmapped list
+        } else {
+            alert("❌ Failed to assign. Please try again.");
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert("❌ Failed to assign. Please try again.");
+    });
+}
+</script>
+{% endblock %} 

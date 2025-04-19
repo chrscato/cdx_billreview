@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block title %}Error - Bill Review Portal{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="alert alert-danger mt-4">
+        <h4 class="alert-heading">Error Loading File</h4>
+        <p>{{ error }}</p>
+        <hr>
+        <p class="mb-0">
+            <a href="{{ url_for('preprocessing.list_invalid_files') }}" class="alert-link">
+                Return to Invalid Files List
+            </a>
+        </p>
+    </div>
+</div>
+{% endblock %} 

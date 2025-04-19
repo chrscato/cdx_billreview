@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+
+{% block title %}HCFA Preprocessing Dropoff{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="mb-4">HCFA Preprocessing Dropoff</h2>
+    
+    <!-- File Upload Section -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">Upload HCFA Batch PDF</h5>
+        </div>
+        <div class="card-body">
+            <form id="uploadForm" class="mb-3">
+                <div class="mb-3">
+                    <label for="pdfFile" class="form-label">Select PDF File</label>
+                    <input type="file" class="form-control" id="pdfFile" accept=".pdf" required>
+                    <small class="form-text text-muted">Selected file: <span id="fileInfo">None</span></small>
+                </div>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-upload me-2"></i>Upload to S3
+                </button>
+            </form>
+            <div id="uploadStatus" class="alert d-none"></div>
+        </div>
+    </div>
+
+    <!-- Preprocessing Control Section -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">Start Preprocessing</h5>
+        </div>
+        <div class="card-body">
+            <button id="startPreprocessing" class="btn btn-success mb-3">
+                <i class="fas fa-play me-2"></i>Start Preprocessing
+            </button>
+            <div id="preprocessingStatus" class="alert d-none"></div>
+            <div id="outputContainer" class="d-none">
+                <h6>Processing Output:</h6>
+                <pre id="outputText" class="bg-light p-3 rounded" style="max-height: 400px; overflow-y: auto;"></pre>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript for handling upload and preprocessing -->
+<script>
+// File size formatter
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+// Update file info when a file is selected
+document.getElementById('pdfFile').addEventListener('change', function(e) {
+    const fileInfo = document.getElementById('fileInfo');
+    if (this.files.length > 0) {
+        const file = this.files[0];
+        if (!file.type.includes('pdf')) {
+            fileInfo.innerHTML = '<span class="text-danger">Error: File must be a PDF</span>';
+            this.value = ''; // Clear the file input
+            return;
+        }
+        fileInfo.textContent = `${file.name} (${formatFileSize(file.size)})`;
+    } else {
+        fileInfo.textContent = 'None';
+    }
+});
+
+document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const fileInput = document.getElementById('pdfFile');
+    const statusDiv = document.getElementById('uploadStatus');
+    
+    if (!fileInput.files[0]) {
+        showStatus(statusDiv, 'Please select a file first.', 'danger');
+        return;
+    }
+    
+    const file = fileInput.files[0];
+    if (!file.type.includes('pdf')) {
+        showStatus(statusDiv, 'Only PDF files are allowed.', 'danger');
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    try {
+        statusDiv.className = 'alert alert-info';
+        statusDiv.textContent = 'Uploading...';
+        statusDiv.classList.remove('d-none');
+        
+        const response = await fetch('/preprocessing/upload', {
+            method: 'POST',
+            body: formData
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showStatus(statusDiv, result.message, 'success');
+            fileInput.value = ''; // Clear the file input
+            document.getElementById('fileInfo').textContent = 'None';
+        } else {
+            showStatus(statusDiv, result.error, 'danger');
+        }
+    } catch (error) {
+        showStatus(statusDiv, `Upload failed: ${error.message}`, 'danger');
+    }
+});
+
+document.getElementById('startPreprocessing').addEventListener('click', async () => {
+    const statusDiv = document.getElementById('preprocessingStatus');
+    const outputContainer = document.getElementById('outputContainer');
+    const outputText = document.getElementById('outputText');
+    const startButton = document.getElementById('startPreprocessing');
+    
+    try {
+        // Show status and disable button
+        showStatus(statusDiv, 'Starting preprocessing pipeline...', 'info');
+        startButton.disabled = true;
+        startButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
+        
+        // Clear previous output
+        outputContainer.classList.remove('d-none');
+        outputText.textContent = 'Initializing pipeline...\n';
+        
+        const response = await fetch('/preprocessing/start', {
+            method: 'POST'
+        });
+        
+        if (!response.ok) {
+            throw new Error(`Server error: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        
+        // Show output
+        if (result.output && result.output.length > 0) {
+            outputText.textContent = result.output.join('\n');
+        } else {
+            outputText.textContent = 'No output received from preprocessing pipeline.';
+        }
+        
+        // Show final status
+        if (result.success) {
+            showStatus(statusDiv, 'Preprocessing completed successfully!', 'success');
+            startButton.innerHTML = '<i class="fas fa-check me-2"></i>Complete';
+            setTimeout(() => {
+                startButton.innerHTML = '<i class="fas fa-play me-2"></i>Start Preprocessing';
+            }, 3000);
+        } else {
+            showStatus(statusDiv, result.error || 'Preprocessing failed. Check the output below for details.', 'danger');
+            startButton.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i>Failed';
+            setTimeout(() => {
+                startButton.innerHTML = '<i class="fas fa-play me-2"></i>Start Preprocessing';
+            }, 3000);
+        }
+    } catch (error) {
+        showStatus(statusDiv, `Error: ${error.message}`, 'danger');
+        outputText.textContent += `\nError: ${error.message}`;
+        startButton.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i>Error';
+        setTimeout(() => {
+            startButton.innerHTML = '<i class="fas fa-play me-2"></i>Start Preprocessing';
+        }, 3000);
+    } finally {
+        startButton.disabled = false;
+    }
+});
+
+function showStatus(element, message, type) {
+    element.className = `alert alert-${type}`;
+    element.textContent = message;
+    element.classList.remove('d-none');
+}
+</script>
+{% endblock %} 
