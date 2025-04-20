@@ -33,6 +33,12 @@
             <button id="view-pdf" class="btn btn-outline-primary">
                 <i class="fas fa-file-pdf me-1"></i>View PDF
             </button>
+            <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#escalateModal">
+                <i class="fas fa-exclamation-triangle me-1"></i>Escalate
+            </button>
+            <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#denyModal">
+                <i class="fas fa-ban me-1"></i>Deny Bill
+            </button>
         </div>
     </div>
 
@@ -513,7 +519,17 @@
 <script src="{{ url_for('static', filename='js/processing/rates.js') }}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Initialize components
     const viewPdfButton = document.getElementById('view-pdf');
+    const escalateModal = document.getElementById('escalateModal');
+    const escalateForm = document.getElementById('escalateForm');
+    const denyModal = document.getElementById('denyModal');
+    const denyForm = document.getElementById('denyForm');
+    const reasonTextarea = document.getElementById('escalationReason');
+    
+    // Create Bootstrap modal instances
+    const escalateModalInstance = new bootstrap.Modal(escalateModal);
+    const denyModalInstance = new bootstrap.Modal(denyModal);
     
     // Handle PDF view button
     viewPdfButton.addEventListener('click', async function() {
@@ -524,12 +540,251 @@ document.addEventListener('DOMContentLoaded', function() {
             if (data.url) {
                 window.open(data.url, '_blank');
             } else {
-                alert('PDF not found or error occurred');
+                showAlert('error', 'PDF not found or error occurred');
             }
         } catch (error) {
-            alert('Error fetching PDF: ' + error.message);
+            showAlert('error', 'Error fetching PDF: ' + error.message);
         }
     });
+
+    // Function to show alerts
+    function showAlert(type, message) {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show`;
+        alertDiv.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        `;
+        
+        // Insert alert at the top of the page
+        const container = document.querySelector('.container-fluid');
+        container.insertBefore(alertDiv, container.firstChild);
+        
+        // Auto-dismiss after 5 seconds
+        setTimeout(() => {
+            alertDiv.remove();
+        }, 5000);
+    }
+
+    // Handle escalation form submission
+    async function handleEscalation(event) {
+        event.preventDefault();
+        
+        // Validate reason field
+        const reason = reasonTextarea.value.trim();
+        if (!reason) {
+            reasonTextarea.classList.add('is-invalid');
+            return;
+        }
+        
+        // Remove any previous validation styling
+        reasonTextarea.classList.remove('is-invalid');
+        
+        try {
+            // Disable form submission while processing
+            const submitButton = escalateForm.querySelector('button[type="submit"]');
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processing...';
+            
+            // Make API call
+            const formData = new FormData(escalateForm);
+            const response = await fetch(`/processing/fails/{{ filename }}/escalate`, {
+                method: 'POST',
+                body: formData
+            });
+            
+            const data = await response.json();
+            
+            if (data.status === 'success') {
+                // Show success message
+                showAlert('success', 'File has been escalated successfully');
+                
+                // Hide modal
+                escalateModalInstance.hide();
+                
+                // Redirect after a short delay
+                setTimeout(() => {
+                    window.location.href = "{{ url_for('processing.list_fail_files') }}";
+                }, 1500);
+            } else {
+                throw new Error(data.message || 'Failed to escalate file');
+            }
+        } catch (error) {
+            showAlert('error', 'Error escalating file: ' + error.message);
+            
+            // Re-enable submit button
+            submitButton.disabled = false;
+            submitButton.innerHTML = 'Confirm Escalation';
+        }
+    }
+
+    // Handle denial form submission
+    async function handleDenial(event) {
+        event.preventDefault();
+        
+        // Get form elements
+        const reasonSelect = denyForm.querySelector('select[name="reason"]');
+        const notesTextarea = denyForm.querySelector('textarea[name="notes"]');
+        const submitButton = denyForm.querySelector('button[type="submit"]');
+        
+        // Validate reason selection
+        if (!reasonSelect.value) {
+            reasonSelect.classList.add('is-invalid');
+            return;
+        }
+        
+        // Remove any previous validation styling
+        reasonSelect.classList.remove('is-invalid');
+        
+        try {
+            // Disable form submission while processing
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processing...';
+            
+            // Make API call
+            const formData = new FormData(denyForm);
+            const response = await fetch(`/processing/fails/{{ filename }}/deny`, {
+                method: 'POST',
+                body: formData
+            });
+            
+            const data = await response.json();
+            
+            if (data.status === 'success') {
+                // Show success message with specific denial reason
+                const reasonText = reasonSelect.options[reasonSelect.selectedIndex].text;
+                showAlert('success', `Bill has been denied successfully (${reasonText})`);
+                
+                // Hide modal
+                denyModalInstance.hide();
+                
+                // Redirect after a short delay
+                setTimeout(() => {
+                    window.location.href = "{{ url_for('processing.list_fail_files') }}";
+                }, 1500);
+            } else {
+                throw new Error(data.message || 'Failed to deny bill');
+            }
+        } catch (error) {
+            showAlert('error', 'Error denying bill: ' + error.message);
+            
+            // Re-enable submit button
+            submitButton.disabled = false;
+            submitButton.innerHTML = 'Confirm Denial';
+        }
+    }
+
+    // Event Listeners
+    if (escalateForm) {
+        // Handle form submission
+        escalateForm.addEventListener('submit', handleEscalation);
+        
+        // Real-time validation on reason field
+        reasonTextarea.addEventListener('input', function() {
+            if (this.value.trim()) {
+                this.classList.remove('is-invalid');
+            }
+        });
+        
+        // Reset form when modal is hidden
+        escalateModal.addEventListener('hidden.bs.modal', function() {
+            escalateForm.reset();
+            reasonTextarea.classList.remove('is-invalid');
+            const submitButton = escalateForm.querySelector('button[type="submit"]');
+            submitButton.disabled = false;
+            submitButton.innerHTML = 'Confirm Escalation';
+        });
+    }
+
+    if (denyForm) {
+        // Handle form submission
+        denyForm.addEventListener('submit', handleDenial);
+        
+        // Real-time validation on reason select
+        const reasonSelect = denyForm.querySelector('select[name="reason"]');
+        reasonSelect.addEventListener('change', function() {
+            if (this.value) {
+                this.classList.remove('is-invalid');
+            }
+        });
+        
+        // Reset form when modal is hidden
+        denyModal.addEventListener('hidden.bs.modal', function() {
+            denyForm.reset();
+            reasonSelect.classList.remove('is-invalid');
+            const submitButton = denyForm.querySelector('button[type="submit"]');
+            submitButton.disabled = false;
+            submitButton.innerHTML = 'Confirm Denial';
+        });
+    }
 });
 </script>
+
+<!-- Escalation Modal -->
+<div class="modal fade" id="escalateModal" tabindex="-1" aria-labelledby="escalateModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="escalateModalLabel">Escalate File</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="escalateForm">
+                <div class="modal-body">
+                    <input type="hidden" name="filename" value="{{ filename }}">
+                    <div class="mb-3">
+                        <label for="escalationReason" class="form-label">Reason for Escalation</label>
+                        <textarea class="form-control" id="escalationReason" name="reason" 
+                                rows="4" required 
+                                placeholder="Please provide a detailed reason for escalating this file..."></textarea>
+                        <div class="invalid-feedback">
+                            Please provide a reason for escalation
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">Confirm Escalation</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Denial Modal -->
+<div class="modal fade" id="denyModal" tabindex="-1" aria-labelledby="denyModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="denyModalLabel">Deny Bill</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="denyForm">
+                <div class="modal-body">
+                    <input type="hidden" name="filename" value="{{ filename }}">
+                    <div class="mb-3">
+                        <label for="denialReason" class="form-label">Denial Reason</label>
+                        <select class="form-select" id="denialReason" name="reason" required>
+                            <option value="" selected disabled>Select a reason...</option>
+                            <option value="CO-50">CO-50: Unauthorized Services</option>
+                            <option value="Claim not found in FileMaker">Claim not found in FileMaker</option>
+                        </select>
+                        <div class="invalid-feedback">
+                            Please select a denial reason
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="denialNotes" class="form-label">Additional Notes (Optional)</label>
+                        <textarea class="form-control" id="denialNotes" name="notes" 
+                                rows="3" 
+                                placeholder="Add any additional notes about this denial..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">Confirm Denial</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 {% endblock %}

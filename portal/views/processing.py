@@ -427,3 +427,103 @@ def assign_rates(filename):
             'success': False,
             'error': str(e)
         }), 500
+
+@processing_bp.route('/fails/<filename>/escalate', methods=['POST'])
+def escalate_fail_file(filename):
+    """Handle escalation of a failed file."""
+    try:
+        # Get escalation reason from request body
+        escalation_reason = request.form.get('reason', 'No reason provided')
+        
+        # Get current JSON data
+        source_key = f'data/hcfa_json/valid/mapped/staging/fails/{filename}'
+        json_data = get_s3_json(source_key)
+        
+        # Add escalation metadata
+        if 'escalation' not in json_data:
+            json_data['escalation'] = {}
+        
+        json_data['escalation'].update({
+            'reason': escalation_reason,
+            'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            'user': request.form.get('user', 'admin_user@clarity-dx.com')  # TODO: Replace with actual user
+        })
+        
+        # Update validation status
+        if 'validation_info' not in json_data:
+            json_data['validation_info'] = {}
+        json_data['validation_info']['status'] = 'ESCALATED'
+        
+        # Move file to escalations folder
+        dest_key = f'data/hcfa_json/valid/mapped/staging/escalations/{filename}'
+        upload_json_to_s3(json_data, dest_key)
+        
+        # Delete from fails folder
+        s3_client.delete_object(Bucket=S3_BUCKET, Key=source_key)
+        
+        flash('File has been escalated successfully.', 'success')
+        return jsonify({
+            'status': 'success',
+            'message': 'File escalated successfully'
+        })
+        
+    except Exception as e:
+        logger.error(f"Error escalating file {filename}: {str(e)}", exc_info=True)
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
+@processing_bp.route('/fails/<filename>/deny', methods=['POST'])
+def deny_fail_file(filename):
+    """Handle denial of a failed file."""
+    try:
+        # Get denial reason from request body
+        denial_reason = request.form.get('reason')
+        
+        # Validate denial reason
+        valid_reasons = ['CO-50', 'Claim not found in FileMaker']
+        if not denial_reason or denial_reason not in valid_reasons:
+            return jsonify({
+                'status': 'error',
+                'message': 'Invalid denial reason. Must be either "CO-50" or "Claim not found in FileMaker"'
+            }), 400
+        
+        # Get current JSON data
+        source_key = f'data/hcfa_json/valid/mapped/staging/fails/{filename}'
+        json_data = get_s3_json(source_key)
+        
+        # Add denial metadata
+        if 'denial' not in json_data:
+            json_data['denial'] = {}
+        
+        json_data['denial'].update({
+            'reason': denial_reason,
+            'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            'user': request.form.get('user', 'admin_user@clarity-dx.com')  # TODO: Replace with actual user
+        })
+        
+        # Update validation status
+        if 'validation_info' not in json_data:
+            json_data['validation_info'] = {}
+        json_data['validation_info']['status'] = 'DENIED'
+        
+        # Move file to denials folder
+        dest_key = f'data/hcfa_json/denials/{filename}'
+        upload_json_to_s3(json_data, dest_key)
+        
+        # Delete from fails folder
+        s3_client.delete_object(Bucket=S3_BUCKET, Key=source_key)
+        
+        flash('File has been denied successfully.', 'success')
+        return jsonify({
+            'status': 'success',
+            'message': 'File denied successfully'
+        })
+        
+    except Exception as e:
+        logger.error(f"Error denying file {filename}: {str(e)}", exc_info=True)
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
