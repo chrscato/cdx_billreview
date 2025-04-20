@@ -1,0 +1,34 @@
+{
+    "EMG Visit Standard": {
+      "bundle_type": "emg",
+      "body_part": null,
+      "modality": "emg",
+      "description": "Standard EMG visit with nerve conduction study and needle EMG",
+      "core_codes": ["95910", "95886"],
+      "optional_codes": ["99203"]
+    },
+    "EMG Visit Limited": {
+      "bundle_type": "emg",
+      "body_part": null,
+      "modality": "emg",
+      "description": "Limited EMG visit with nerve conduction study and limited needle EMG",
+      "core_codes": ["95910", "95885"],
+      "optional_codes": ["99203"]
+    },
+    "EMG Visit Comprehensive": {
+      "bundle_type": "emg",
+      "body_part": null,
+      "modality": "emg",
+      "description": "Comprehensive EMG visit with extended nerve conduction study and needle EMG",
+      "core_codes": ["95913", "95886"],
+      "optional_codes": ["99203"]
+    },
+    "EMG Visit Minimal": {
+      "bundle_type": "emg",
+      "body_part": null,
+      "modality": "emg",
+      "description": "Minimal EMG visit with limited nerve conduction study and limited needle EMG",
+      "core_codes": ["95909", "95885"],
+      "optional_codes": []
+    }
+  }
