@@ -3,6 +3,7 @@ from utils.s3_utils import list_objects, get_s3_json, upload_json_to_s3, move
 import os
 import re
 import boto3
+import sqlite3
 import json
 from pathlib import Path
 from datetime import datetime
@@ -259,6 +260,169 @@ def override_fail_file(filename):
     
     except Exception as e:
         logger.error(f"Error processing override for {filename}: {str(e)}", exc_info=True)
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+    
+
+@processing_bp.route('/fails/<filename>/assign-rates', methods=['POST'])
+def assign_rates(filename):
+    """Handle rate assignments for CPT codes with missing rates"""
+    try:
+        # Get JSON data from request
+        data = request.get_json()
+        tin = data.get('tin', '')  # Should be clean TIN (9 digits)
+        rates = data.get('rates', [])
+        notes = data.get('notes', '')
+        provider_network = data.get('provider_network', '')
+        
+        if not tin or not rates:
+            return jsonify({
+                'success': False,
+                'error': 'Missing required data (TIN or rates)'
+            }), 400
+        
+        # Clean TIN to ensure it's just 9 digits
+        tin = ''.join(filter(str.isdigit, tin))
+        if len(tin) != 9:
+            return jsonify({
+                'success': False,
+                'error': f'Invalid TIN format: {tin} (must be 9 digits)'
+            }), 400
+        
+        # Get the current JSON data for the file
+        key = f'data/hcfa_json/valid/mapped/staging/fails/{filename}'
+        json_data = get_s3_json(key)
+        
+        # Handle In Network rate assignments
+        if provider_network == 'In Network':
+            # Connect to database
+            conn = sqlite3.connect('filemaker.db')
+            cursor = conn.cursor()
+            
+            try:
+                # Check if PPO table exists, create it if not
+                cursor.execute("""
+                    SELECT name FROM sqlite_master WHERE type='table' AND name='ppo'
+                """)
+                
+                if not cursor.fetchone():
+                    # Create PPO table if it doesn't exist
+                    cursor.execute("""
+                        CREATE TABLE ppo (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            TIN TEXT NOT NULL,
+                            proc_cd TEXT NOT NULL,
+                            modifier TEXT,
+                            rate REAL NOT NULL,
+                            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                        )
+                    """)
+                
+                # Process each rate
+                for rate_data in rates:
+                    cpt_code = rate_data.get('cpt_code')
+                    rate = rate_data.get('rate')
+                    modifier = rate_data.get('modifier')
+                    
+                    # Check if record already exists
+                    cursor.execute("""
+                        SELECT * FROM ppo 
+                        WHERE TIN = ? AND proc_cd = ? AND (modifier = ? OR (? IS NULL AND modifier IS NULL))
+                    """, (tin, cpt_code, modifier, modifier))
+                    
+                    existing = cursor.fetchone()
+                    
+                    if existing:
+                        # Update existing record
+                        cursor.execute("""
+                            UPDATE ppo SET rate = ?, updated_at = CURRENT_TIMESTAMP
+                            WHERE TIN = ? AND proc_cd = ? AND (modifier = ? OR (? IS NULL AND modifier IS NULL))
+                        """, (rate, tin, cpt_code, modifier, modifier))
+                        logger.info(f"Updated existing rate for TIN {tin}, CPT {cpt_code}, modifier {modifier}")
+                    else:
+                        # Insert new record
+                        cursor.execute("""
+                            INSERT INTO ppo (TIN, proc_cd, modifier, rate)
+                            VALUES (?, ?, ?, ?)
+                        """, (tin, cpt_code, modifier, rate))
+                        logger.info(f"Inserted new rate for TIN {tin}, CPT {cpt_code}, modifier {modifier}")
+                
+                # Commit changes
+                conn.commit()
+            except sqlite3.Error as e:
+                conn.rollback()
+                raise e
+            finally:
+                conn.close()
+            
+            # Add rate assignment info to JSON
+            if 'rate_assignment' not in json_data:
+                json_data['rate_assignment'] = {}
+                
+            json_data['rate_assignment'] = {
+                'tin': tin,
+                'rates': rates,
+                'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                'user': 'admin_user@clarity-dx.com',  # TODO: Replace with actual user
+                'notes': notes,
+                'provider_network': provider_network
+            }
+            
+            # Update validation status
+            if 'validation_info' not in json_data:
+                json_data['validation_info'] = {}
+            
+            # Remove the rate missing failure reasons
+            if 'failure_reasons' in json_data['validation_info']:
+                updated_reasons = []
+                for reason in json_data['validation_info'].get('failure_reasons', []):
+                    is_rate_issue = False
+                    for rate_data in rates:
+                        if reason.startswith(f'RATE_MISSING: {rate_data["cpt_code"]}'):
+                            is_rate_issue = True
+                            break
+                    if not is_rate_issue:
+                        updated_reasons.append(reason)
+                
+                json_data['validation_info']['failure_reasons'] = updated_reasons
+            
+            # If no more failures, update status and move to success folder
+            if not json_data['validation_info'].get('failure_reasons'):
+                json_data['validation_info']['status'] = 'PASS'
+                dest_key = f'data/hcfa_json/valid/mapped/staging/success/{filename}'
+                upload_json_to_s3(json_data, dest_key)
+                # Delete from fails folder
+                s3_client.delete_object(Bucket=S3_BUCKET, Key=key)
+                logger.info(f"File {filename} moved to success folder")
+            else:
+                # Still has other failures, save back to fails folder
+                upload_json_to_s3(json_data, key)
+                logger.info(f"File {filename} updated but still has failures: {json_data['validation_info'].get('failure_reasons')}")
+            
+            return jsonify({
+                'success': True,
+                'message': 'Rate assigned successfully'
+            })
+        
+        # Handle Out of Network rate assignments (OTA)
+        else:
+            # This will be implemented separately
+            return jsonify({
+                'success': False,
+                'error': 'OTA rate assignment not yet implemented'
+            }), 501
+            
+    except sqlite3.Error as e:
+        logger.error(f"Database error assigning rates for {filename}: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': f'Database error: {str(e)}'
+        }), 500
+    except Exception as e:
+        logger.error(f"Error assigning rates for {filename}: {str(e)}", exc_info=True)
         return jsonify({
             'success': False,
             'error': str(e)
