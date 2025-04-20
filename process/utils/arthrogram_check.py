@@ -180,6 +180,35 @@ def process_staging_files(file_key=None, limit=None):
         logger.info(f"Processing complete. {success_count}/{len(json_keys)} files processed successfully.")
         logger.info(f"Found {arthrogram_count} arthrogram orders.")
 
+def check_and_redirect_if_arthrogram(file_name: str, claim_data: dict) -> bool:
+    """
+    Check if a claim is an arthrogram and redirect it if so.
+    
+    Args:
+        file_name (str): Name of the JSON file
+        claim_data (dict): The claim data to check
+        
+    Returns:
+        bool: True if claim is an arthrogram and was redirected, False otherwise
+    """
+    # Check if it's an arthrogram
+    if is_arthrogram(claim_data):
+        # Add status to JSON
+        claim_data = add_arthrogram_status(claim_data, True)
+        
+        # Move to arthrogram folder
+        dest_key = f"{ARTHROGRAM_PREFIX}{file_name}"
+        upload_json_to_s3(claim_data, dest_key)
+        
+        # Delete from original location if moved
+        if STAGING_PREFIX in file_name:
+            from boto3 import client
+            s3_client = client('s3')
+            s3_client.delete_object(Bucket=S3_BUCKET, Key=f"{STAGING_PREFIX}{file_name}")
+        
+        return True
+    return False
+
 def main():
     """Main entry point with command line argument parsing."""
     parser = argparse.ArgumentParser(description='Process HCFA JSON files to identify arthrogram orders.')

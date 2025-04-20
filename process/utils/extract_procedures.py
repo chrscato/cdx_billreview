@@ -1,8 +1,20 @@
 # process/utils/extract_procedures.py
-
-from typing import List, Dict
+from typing import List, Dict, Union
 from process.utils.models import Procedure
 from datetime import datetime
+
+
+def safe_int(value: Union[str, int, None], default: int = 1) -> int:
+    """
+    Safely converts a value to integer, returning default if conversion fails.
+    """
+    if value is None:
+        return default
+    try:
+        result = int(str(value).strip())
+        return result if result > 0 else default
+    except (ValueError, TypeError):
+        return default
 
 
 def extract_from_service_lines(service_lines: List[Dict]) -> List[Procedure]:
@@ -14,7 +26,7 @@ def extract_from_service_lines(service_lines: List[Dict]) -> List[Procedure]:
         procedures.append(Procedure(
             cpt_code=str(line.get("cpt_code", "")).strip(),
             date_of_service=parse_dos(line.get("date_of_service")),
-            units=int(line.get("units", 1)),
+            units=safe_int(line.get("units", 1)),
             source="billed",
             modifiers=line.get("modifiers", []),
             raw=line
@@ -31,7 +43,7 @@ def extract_from_line_items(line_items: List[Dict]) -> List[Procedure]:
         procedures.append(Procedure(
             cpt_code=str(line.get("CPT", "")).strip(),
             date_of_service=parse_dos(line.get("DOS")),
-            units=int(line.get("Units", 1)),
+            units=safe_int(line.get("Units", 1)),
             source="ordered",
             modifiers=[line.get("Modifier")] if line.get("Modifier") and line.get("Modifier") != "None" else [],
             raw=line

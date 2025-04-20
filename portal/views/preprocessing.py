@@ -79,7 +79,7 @@ def get_mapped_files_count():
     return len([f for f in files if f.endswith('.json') and 'staging' not in f])
 
 @preprocessing_bp.route('/')
-def preprocessing():
+def index():
     invalid_count = get_invalid_files_count()
     unmapped_count = get_unmapped_files_count()
     mapped_count = get_mapped_files_count()

@@ -64,4 +64,4 @@ def upload_json_to_s3(data: dict, key: str):
 
 def delete(key: str):
     """Delete an object from S3."""
-    _S3.delete_object(Bucket=_BUCKET, Key=key)
+    _S3.delete_object(Bucket=_BUCKET, Key=key) 

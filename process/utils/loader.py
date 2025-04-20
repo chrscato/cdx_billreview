@@ -2,7 +2,7 @@
 
 import os
 from typing import Tuple, List, Dict, Any
-from process.utils import s3_utils
+from utils import s3_utils
 from dotenv import load_dotenv
 
 load_dotenv()

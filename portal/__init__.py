@@ -1,10 +1,14 @@
 from flask import Flask
 from flask_bootstrap5 import Bootstrap
 from pathlib import Path
+import os
 
 def create_app():
     app = Flask(__name__)
     Bootstrap(app)
+    
+    # Set secret key - use environment variable or fallback to a random key
+    app.config['SECRET_KEY'] = os.environ.get('FLASK_SECRET_KEY', os.urandom(24))
     
     # Register blueprints
     from .views.home import home_bp

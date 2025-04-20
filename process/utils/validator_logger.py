@@ -10,9 +10,9 @@ from process.utils import s3_utils
 load_dotenv()
 
 # Paths from .env
-INPUT_PREFIX = os.getenv("VALIDATE_INPUT_PREFIX")
-SUCCESS_PREFIX = os.path.join(INPUT_PREFIX, "success")
-FAILS_PREFIX = os.path.join(INPUT_PREFIX, "fails")
+INPUT_PREFIX = os.getenv("VALIDATE_INPUT_PREFIX", "").rstrip('/')
+SUCCESS_PREFIX = f"{INPUT_PREFIX}/success"
+FAILS_PREFIX = f"{INPUT_PREFIX}/fails"
 
 
 def log_validation_results(
@@ -49,13 +49,13 @@ def log_validation_results(
     # 5. Determine final status and destination
     if failure_reasons or rate_failure:
         status = "FAIL"
-        dest_key = os.path.join(FAILS_PREFIX, file_name)
+        dest_key = f"{FAILS_PREFIX}/{file_name}"
     elif any(m.match_type == "CLINICAL_EQUIVALENT" for m in match_results):
         status = "SOFT_PASS"
-        dest_key = os.path.join(SUCCESS_PREFIX, file_name)
+        dest_key = f"{SUCCESS_PREFIX}/{file_name}"
     else:
         status = "PASS"
-        dest_key = os.path.join(SUCCESS_PREFIX, file_name)
+        dest_key = f"{SUCCESS_PREFIX}/{file_name}"
 
     # 6. Update claim JSON with validation info
     claim_json["validation_info"] = {
@@ -67,7 +67,7 @@ def log_validation_results(
     }
 
     # 7. Write updated JSON to appropriate S3 folder
-    s3_utils.put_json(dest_key, claim_json)
-    s3_utils.delete(os.path.join(INPUT_PREFIX, file_name))
+    s3_utils.upload_json_to_s3(claim_json, dest_key)
+    s3_utils.delete(f"{INPUT_PREFIX}/{file_name}")
 
     print(f"✅ {file_name} → {status} → {dest_key}")

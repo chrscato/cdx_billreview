@@ -34,90 +34,41 @@ S3_BUCKET = os.getenv('S3_BUCKET')
 
 # Precompiled regex patterns for critical validations
 ZIP_PATTERN = re.compile(r"^\d{5}$")
-CURRENCY_PATTERN = re.compile(r"^\$\d{1,3}(?:,\d{3})*(?:\.\d{2})?$")
+CURRENCY_PATTERN = re.compile(r"^\$?\d{1,3}(?:,\d{3})*(?:\.\d{2})?$")
+
+def clean_text(text):
+    """
+    Clean text by removing special characters and normalizing spaces.
+    """
+    if not text:
+        return text
+    
+    # Normalize unicode characters
+    text = unicodedata.normalize('NFKD', text)
+    
+    # Replace any non-ASCII characters with closest ASCII equivalent
+    text = text.encode('ascii', 'ignore').decode('ascii')
+    
+    # Fix multiple spaces and trim
+    text = re.sub(r'\s+', ' ', text).strip()
+    
+    return text
 
 def clean_name(name):
     """
-    Clean a patient name by replacing Greek and other non-ASCII characters 
-    with their Latin equivalents and removing any remaining invalid characters.
+    Clean a patient name by removing special characters and normalizing spaces.
     """
-    if not name:
-        return name
-    
-    # Greek to Latin character mapping
-    greek_to_latin = {
-        '\u0391': 'A',  # Greek capital Alpha
-        '\u0392': 'B',  # Greek capital Beta
-        '\u0393': 'G',  # Greek capital Gamma
-        '\u0394': 'D',  # Greek capital Delta
-        '\u0395': 'E',  # Greek capital Epsilon
-        '\u0396': 'Z',  # Greek capital Zeta
-        '\u0397': 'H',  # Greek capital Eta
-        '\u0398': 'TH', # Greek capital Theta
-        '\u0399': 'I',  # Greek capital Iota
-        '\u039A': 'K',  # Greek capital Kappa
-        '\u039B': 'L',  # Greek capital Lambda
-        '\u039C': 'M',  # Greek capital Mu
-        '\u039D': 'N',  # Greek capital Nu (this is in your example)
-        '\u039E': 'X',  # Greek capital Xi
-        '\u039F': 'O',  # Greek capital Omicron
-        '\u03A0': 'P',  # Greek capital Pi
-        '\u03A1': 'R',  # Greek capital Rho
-        '\u03A3': 'S',  # Greek capital Sigma
-        '\u03A4': 'T',  # Greek capital Tau
-        '\u03A5': 'Y',  # Greek capital Upsilon
-        '\u03A6': 'F',  # Greek capital Phi
-        '\u03A7': 'CH', # Greek capital Chi
-        '\u03A8': 'PS', # Greek capital Psi
-        '\u03A9': 'O',  # Greek capital Omega
-        
-        # Lowercase Greek letters
-        '\u03B1': 'a',  # Greek small Alpha
-        '\u03B2': 'b',  # Greek small Beta
-        '\u03B3': 'g',  # Greek small Gamma
-        '\u03B4': 'd',  # Greek small Delta
-        '\u03B5': 'e',  # Greek small Epsilon
-        '\u03B6': 'z',  # Greek small Zeta
-        '\u03B7': 'h',  # Greek small Eta
-        '\u03B8': 'th', # Greek small Theta
-        '\u03B9': 'i',  # Greek small Iota
-        '\u03BA': 'k',  # Greek small Kappa
-        '\u03BB': 'l',  # Greek small Lambda
-        '\u03BC': 'm',  # Greek small Mu
-        '\u03BD': 'n',  # Greek small Nu
-        '\u03BE': 'x',  # Greek small Xi
-        '\u03BF': 'o',  # Greek small Omicron
-        '\u03C0': 'p',  # Greek small Pi
-        '\u03C1': 'r',  # Greek small Rho
-        '\u03C3': 's',  # Greek small Sigma
-        '\u03C4': 't',  # Greek small Tau
-        '\u03C5': 'y',  # Greek small Upsilon
-        '\u03C6': 'f',  # Greek small Phi
-        '\u03C7': 'ch', # Greek small Chi
-        '\u03C8': 'ps', # Greek small Psi
-        '\u03C9': 'o',  # Greek small Omega
-    }
-    
-    # First try standard normalization
-    normalized = unicodedata.normalize('NFKD', name)
-    
-    # Replace any Greek characters that weren't properly normalized
-    for greek, latin in greek_to_latin.items():
-        normalized = normalized.replace(greek, latin)
-    
-    # Keep only ASCII characters, hyphens, commas, and spaces
-    ascii_only = re.sub(r'[^\x00-\x7F\-,\s]', '', normalized)
-    
-    # Fix multiple spaces
-    clean_name = re.sub(r'\s+', ' ', ascii_only).strip()
-    
-    return clean_name
+    return clean_text(name)
 
 def parse_date(date_str):
     """
     Try to parse a date string using formats MM/DD/YY and MM/DD/YYYY.
     Return the date in YYYY-MM-DD format if successful, otherwise None.
     """
+    if not date_str:
+        return None
+        
+    date_str = clean_text(date_str)
     for fmt in ("%m/%d/%y", "%m/%d/%Y"):
         try:
             return datetime.strptime(date_str, fmt).strftime("%Y-%m-%d")
@@ -125,21 +76,46 @@ def parse_date(date_str):
             continue
     return None
 
-def validate_json(data):
-    # Clean patient name if it exists
-    if "patient_info" in data and "patient_name" in data["patient_info"]:
-        data["patient_info"]["patient_name"] = clean_name(data["patient_info"]["patient_name"])
+def clean_currency(amount):
+    """
+    Clean and standardize currency amounts.
+    """
+    if not amount:
+        return None
+    
+    # Remove any non-numeric characters except decimal point
+    amount = re.sub(r'[^\d.]', '', str(amount))
+    try:
+        value = float(amount)
+        return f"${value:.2f}"
+    except ValueError:
+        return None
 
+def validate_json(data):
+    # Clean all text fields to handle encoding issues
+    if "patient_info" in data:
+        if "patient_name" in data["patient_info"]:
+            data["patient_info"]["patient_name"] = clean_name(data["patient_info"]["patient_name"])
+        if "patient_zip" in data["patient_info"]:
+            data["patient_info"]["patient_zip"] = clean_text(data["patient_info"]["patient_zip"])
+
+    if "billing_info" in data:
+        if "billing_provider_name" in data["billing_info"]:
+            data["billing_info"]["billing_provider_name"] = clean_text(data["billing_info"]["billing_provider_name"])
+        if "billing_provider_address" in data["billing_info"]:
+            data["billing_info"]["billing_provider_address"] = clean_text(data["billing_info"]["billing_provider_address"])
+
+    # Define minimum required fields
     required_fields = {
-        "patient_info": ["patient_name", "patient_dob", "patient_zip"],
-        "service_lines": ["date_of_service", "place_of_service", "cpt_code", "diagnosis_pointer", "charge_amount", "units"],
-        "billing_info": ["billing_provider_name", "billing_provider_address", "billing_provider_tin", "billing_provider_npi", "total_charge", "patient_account_no"]
+        "patient_info": ["patient_name"],  # ZIP removed from required fields
+        "service_lines": ["date_of_service", "cpt_code", "charge_amount"],  # Reduced to essential fields
+        "billing_info": ["billing_provider_name", "total_charge"]  # Reduced to essential fields
     }
     
     # Check required sections and fields
     for section, fields in required_fields.items():
         if section not in data:
-            return False, f"Missing section: {section}"
+            return False, f"Missing required section: {section}"
         
         if section == "service_lines":
             if not isinstance(data[section], list) or not data[section]:
@@ -147,47 +123,56 @@ def validate_json(data):
             for service in data[section]:
                 for field in fields:
                     if field not in service:
-                        return False, f"Missing field: {field} in service_lines"
+                        return False, f"Missing required field: {field} in service_lines"
         else:
             for field in fields:
                 if field not in data[section]:
-                    return False, f"Missing field: {field} in {section}"
+                    return False, f"Missing required field: {field} in {section}"
     
-    # Validate only the critical formats
-    if not ZIP_PATTERN.match(data["patient_info"]["patient_zip"]):
-        return False, "Invalid ZIP format (expected 5 digits)"
-    if not CURRENCY_PATTERN.match(data["billing_info"]["total_charge"]):
-        return False, "Invalid total charge format (expected currency)"
+    # Optional ZIP validation - only if present
+    if "patient_info" in data and "patient_zip" in data["patient_info"] and data["patient_info"]["patient_zip"]:
+        if not ZIP_PATTERN.match(data["patient_info"]["patient_zip"]):
+            data["patient_info"]["patient_zip"] = re.sub(r'\D', '', data["patient_info"]["patient_zip"])[:5]
+            if not ZIP_PATTERN.match(data["patient_info"]["patient_zip"]):
+                print(f"Warning: Invalid ZIP format for {data['patient_info'].get('patient_name', 'Unknown')}")
     
-    try:
-        total_charge = float(data["billing_info"]["total_charge"].replace("$", ""))
-    except ValueError:
-        return False, "Invalid total charge value"
+    # Clean and validate currency amounts
+    if "billing_info" in data and "total_charge" in data["billing_info"]:
+        total_charge = clean_currency(data["billing_info"]["total_charge"])
+        if not total_charge:
+            return False, "Invalid total charge format"
+        data["billing_info"]["total_charge"] = total_charge
     
-    try:
-        sum_charges = sum(float(service["charge_amount"].replace("$", "")) for service in data["service_lines"])
-    except ValueError:
-        return False, "One of the service charge amounts is invalid"
-    
-    if abs(total_charge - sum_charges) > 5:
-        return False, "Sum of line item charges does not match total charge (difference exceeds $5)"
-    
+    # Clean and validate service line charges
+    valid_charges = []
     for service in data["service_lines"]:
-        # Critical check for currency format on charge_amount remains.
-        if not CURRENCY_PATTERN.match(service["charge_amount"]):
-            return False, "Invalid charge amount format (expected currency)"
+        if "charge_amount" in service:
+            charge = clean_currency(service["charge_amount"])
+            if charge:
+                service["charge_amount"] = charge
+                valid_charges.append(float(charge.replace('$', '')))
+            else:
+                return False, f"Invalid charge amount format in service line"
         
-        # Validate and standardize date_of_service remains critical.
-        dos = service["date_of_service"]
-        date_range = dos.split(" - ")
-        parsed_dates = []
-        for date in date_range:
-            parsed = parse_date(date)
-            if parsed:
-                parsed_dates.append(parsed)
-        if not parsed_dates:
-            return False, "Invalid Date of Service format (expected MM/DD/YY or MM/DD/YYYY)"
-        service["date_of_service"] = parsed_dates[0]
+        # Clean and validate dates
+        if "date_of_service" in service:
+            dates = service["date_of_service"].split(" - ")
+            parsed_dates = []
+            for date in dates:
+                parsed = parse_date(date)
+                if parsed:
+                    parsed_dates.append(parsed)
+            if parsed_dates:
+                service["date_of_service"] = " - ".join(parsed_dates)
+            else:
+                return False, "Invalid Date of Service format"
+    
+    # Validate total matches sum of line items (if we have both)
+    if valid_charges and "billing_info" in data and "total_charge" in data["billing_info"]:
+        total = float(data["billing_info"]["total_charge"].replace('$', ''))
+        sum_charges = sum(valid_charges)
+        if abs(total - sum_charges) > 5:  # Allow $5 tolerance
+            print(f"Warning: Sum of charges (${sum_charges:.2f}) differs from total (${total:.2f})")
     
     return True, "Valid JSON"
 
