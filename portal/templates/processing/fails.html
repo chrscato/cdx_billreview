@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block title %}Processing Fails - Bill Review Portal{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Failed Processing Documents
+        {% if fails_count > 0 %}
+        <span class="badge bg-danger ms-2">{{ fails_count }}</span>
+        {% endif %}
+    </h1>
+    <p class="lead">Documents that failed validation during processing</p>
+    <hr>
+
+    <!-- Quick filter controls -->
+    <div class="mb-4">
+        <div class="card">
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-8">
+                        <input type="text" id="searchInput" class="form-control" placeholder="Search by filename, CPT code, or failure reason...">
+                    </div>
+                    <div class="col-md-4">
+                        <select id="filterType" class="form-select">
+                            <option value="all">All Failure Types</option>
+                            <option value="RATE_MISSING">Missing Rate</option>
+                            <option value="UNMATCHED_CPT">Unmatched CPT</option>
+                            <option value="TOO_MANY_UNITS">Too Many Units</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if files %}
+        <div class="list-group mt-4" id="filesList">
+            {% for file in files %}
+                <a href="{{ url_for('processing.view_fail_file', filename=file) }}" 
+                   class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                    <span>{{ file }}</span>
+                    <div>
+                        <!-- Add failure type badges here in a real implementation -->
+                        <span class="badge bg-danger rounded-pill me-2">Failed</span>
+                        <span class="badge bg-primary rounded-pill">View</span>
+                    </div>
+                </a>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-info">
+            <i class="fas fa-check-circle me-2"></i>
+            No failed processing files found. All documents have been processed successfully!
+        </div>
+    {% endif %}
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Simple client-side search filtering
+    const searchInput = document.getElementById('searchInput');
+    const filterType = document.getElementById('filterType');
+    const filesList = document.getElementById('filesList');
+    const fileItems = filesList ? filesList.querySelectorAll('.list-group-item') : [];
+    
+    function filterFiles() {
+        const searchTerm = searchInput.value.toLowerCase();
+        const filterValue = filterType.value;
+        
+        fileItems.forEach(item => {
+            const fileName = item.querySelector('span').textContent.toLowerCase();
+            // In a real implementation, you'd store failure types as data attributes
+            // const failureType = item.dataset.failureType;
+            
+            const matchesSearch = fileName.includes(searchTerm);
+            // const matchesFilter = filterValue === 'all' || failureType === filterValue;
+            const matchesFilter = true; // Placeholder - replace with real logic
+            
+            if (matchesSearch && matchesFilter) {
+                item.style.display = '';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    }
+    
+    if (searchInput && filterType) {
+        searchInput.addEventListener('input', filterFiles);
+        filterType.addEventListener('change', filterFiles);
+    }
+});
+</script>
+{% endblock %}

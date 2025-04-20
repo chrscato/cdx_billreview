@@ -8,7 +8,7 @@
     <p class="lead">Manage and process your HCFA files</p>
 
     <div class="row mt-4">
-        <div class="col-md-6">
+        <div class="col-md-6 mb-4">
             <div class="card h-100">
                 <div class="card-body">
                     <h5 class="card-title">Mapped Files
@@ -23,6 +23,39 @@
                 </div>
             </div>
         </div>
+
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Failed Files
+                        <span class="badge {% if fails_count > 0 %}bg-danger{% else %}bg-secondary{% endif %} ms-2">{{ fails_count }}</span>
+                    </h5>
+                    <p class="card-text">Files that failed validation during processing.</p>
+                    <a href="{{ url_for('processing.list_fail_files') }}" class="btn btn-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>View Failed Files
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Brief explanation of processing workflow -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Processing Workflow</h5>
+                </div>
+                <div class="card-body">
+                    <ol class="mb-0">
+                        <li><strong>Stage mapped files</strong> - Click the "Process All Mapped Files" button to start processing</li>
+                        <li><strong>Review failures</strong> - If any files fail validation, review and fix them in the Failed Files section</li>
+                        <li><strong>Override</strong> - For files that cannot be automatically validated, you can manually override and approve them</li>
+                        <li><strong>Track progress</strong> - Monitor the counts of mapped and failed files</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
-{% endblock %} 
+{% endblock %}

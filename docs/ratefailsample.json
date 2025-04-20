@@ -1,0 +1,135 @@
+{
+    "patient_info": {
+      "patient_name": "DICKEY, DONALD RAY",
+      "patient_dob": "08/05/71",
+      "patient_zip": "32854"
+    },
+    "billing_info": {
+      "billing_provider_name": "Shoals Radiology Assoc",
+      "billing_provider_npi": "1750356572",
+      "billing_provider_address": "PO BOX 748097, Atlanta GA 30374-8097",
+      "billing_provider_tin": "63-1225938",
+      "patient_account_no": "48215",
+      "total_charge": "$1600.00"
+    },
+    "service_lines": [
+      {
+        "cpt_code": "72141",
+        "charge_amount": "$1600.00",
+        "date_of_service": "03/03/25 - 03/03/25",
+        "units": "1",
+        "place_of_service": "11",
+        "diagnosis_pointer": "A",
+        "modifiers": []
+      }
+    ],
+    "mapping_info": {
+      "order_id": "ORD-202522000000-DICKEYDONA",
+      "filemaker_number": "ORD-202522000000-DICKEYDONA",
+      "mapping_date": "2025-04-20 00:18:03"
+    },
+    "filemaker": {
+      "order": {
+        "Order_ID": "ORD-202522000000-DICKEYDONA",
+        "FileMaker_Record_Number": "202522000000",
+        "Patient_Address": "969 Crestview Ct",
+        "Patient_City": "Florenec",
+        "Patient_State": "AL",
+        "Patient_Zip": "35630",
+        "Patient_Injury_Date": null,
+        "Patient_Injury_Description": null,
+        "Patient_DOB": "8/5/1971",
+        "Patient_Last_Name": "Dickey",
+        "Patient_First_Name": "Donald",
+        "PatientName": "Donald Dickey",
+        "PatientPhone": "12564831578",
+        "Referring_Physician": "Deborah Ragan",
+        "Referring_Physician_NPI": "1619563913",
+        "Assigning_Company": "Publix",
+        "Assigning_Adjuster": "Donna Godec",
+        "Claim_Number": "WC2025645320",
+        "Order_Type": "Imaging",
+        "Jurisdiction_State": "AL",
+        "created_at": "2025-04-08 16:12:08.638403",
+        "updated_at": "2025-04-08 16:12:08.638404",
+        "is_active": 1.0,
+        "bundle_type": null,
+        "provider_id": "577856F8-36A9-450B-AE71-0CA8B2F81736",
+        "provider_name": "Shoals Radiology Associates"
+      },
+      "line_items": [
+        {
+          "id": "76057",
+          "Order_ID": "ORD-202522000000-DICKEYDONA",
+          "DOS": "2025-03-03",
+          "CPT": "72141",
+          "Modifier": "None",
+          "Units": "1",
+          "Description": "None",
+          "Charge": "725.0",
+          "line_number": "1",
+          "created_at": "2025-04-03 10:10:32.534837",
+          "updated_at": "2025-04-08 16:12:08.638416",
+          "is_active": "1.0",
+          "BR_paid": "None",
+          "BR_rate": "nan",
+          "EOBR_doc_no": "None",
+          "HCFA_doc_no": "None",
+          "BR_date_processed": "None"
+        }
+      ],
+      "provider": {
+        "Address 1 Full": "406 Woodward Ave. \nMuscle Shoals, AL 35661",
+        "Address Line 1": "406 Woodward Ave.",
+        "Address Line 2": null,
+        "Billing Address 1": "PO BOX 748097",
+        "Billing Address 2": null,
+        "Billing Address City": "Atlanta",
+        "Billing Address Postal Code": "30374-8097",
+        "Billing Address State": "GA",
+        "Billing Name": "Shoals Radiology Associates",
+        "City": "Muscle Shoals",
+        "Contract Date": null,
+        "Contract Date Renewal": null,
+        "Country": null,
+        "DBA Name Billing Name": "Shoals Radiology Associates",
+        "Email": null,
+        "Fax Number": "(256)386-0937",
+        "lat": "34.756201",
+        "Latitude": "34.756201",
+        "Location": null,
+        "lon": "-87.668015",
+        "Longitude": "-87.668015",
+        "Need OTA": null,
+        "NPI": "1750356572",
+        "Phone": "(256)386-7100",
+        "Postal Code": "35661",
+        "PrimaryKey": "577856F8-36A9-450B-AE71-0CA8B2F81736",
+        "Provider Network": "In Network",
+        "Provider Status": "Contract Complete",
+        "Provider Type": "Imaging",
+        "Record Status": null,
+        "ServicesProvided": "-  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - All",
+        "State": "AL",
+        "Status": "Active",
+        "TIN": "63-1225938",
+        "Website": null
+      }
+    },
+    "validation_info": {
+      "status": "FAIL",
+      "failure_reasons": [
+        "RATE_MISSING: 72141"
+      ],
+      "matched_lines": [
+        {
+          "billed_cpt": "72141",
+          "ordered_cpt": "72141",
+          "match_type": "EXACT",
+          "details": null
+        }
+      ],
+      "unmatched_cpts": [],
+      "skipped_cpts": []
+    }
+  }
