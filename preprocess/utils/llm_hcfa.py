@@ -72,10 +72,10 @@ def extract_data_via_llm(prompt_text: str, ocr_text: str) -> str:
         {"role": "user", "content": prompt_text + "\n---\n" + ocr_text}
     ]
     response = client.chat.completions.create(
-        model="gpt-4",
+        model="gpt-4.1-mini",
         messages=messages,
         temperature=0.0,
-        max_tokens=1500
+        max_tokens=2000
     )
     return response.choices[0].message.content
 

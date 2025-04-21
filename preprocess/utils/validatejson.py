@@ -26,7 +26,7 @@ load_dotenv()
 from utils.s3_utils import list_objects, download, upload, move
 
 # S3 prefixes (override in .env if needed)
-INPUT_PREFIX = os.getenv('VALIDATE_INPUT_PREFIX', 'data/hcfa_json/')
+INPUT_PREFIX = os.getenv('PREPROCESS_INPUT_PREFIX', 'data/hcfa_json/')
 VALID_PREFIX = os.getenv('VALIDATE_VALID_PREFIX', 'data/hcfa_json/valid/')
 INVALID_PREFIX = os.getenv('VALIDATE_INVALID_PREFIX', 'data/hcfa_json/invalid/')
 LOG_PREFIX = os.getenv('VALIDATE_LOG_PREFIX', 'logs/validation_errors.log')

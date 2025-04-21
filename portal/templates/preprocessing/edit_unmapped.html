@@ -33,6 +33,9 @@
             <button id="view-pdf" class="btn btn-outline-primary">
                 <i class="fas fa-file-pdf me-1"></i>View PDF
             </button>
+            <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#escalationModal">
+                <i class="fas fa-exclamation-triangle me-1"></i>Escalate
+            </button>
         </div>
     </div>
 
@@ -180,32 +183,53 @@
         <!-- FileMaker Match Lookup Section -->
         <div class="mb-4">
             <div class="card mb-3">
-                <div class="card-header">
+                <div class="card-header d-flex justify-content-between align-items-center">
                     <h3 class="card-title mb-0">FileMaker Match Lookup</h3>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="autosearchToggle" checked>
+                        <label class="form-check-label" for="autosearchToggle">Auto-Search</label>
+                    </div>
                 </div>
                 <div class="card-body">
                     <div class="row g-3 mb-3">
                         <div class="col-md-4">
                             <label class="form-label">Last Name</label>
-                            <input type="text" class="form-control" id="last-name-search">
+                            <input type="text" class="form-control" id="last-name-search" aria-label="Last name for search">
                         </div>
                         <div class="col-md-4">
                             <label class="form-label">First Name</label>
-                            <input type="text" class="form-control" id="first-name-search">
+                            <input type="text" class="form-control" id="first-name-search" aria-label="First name for search">
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-4">
                             <label class="form-label">Date of Service</label>
-                            <input type="text" class="form-control" id="dos-search" placeholder="YYYY-MM-DD">
+                            <input type="text" class="form-control" id="dos-search" placeholder="YYYY-MM-DD" aria-label="Date of service for search">
                         </div>
-                        <div class="col-md-1 d-flex align-items-end">
-                            <button type="button" class="btn btn-primary w-100" id="search-button">
-                                Search
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-12 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                            <div class="btn-group">
+                                <button type="button" class="btn btn-primary" id="search-button" aria-label="Search for matches">
+                                    <i class="bi bi-search me-1"></i>Search
+                                </button>
+                                <button type="button" class="btn btn-secondary" id="clear-search-button" aria-label="Clear search form">
+                                    <i class="bi bi-x-circle me-1"></i>Clear
+                                </button>
+                            </div>
+                            <button type="button" class="btn btn-info" id="show-all-matches-button" 
+                                    data-bs-toggle="tooltip" data-bs-placement="top" 
+                                    title="Search with just the last name to show more potential matches"
+                                    aria-label="Show all possible matches">
+                                <i class="bi bi-list-ul me-1"></i>Show All Matches
                             </button>
                         </div>
                     </div>
                     
                     <div id="search-results" class="mt-3" style="display: none;">
-                        <h5 class="mb-3">Matching Orders</h5>
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="mb-0">Matching Orders</h5>
+                            <span id="match-counter" class="badge bg-primary">0 matches found</span>
+                        </div>
                         <div class="list-group" id="matches-list">
                             <!-- Results will be populated here -->
                         </div>
@@ -282,8 +306,171 @@
     </div>
 </template>
 
+<!-- Loading spinner template -->
+<template id="loading-spinner-template">
+    <div class="text-center my-4">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="mt-2">Searching for matches...</p>
+    </div>
+</template>
+
+<!-- Escalation Modal -->
+<div class="modal fade" id="escalationModal" tabindex="-1" aria-labelledby="escalationModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="escalationModalLabel">Escalate Unmapped File</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="escalationForm">
+                    <div class="mb-3">
+                        <label for="escalationReason" class="form-label">Reason for Escalation<span class="text-danger">*</span></label>
+                        <select class="form-select" id="escalationReason" name="reason" required>
+                            <option value="" selected disabled>Select a reason...</option>
+                            <option value="not_found">Not found in FileMaker</option>
+                            <option value="incorrect_patient">Incorrect patient information</option>
+                            <option value="missing_data">Missing critical data</option>
+                            <option value="duplicate">Potential duplicate</option>
+                            <option value="illegible">Document illegible</option>
+                            <option value="other">Other reason</option>
+                        </select>
+                        <div class="invalid-feedback">
+                            Please select a reason for escalation.
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="escalationNotes" class="form-label">Additional Notes</label>
+                        <textarea class="form-control" id="escalationNotes" name="notes" rows="4" placeholder="Please provide any additional details that would help resolve this issue..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmEscalation">Confirm Escalation</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
+// Utility function for debouncing
+function debounce(func, wait) {
+    let timeout;
+    return function(...args) {
+        const context = this;
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(context, args), wait);
+    };
+}
+
+// Function to highlight text in search results
+function highlightText(text, searchTerm) {
+    if (!searchTerm || !text) return text;
+    const regex = new RegExp(`(${searchTerm})`, 'gi');
+    return text.replace(regex, '<mark>$1</mark>');
+}
+
+// Function to calculate string similarity (Levenshtein distance)
+function calculateSimilarity(s1, s2) {
+    if (!s1 || !s2) return 0;
+    s1 = s1.toLowerCase();
+    s2 = s2.toLowerCase();
+    
+    const costs = [];
+    for (let i = 0; i <= s1.length; i++) {
+        let lastValue = i;
+        for (let j = 0; j <= s2.length; j++) {
+            if (i === 0) {
+                costs[j] = j;
+            } else if (j > 0) {
+                let newValue = costs[j - 1];
+                if (s1.charAt(i - 1) !== s2.charAt(j - 1)) {
+                    newValue = Math.min(Math.min(newValue, lastValue), costs[j]) + 1;
+                }
+                costs[j - 1] = lastValue;
+                lastValue = newValue;
+            }
+        }
+        if (i > 0) costs[s2.length] = lastValue;
+    }
+    
+    // Convert to a similarity percentage (higher is better)
+    const maxLength = Math.max(s1.length, s2.length);
+    if (maxLength === 0) return 100;
+    return Math.round((1 - costs[s2.length] / maxLength) * 100);
+}
+
+// Search cache
+const searchCache = new Map();
+
 document.addEventListener('DOMContentLoaded', function() {
+    // Initialize tooltips
+    if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
+        const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+        [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
+    }
+    
+    // Escalation form handling
+    const escalationForm = document.getElementById('escalationForm');
+    const confirmEscalationBtn = document.getElementById('confirmEscalation');
+    
+    if (escalationForm && confirmEscalationBtn) {
+        confirmEscalationBtn.addEventListener('click', function() {
+            // Add was-validated class to show validation feedback
+            escalationForm.classList.add('was-validated');
+            
+            // Check if form is valid
+            if (escalationForm.checkValidity()) {
+                // Get form data
+                const reason = document.getElementById('escalationReason').value;
+                const notes = document.getElementById('escalationNotes').value;
+                
+                // Here you would typically send the data to the server
+                console.log('Escalating with reason:', reason, 'and notes:', notes);
+                
+                // Show success message
+                const modalElement = document.getElementById('escalationModal');
+                const modal = bootstrap.Modal.getInstance(modalElement);
+                
+                // Close the modal
+                modal.hide();
+                
+                // Show success alert
+                const alertHtml = `
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <strong>Success!</strong> This file has been escalated for review.
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                `;
+                document.querySelector('.container-fluid').insertAdjacentHTML('afterbegin', alertHtml);
+                
+                // Reset form
+                escalationForm.classList.remove('was-validated');
+                escalationForm.reset();
+            }
+        });
+    }
+    
+    // Prepopulate search fields functionality
+    prepopulateSearchFields();
+    
+    // Load autosearch toggle state from localStorage
+    const autosearchToggle = document.getElementById('autosearchToggle');
+    if (autosearchToggle) {
+        const savedState = localStorage.getItem('autosearchEnabled');
+        if (savedState !== null) {
+            autosearchToggle.checked = savedState === 'true';
+        }
+        
+        // Save toggle state to localStorage when changed
+        autosearchToggle.addEventListener('change', function() {
+            localStorage.setItem('autosearchEnabled', this.checked);
+        });
+    }
+    
     // Add service line functionality
     const addLineButton = document.getElementById('add-line');
     const serviceLinesContainer = document.getElementById('service-lines');
@@ -335,41 +522,184 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // FileMaker search functionality
     const searchButton = document.getElementById('search-button');
+    const clearSearchButton = document.getElementById('clear-search-button');
+    const showAllMatchesButton = document.getElementById('show-all-matches-button');
     const searchResults = document.getElementById('search-results');
     const matchesList = document.getElementById('matches-list');
+    const matchCounter = document.getElementById('match-counter');
+    
+    // Store original search button text
+    const originalButtonText = searchButton.innerHTML;
+    
+    // Search fields
+    const lastNameField = document.getElementById('last-name-search');
+    const firstNameField = document.getElementById('first-name-search');
+    const dosSearchField = document.getElementById('dos-search');
+    
+    // Add event listeners to search fields for keyboard shortcuts
+    [lastNameField, firstNameField, dosSearchField].forEach(field => {
+        field.addEventListener('keydown', function(e) {
+            // Enter key to trigger search
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                searchButton.click();
+            }
+            // Escape key to clear form
+            else if (e.key === 'Escape') {
+                e.preventDefault();
+                clearSearchButton.click();
+            }
+        });
+        
+        // Add debounced input handler for auto-search
+        field.addEventListener('input', debounce(function() {
+            if (document.getElementById('autosearchToggle').checked) {
+                // Only auto-search if the last name has at least 3 characters
+                const lastNameValue = lastNameField.value.trim();
+                
+                if (lastNameValue.length >= 3) {
+                    searchButton.click();
+                }
+            }
+        }, 300));
+    });
+    
+    // Clear search button functionality
+    clearSearchButton.addEventListener('click', function() {
+        lastNameField.value = '';
+        firstNameField.value = '';
+        dosSearchField.value = '';
+        searchResults.style.display = 'none';
+    });
+    
+    // Show all matches button functionality
+    showAllMatchesButton.addEventListener('click', function() {
+        // Keep last name, clear other fields
+        firstNameField.value = '';
+        dosSearchField.value = '';
+        // Only trigger search if last name has value
+        if (lastNameField.value.trim()) {
+            searchButton.click();
+        } else {
+            // If no last name, prompt the user
+            matchesList.innerHTML = '<div class="alert alert-warning">Please enter a last name to show all matches</div>';
+            searchResults.style.display = 'block';
+        }
+    });
 
     searchButton.addEventListener('click', async function() {
-        const lastName = document.getElementById('last-name-search').value;
-        const firstName = document.getElementById('first-name-search').value;
-        const dos = document.getElementById('dos-search').value;
+        const lastName = lastNameField.value.trim();
+        const firstName = firstNameField.value.trim();
+        const dos = dosSearchField.value.trim();
+        
+        // Generate cache key
+        const cacheKey = `${lastName}_${firstName}_${dos}`;
+        
+        // Show loading state
+        searchButton.disabled = true;
+        searchButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Searching...';
+        
+        // Show search results area with loading spinner
+        searchResults.style.display = 'block';
+        const loadingSpinner = document.getElementById('loading-spinner-template').content.cloneNode(true);
+        matchesList.innerHTML = '';
+        matchesList.appendChild(loadingSpinner);
+        matchCounter.textContent = 'Searching...';
 
         try {
-            const response = await fetch(`/preprocessing/unmapped/{{ filename }}/search`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    last_name: lastName,
-                    first_name: firstName,
-                    dos: dos
-                })
-            });
+            // Check cache first
+            let data;
+            if (searchCache.has(cacheKey)) {
+                console.log('Using cached search results');
+                data = searchCache.get(cacheKey);
+            } else {
+                const response = await fetch(`/preprocessing/unmapped/{{ filename }}/search`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        last_name: lastName,
+                        first_name: firstName,
+                        dos: dos
+                    })
+                });
 
-            const data = await response.json();
+                data = await response.json();
+                
+                // Cache the result
+                if (data.success) {
+                    searchCache.set(cacheKey, data);
+                }
+            }
+            
+            // Clear loading spinner
+            matchesList.innerHTML = '';
             
             if (data.success) {
-                matchesList.innerHTML = '';
-                if (data.matches.length === 0) {
+                const matches = data.matches || [];
+                
+                // Update match counter
+                matchCounter.textContent = `${matches.length} ${matches.length === 1 ? 'match' : 'matches'} found`;
+                
+                if (matches.length === 0) {
                     matchesList.innerHTML = '<div class="alert alert-info">No matches found</div>';
                 } else {
-                    data.matches.forEach(match => {
+                    // Calculate similarity scores and sort by relevance
+                    const enhancedMatches = matches.map(match => {
+                        // Extract patient name parts for comparison
+                        const patientName = match.patient_name || '';
+                        const nameParts = patientName.split(/,\s*|\s+/);
+                        const matchLastName = nameParts.length > 0 ? nameParts[0] : '';
+                        const matchFirstName = nameParts.length > 1 ? nameParts[1] : '';
+                        
+                        // Calculate similarity scores
+                        const lastNameSimilarity = calculateSimilarity(lastName, matchLastName);
+                        const firstNameSimilarity = firstName ? calculateSimilarity(firstName, matchFirstName) : 0;
+                        
+                        // Calculate overall relevance score (weighted average)
+                        const relevanceScore = lastName && firstName 
+                            ? (lastNameSimilarity * 0.6) + (firstNameSimilarity * 0.4)
+                            : lastNameSimilarity;
+                            
+                        return {
+                            ...match,
+                            relevanceScore,
+                            lastNameSimilarity,
+                            firstNameSimilarity
+                        };
+                    });
+                    
+                    // Sort by relevance score (highest first)
+                    enhancedMatches.sort((a, b) => b.relevanceScore - a.relevanceScore);
+                    
+                    enhancedMatches.forEach(match => {
                         const card = document.createElement('div');
                         card.className = 'card mb-3';
+                        
+                        // Determine match quality badge
+                        let matchQuality = '';
+                        if (match.relevanceScore >= 90) {
+                            matchQuality = '<span class="badge bg-success ms-2">Strong Match</span>';
+                        } else if (match.relevanceScore >= 70) {
+                            matchQuality = '<span class="badge bg-info ms-2">Good Match</span>';
+                        } else if (match.relevanceScore >= 50) {
+                            matchQuality = '<span class="badge bg-warning ms-2">Potential Match</span>';
+                        } else {
+                            matchQuality = '<span class="badge bg-secondary ms-2">Weak Match</span>';
+                        }
+                        
+                        // Highlight matching text
+                        const highlightedName = highlightText(match.patient_name || '', lastName) || 
+                                             highlightText(match.patient_name || '', firstName);
+                        
                         card.innerHTML = `
                             <div class="card-body">
-                                <h5 class="card-title mb-2">Order ID: ${match.order_id}</h5>
-                                <p><strong>Patient:</strong> ${match.patient_name} (DOB: ${match.patient_dob})</p>
+                                <h5 class="card-title mb-2 d-flex align-items-center">
+                                    <span>Order ID: ${match.order_id}</span>
+                                    ${matchQuality}
+                                </h5>
+                                <p><strong>Patient:</strong> ${highlightedName} (DOB: ${match.patient_dob})</p>
                                 <p><strong>Provider:</strong> ${match.provider_name || 'N/A'}</p>
                                 <p><strong>DOS:</strong> ${match.DOS_list.join(', ') || 'N/A'}</p>
                                 <p><strong>CPTs:</strong><br>${match.CPTs.map((cpt, i) => `${cpt} - ${match.CPT_descriptions[i] || 'No description available'}`).join('<br>')}</p>
@@ -381,16 +711,245 @@ document.addEventListener('DOMContentLoaded', function() {
                         matchesList.appendChild(card);
                     });
                 }
-                searchResults.style.display = 'block';
             } else {
-                alert(`Error: ${data.error}\n${data.details}`);
+                // Display error in the results area instead of an alert
+                const errorMsg = `<div class="alert alert-danger">
+                    <h5>Error</h5>
+                    <p>${data.error}</p>
+                    <p class="mb-0 small">${data.details || ''}</p>
+                </div>`;
+                matchesList.innerHTML = errorMsg;
+                matchCounter.textContent = 'Error';
+                console.error('Search Error:', data.error, data.details);
             }
         } catch (error) {
-            console.error('Error:', error);
-            alert('An error occurred while searching');
+            // Display error in the results area
+            const errorMsg = `<div class="alert alert-danger">
+                <h5>Search Failed</h5>
+                <p>An error occurred while searching.</p>
+                <p class="mb-0 small">${error.message}</p>
+            </div>`;
+            matchesList.innerHTML = errorMsg;
+            matchCounter.textContent = 'Error';
+            console.error('Search Error:', error);
+        } finally {
+            // Reset button state
+            searchButton.disabled = false;
+            searchButton.innerHTML = originalButtonText;
         }
     });
 });
+
+/**
+ * Function to perform automatic search if conditions are met
+ */
+function performAutoSearch() {
+    const autosearchToggle = document.getElementById('autosearchToggle');
+    const lastNameField = document.getElementById('last-name-search');
+    const firstNameField = document.getElementById('first-name-search');
+    const dosSearchField = document.getElementById('dos-search');
+    const searchButton = document.getElementById('search-button');
+    const searchResults = document.getElementById('search-results');
+    const matchesList = document.getElementById('matches-list');
+    
+    // Return early if required elements are missing
+    if (!autosearchToggle || !lastNameField || !firstNameField || !dosSearchField || !searchButton || !searchResults || !matchesList) {
+        console.log('Required elements for auto-search not found');
+        return;
+    }
+    
+    // Only proceed if auto-search is enabled
+    if (!autosearchToggle.checked) {
+        console.log('Auto-search is disabled');
+        return;
+    }
+    
+    // Check if last name field has a value (now the only required field)
+    if (!lastNameField.value.trim()) {
+        console.log('Last name is required for auto-search');
+        return;
+    }
+    
+    // Show search results with loading indicator
+    searchResults.style.display = 'block';
+    const loadingSpinner = document.getElementById('loading-spinner-template').content.cloneNode(true);
+    matchesList.innerHTML = '';
+    matchesList.appendChild(loadingSpinner);
+    
+    // Trigger search after a short delay
+    console.log('Auto-search will execute in 500ms');
+    setTimeout(() => {
+        searchButton.click();
+    }, 500);
+}
+
+/**
+ * Helper function to clean and normalize last names
+ * - Removes leading/trailing whitespace
+ * - Removes non-alphanumeric characters except hyphens
+ * - Handles edge cases
+ */
+function cleanLastName(lastName) {
+    if (!lastName) return '';
+    
+    // Trim whitespace
+    lastName = lastName.trim();
+    
+    // Remove common suffixes
+    const suffixes = [' JR', ' SR', ' II', ' III', ' IV', ' V', ' MD', ' PHD', ' ESQ', ' JR.', ' SR.'];
+    suffixes.forEach(suffix => {
+        if (lastName.toUpperCase().endsWith(suffix)) {
+            lastName = lastName.slice(0, lastName.length - suffix.length).trim();
+        }
+    });
+    
+    // Keep only alphanumeric characters and hyphens
+    lastName = lastName.replace(/[^\w\s-]/g, '');
+    
+    return lastName.trim();
+}
+
+/**
+ * Function to extract last name from full name with various formats
+ */
+function extractLastName(fullName) {
+    if (!fullName || typeof fullName !== 'string') {
+        console.log('Invalid name format provided');
+        return '';
+    }
+    
+    // Debug info
+    console.log('Original patient name:', fullName);
+    
+    try {
+        let lastName = '';
+        fullName = fullName.trim();
+        
+        // Format: "Last, First"
+        if (fullName.includes(',')) {
+            lastName = fullName.split(',')[0].trim();
+        }
+        // Format with suffix: "John Smith Jr." or "John Smith Sr."
+        else if (/\s(Jr\.?|Sr\.?|I{2,3}|IV|V|MD|PhD|Esq\.?)$/i.test(fullName)) {
+            // Remove the suffix and then get the last word
+            const nameWithoutSuffix = fullName.replace(/\s(Jr\.?|Sr\.?|I{2,3}|IV|V|MD|PhD|Esq\.?)$/i, '');
+            const parts = nameWithoutSuffix.split(/\s+/);
+            lastName = parts[parts.length - 1];
+        }
+        // Format with hyphenated last name: "Mary Johnson-Smith"
+        else if (fullName.includes('-')) {
+            const parts = fullName.split(/\s+/);
+            // Check if the hyphen is in the last part
+            if (parts[parts.length - 1].includes('-')) {
+                lastName = parts[parts.length - 1];
+            } 
+            // Check if the hyphen is in the second-to-last part
+            else if (parts.length > 1 && parts[parts.length - 2].includes('-')) {
+                lastName = parts[parts.length - 2] + ' ' + parts[parts.length - 1];
+            }
+            // Otherwise just use the last word
+            else {
+                lastName = parts[parts.length - 1];
+            }
+        }
+        // Format with multi-part last name: "Juan De La Cruz"
+        else if (fullName.toLowerCase().includes(' de ') || 
+                 fullName.toLowerCase().includes(' van ') || 
+                 fullName.toLowerCase().includes(' von ') || 
+                 fullName.toLowerCase().includes(' la ') ||
+                 fullName.toLowerCase().includes(' du ')) {
+            const parts = fullName.split(/\s+/);
+            // If we have more than 2 words and the second to last is a known prefix
+            if (parts.length > 2) {
+                const possiblePrefix = parts[parts.length - 2].toLowerCase();
+                if (['de', 'van', 'von', 'la', 'du', 'del', 'dos', 'di', 'el', 'al'].includes(possiblePrefix)) {
+                    // Include the prefix and the last word
+                    lastName = parts[parts.length - 2] + ' ' + parts[parts.length - 1];
+                    
+                    // Check for 3-part last names (e.g., "De La Cruz")
+                    if (parts.length > 3) {
+                        const previousPart = parts[parts.length - 3].toLowerCase();
+                        if (['de', 'van', 'von', 'la', 'du', 'del'].includes(previousPart)) {
+                            lastName = parts[parts.length - 3] + ' ' + lastName;
+                        }
+                    }
+                } else {
+                    lastName = parts[parts.length - 1];
+                }
+            } else {
+                lastName = parts[parts.length - 1];
+            }
+        }
+        // Default format: "First Last"
+        else {
+            const parts = fullName.split(/\s+/);
+            lastName = parts[parts.length - 1];
+        }
+        
+        // Clean and normalize the last name
+        lastName = cleanLastName(lastName);
+        
+        // Debug info
+        console.log('Extracted last name:', lastName);
+        
+        return lastName;
+    } catch (error) {
+        console.error('Error extracting last name:', error);
+        return '';
+    }
+}
+
+/**
+ * Function to prepopulate the search fields based on patient information and service date
+ */
+function prepopulateSearchFields() {
+    // Only proceed if required fields exist
+    const patientNameField = document.querySelector('input[name="patient_info[patient_name]"]');
+    const lastNameField = document.getElementById('last-name-search');
+    const firstNameField = document.getElementById('first-name-search');
+    const dosSearchField = document.getElementById('dos-search');
+    
+    if (!patientNameField || !lastNameField || !firstNameField || !dosSearchField) {
+        console.log('Required fields not found for prepopulation');
+        return;
+    }
+    
+    // Extract patient last name only
+    try {
+        const patientFullName = patientNameField.value.trim();
+        
+        if (patientFullName) {
+            // Extract and set the last name using the enhanced function
+            const lastName = extractLastName(patientFullName);
+            
+            if (lastName) {
+                // Set only the last name field
+                lastNameField.value = lastName;
+            } else {
+                console.log('Could not extract a valid last name from:', patientFullName);
+                lastNameField.value = ''; // Ensure the field is cleared if extraction failed
+            }
+            
+            // Explicitly clear the first name field
+            firstNameField.value = '';
+        } else {
+            console.log('No patient name found to extract last name from');
+        }
+    } catch (error) {
+        console.error('Error in prepopulateSearchFields:', error);
+        // Clear fields on error for safety
+        lastNameField.value = '';
+        firstNameField.value = '';
+    }
+    
+    // Explicitly clear the date of service field
+    dosSearchField.value = '';
+    
+    // Run auto-search after field is populated (only if last name has a value)
+    if (lastNameField.value.trim()) {
+        performAutoSearch();
+    }
+}
 
 // Assign mapping function
 function assignMapping(orderId) {
@@ -412,5 +971,164 @@ function assignMapping(orderId) {
         alert("❌ Failed to assign. Please try again.");
     });
 }
+
+/**
+ * Handle the escalation form submission
+ * @param {Event} event - The submission event
+ */
+function handleEscalationSubmit(event) {
+    // Prevent default form submission
+    event.preventDefault();
+    
+    // Get form elements
+    const form = document.getElementById('escalationForm');
+    const reasonSelect = document.getElementById('escalationReason');
+    const notesTextarea = document.getElementById('escalationNotes');
+    const confirmButton = document.getElementById('confirmEscalation');
+    const originalButtonText = confirmButton.innerHTML;
+    
+    // Add was-validated class to show validation feedback
+    form.classList.add('was-validated');
+    
+    // Check if form is valid
+    if (!form.checkValidity()) {
+        // If not valid, focus on the reason select if it's the invalid element
+        if (!reasonSelect.validity.valid) {
+            reasonSelect.focus();
+        }
+        return;
+    }
+    
+    // Get form data
+    const reason = reasonSelect.value;
+    const notes = notesTextarea.value.trim();
+    
+    // Show loading state
+    confirmButton.disabled = true;
+    confirmButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
+    
+    // Send the escalation request
+    fetch(`/preprocessing/unmapped/{{ filename }}/escalate`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            reason: reason,
+            notes: notes
+        })
+    })
+    .then(response => {
+        // Check for HTTP errors
+        if (!response.ok) {
+            throw new Error(`Server returned ${response.status}: ${response.statusText}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        // Handle successful response
+        console.log('Escalation successful:', data);
+        
+        // Close the modal
+        const modalElement = document.getElementById('escalationModal');
+        const modal = bootstrap.Modal.getInstance(modalElement);
+        modal.hide();
+        
+        // Show success alert
+        const alertHtml = `
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <strong>Success!</strong> This file has been escalated for review.
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        `;
+        document.querySelector('.container-fluid').insertAdjacentHTML('afterbegin', alertHtml);
+        
+        // Redirect to unmapped files list after a short delay
+        setTimeout(() => {
+            window.location.href = "/preprocessing/unmapped";
+        }, 2000);
+    })
+    .catch(error => {
+        // Handle error
+        console.error('Escalation error:', error);
+        
+        // Show error message inside the modal
+        const errorMessageElement = document.createElement('div');
+        errorMessageElement.className = 'alert alert-danger mt-3';
+        errorMessageElement.id = 'escalationErrorMessage';
+        errorMessageElement.innerHTML = `
+            <strong>Error:</strong> Failed to escalate this file. 
+            <p class="mb-0 small">${error.message || 'Please try again or contact support.'}</p>
+        `;
+        
+        // Remove any existing error message
+        const existingError = document.getElementById('escalationErrorMessage');
+        if (existingError) {
+            existingError.remove();
+        }
+        
+        // Add the error message to the form
+        form.appendChild(errorMessageElement);
+        
+        // Reset button state
+        confirmButton.disabled = false;
+        confirmButton.innerHTML = originalButtonText;
+    });
+}
+
+// Set up event listeners when the DOM is fully loaded
+document.addEventListener('DOMContentLoaded', function() {
+    // Get relevant DOM elements for escalation
+    const escalationForm = document.getElementById('escalationForm');
+    const confirmEscalationBtn = document.getElementById('confirmEscalation');
+    const escalationModal = document.getElementById('escalationModal');
+    const reasonSelect = document.getElementById('escalationReason');
+    
+    // Add submit event listener to the form
+    if (escalationForm) {
+        escalationForm.addEventListener('submit', handleEscalationSubmit);
+        
+        // Also trigger submit when the confirm button is clicked
+        if (confirmEscalationBtn) {
+            confirmEscalationBtn.addEventListener('click', function() {
+                // Create and dispatch a submit event
+                const submitEvent = new Event('submit', { cancelable: true });
+                escalationForm.dispatchEvent(submitEvent);
+            });
+        }
+    }
+    
+    // Reset form when modal is hidden
+    if (escalationModal) {
+        escalationModal.addEventListener('hidden.bs.modal', function() {
+            // Reset form validation state
+            if (escalationForm) {
+                escalationForm.classList.remove('was-validated');
+                escalationForm.reset();
+                
+                // Remove any error messages
+                const errorMessage = document.getElementById('escalationErrorMessage');
+                if (errorMessage) {
+                    errorMessage.remove();
+                }
+            }
+        });
+    }
+    
+    // Add change event listener to reason dropdown for real-time validation
+    if (reasonSelect) {
+        reasonSelect.addEventListener('change', function() {
+            if (this.value) {
+                this.classList.remove('is-invalid');
+                this.classList.add('is-valid');
+            } else {
+                this.classList.remove('is-valid');
+                this.classList.add('is-invalid');
+            }
+        });
+    }
+    
+    // ... existing event listeners from before ...
+});
 </script>
 {% endblock %} 

@@ -688,6 +688,86 @@ def assign_filemaker_order(filename):
             'details': str(e)
         }), 500
 
+@preprocessing_bp.route('/unmapped/<filename>/escalate', methods=['POST'])
+def escalate_unmapped_file(filename):
+    """
+    Escalate an unmapped file for manual review.
+    
+    This endpoint handles the escalation process for files that cannot be mapped
+    through the standard process. It accepts a reason for escalation and optional notes,
+    adds this metadata to the file JSON, and moves the file to the escalations folder.
+    
+    Args:
+        filename (str): The filename of the unmapped file to escalate
+        
+    Returns:
+        JSON response indicating success or failure of the escalation process
+    """
+    try:
+        logger.info(f"Processing escalation request for file: {filename}")
+        
+        # Get request data (supports both JSON and form data)
+        if request.is_json:
+            data = request.get_json()
+            reason = data.get('reason')
+            notes = data.get('notes', '')
+        else:
+            reason = request.form.get('reason')
+            notes = request.form.get('notes', '')
+        
+        # Validate required parameters
+        if not reason:
+            logger.warning(f"Escalation attempt missing reason for file: {filename}")
+            return jsonify({
+                'success': False,
+                'error': 'Missing required parameter',
+                'details': 'Reason for escalation is required'
+            }), 400
+        
+        # Get the current JSON data
+        unmapped_key = f'data/hcfa_json/valid/unmapped/{filename}'
+        json_data = get_s3_json(unmapped_key)
+        
+        # Add escalation metadata to the JSON
+        json_data['escalation'] = {
+            'reason': reason,
+            'notes': notes,
+            'timestamp': datetime.now().isoformat(),
+            'user': request.environ.get('REMOTE_USER', 'unknown_user')  # Get username if available
+        }
+        
+        # Define the escalation destination path
+        escalation_key = f'data/hcfa_json/escalations/{filename}'
+        
+        # Upload the modified JSON to the escalations folder
+        upload_json_to_s3(json_data, escalation_key)
+        logger.info(f"Uploaded file to escalations folder: {escalation_key}")
+        
+        # Delete the original file from unmapped folder
+        try:
+            s3_client.delete_object(Bucket=S3_BUCKET, Key=unmapped_key)
+            logger.info(f"Deleted original file from unmapped folder: {unmapped_key}")
+        except Exception as e:
+            logger.error(f"Error deleting original file: {str(e)}")
+            # Continue even if delete fails - the important part is that we've created the escalation copy
+        
+        return jsonify({
+            'success': True,
+            'message': f'Successfully escalated file {filename}',
+            'data': {
+                'reason': reason,
+                'timestamp': json_data['escalation']['timestamp']
+            }
+        })
+        
+    except Exception as e:
+        logger.error(f"Error escalating file {filename}: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': 'Internal server error',
+            'details': str(e)
+        }), 500
+
 @preprocessing_bp.route('/stage_mapped_files', methods=['POST'])
 def stage_mapped_files():
     """Process all mapped files and move them to staging."""
