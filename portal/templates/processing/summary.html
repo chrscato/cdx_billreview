@@ -1,0 +1,381 @@
+{% extends 'base.html' %}
+
+{% block title %}Processing Summary Dashboard{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>Processing Summary Dashboard</h1>
+    <hr>
+
+    <!-- Filter Dropdowns -->
+    <div class="row mb-3">
+        <div class="col-md-4">
+            <label for="filter-failure-type">Failure Type:</label>
+            <select id="filter-failure-type" class="form-select">
+                <option value="All" selected>All Failure Types</option>
+                <!-- Options will be populated by JavaScript -->
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label for="filter-provider">Provider:</label>
+            <select id="filter-provider" class="form-select">
+                <option value="All" selected>All Providers</option>
+                <!-- Options will be populated by JavaScript -->
+            </select>
+        </div>
+        <!-- Add more filter columns if needed -->
+    </div>
+
+    <!-- Button to trigger navigation to filtered fails page -->
+    <button id="viewFailsBtn" class="btn btn-primary mt-2">View Selected Fails</button>
+
+    <hr />
+
+    <!-- ✅ Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- ✅ Chart containers -->
+    <div class="row mb-4">
+      <div class="col-md-6">
+        <h5 class="mt-3">Failure Types Distribution</h5>
+        <canvas id="chart-failure-types" style="max-height: 300px;"></canvas>
+      </div>
+      <div class="col-md-6">
+        <h5 class="mt-3">Top Providers by Failure Count</h5>
+        <canvas id="chart-top-providers" style="max-height: 300px;"></canvas>
+      </div>
+    </div>
+
+    <!-- Placeholder for summary results/visualizations -->
+    <div id="summary-results" class="mt-3">
+        <p>Summary results will be displayed here based on filters.</p>
+    </div>
+
+</div>
+
+<!-- Inject summary data from Flask into a JavaScript variable -->
+<script>
+  window.SUMMARY_DATA = {{ summary_json | tojson | safe }};
+  let filteredSummary = []; // Define globally within the script scope
+
+  // Function to populate a dropdown
+  function populateDropdown(id, options) {
+    const select = document.getElementById(id);
+    if (!select) {
+        console.error(`Dropdown with ID ${id} not found.`);
+        return;
+    }
+    // Keep the "All" option, clear others
+    select.length = 1; 
+    [...new Set(options)] // Get unique options
+      .filter(opt => opt) // Remove null/undefined options
+      .sort() // Sort alphabetically
+      .forEach(opt => {
+        const el = document.createElement('option');
+        el.value = opt;
+        el.textContent = opt;
+        select.appendChild(el);
+    });
+  }
+
+  // Replace the old renderSummaryResults function
+  function renderSummaryResults(data) {
+    const container = document.getElementById("summary-results");
+    if (!container) {
+        console.error("Summary results container not found!");
+        return;
+    }
+    container.innerHTML = ""; // Clear previous results
+
+    if (!Array.isArray(data)) {
+        console.error("renderSummaryResults received non-array data:", data);
+        container.innerHTML = '<p class="text-danger">Error rendering results.</p>';
+        return;
+    }
+
+    if (!data.length) {
+        container.innerHTML = '<p class="text-info">No matching records found.</p>';
+        return;
+    }
+
+    // Add a count header
+    const countHeader = document.createElement('p');
+    countHeader.textContent = `Showing ${data.length} matching records:`;
+    container.appendChild(countHeader);
+
+    data.forEach(item => {
+        if (!item || typeof item !== 'object') {
+            console.warn("Skipping invalid item in data:", item);
+            return; // Skip invalid items
+        }
+        const div = document.createElement("div");
+        div.className = "card p-3 mb-2 shadow-sm"; // Added shadow for better visibility
+
+        // Basic structure with safe access to properties
+        const filename = item.filename || "Unknown Filename";
+        const provider = item.provider || "Unknown Provider";
+        const dos = item.dos || "Unknown DOS"; // Assuming 'dos' is the key for date of service
+        const failureTypes = Array.isArray(item.failure_types) ? item.failure_types : [];
+
+        div.innerHTML = `
+            <div class="d-flex justify-content-between align-items-center">
+                <strong>${filename}</strong>
+                <div>
+                    <span class="badge bg-secondary me-1">${provider}</span>
+                    <span class="badge bg-light text-dark">${dos}</span>
+                </div>
+            </div>
+            <div class="mt-2">
+                ${failureTypes.map(t => `<span class="badge bg-danger me-1">${t}</span>`).join("")}
+                ${failureTypes.length === 0 ? '<span class="badge bg-warning text-dark">No specific failure types listed</span>' : ''}
+            </div>
+        `;
+
+        container.appendChild(div);
+    });
+  }
+
+  // ✏️ Define updateCharts function HERE, before applyFilters
+  let failureChartInstance = null; // Keep track of chart instances
+  let providerChartInstance = null;
+
+  function updateCharts(data) {
+    console.log("Updating charts with data:", data);
+    
+    // --- Failure Type Chart (Example: Pie Chart) ---
+    const failureCtx = document.getElementById('chart-failure-types')?.getContext('2d');
+    if (!failureCtx) {
+        console.error("Failure type chart canvas not found!");
+        return;
+    }
+    
+    const failureCounts = {};
+    data.forEach(item => {
+        const types = Array.isArray(item.failure_types) ? item.failure_types : [];
+        types.forEach(type => {
+            failureCounts[type] = (failureCounts[type] || 0) + 1;
+        });
+    });
+
+    const failureLabels = Object.keys(failureCounts);
+    const failureData = Object.values(failureCounts);
+
+    // Destroy previous chart instance if it exists
+    if (failureChartInstance) {
+        failureChartInstance.destroy();
+    }
+
+    failureChartInstance = new Chart(failureCtx, {
+        type: 'pie',
+        data: {
+            labels: failureLabels,
+            datasets: [{
+                label: 'Failure Count',
+                data: failureData,
+                backgroundColor: [
+                    // Add more colors as needed
+                    'rgba(255, 99, 132, 0.7)',
+                    'rgba(54, 162, 235, 0.7)',
+                    'rgba(255, 206, 86, 0.7)',
+                    'rgba(75, 192, 192, 0.7)',
+                    'rgba(153, 102, 255, 0.7)',
+                    'rgba(255, 159, 64, 0.7)'
+                ],
+                borderColor: [
+                    'rgba(255, 99, 132, 1)',
+                    'rgba(54, 162, 235, 1)',
+                    'rgba(255, 206, 86, 1)',
+                    'rgba(75, 192, 192, 1)',
+                    'rgba(153, 102, 255, 1)',
+                    'rgba(255, 159, 64, 1)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+                title: {
+                    display: false, // Title is already in H5
+                    text: 'Failure Type Distribution'
+                }
+            }
+        }
+    });
+
+    // --- Top Providers Chart (Example: Bar Chart) ---
+    const providerCtx = document.getElementById('chart-top-providers')?.getContext('2d');
+    if (!providerCtx) {
+        console.error("Provider chart canvas not found!");
+        return;
+    }
+
+    const providerCounts = {};
+    data.forEach(item => {
+        const provider = item.provider || "Unknown";
+        providerCounts[provider] = (providerCounts[provider] || 0) + 1;
+    });
+
+    // Sort providers by count descending and take top N (e.g., top 10)
+    const sortedProviders = Object.entries(providerCounts)
+                                .sort(([, a], [, b]) => b - a)
+                                .slice(0, 10);
+
+    const providerLabels = sortedProviders.map(entry => entry[0]);
+    const providerData = sortedProviders.map(entry => entry[1]);
+
+    // Destroy previous chart instance if it exists
+    if (providerChartInstance) {
+        providerChartInstance.destroy();
+    }
+
+    providerChartInstance = new Chart(providerCtx, {
+        type: 'bar',
+        data: {
+            labels: providerLabels,
+            datasets: [{
+                label: 'Failure Count',
+                data: providerData,
+                backgroundColor: 'rgba(75, 192, 192, 0.7)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            indexAxis: 'y', // Make it a horizontal bar chart if desired
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false // Not usually needed for single dataset bar chart
+                },
+                title: {
+                    display: false,
+                    text: 'Top Providers by Failure Count'
+                }
+            },
+            scales: {
+                x: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+  }
+
+  // Function to apply filters
+  function applyFilters() {
+    const typeSelect = document.getElementById("filter-failure-type");
+    const providerSelect = document.getElementById("filter-provider");
+    
+    const type = typeSelect ? typeSelect.value : "All";
+    const provider = providerSelect ? providerSelect.value : "All";
+    
+    console.log(`Applying filters - Type: ${type}, Provider: ${provider}`);
+
+    filteredSummary = (window.SUMMARY_DATA || []).filter(item => {
+        if (!item) return false; // Skip null/invalid items
+        // Check failure types (assuming it's an array in the JSON)
+        const failureTypes = item.failure_types || [];
+        const matchesType = (type === "All") || failureTypes.includes(type);
+        
+        // Check provider (assuming it's a string)
+        const itemProvider = item.provider || '';
+        const matchesProvider = (provider === "All") || (itemProvider === provider);
+        
+        return matchesType && matchesProvider;
+    });
+
+    console.log("Filtered Data:", filteredSummary);
+    renderSummaryResults(filteredSummary);
+    updateCharts(filteredSummary);
+  }
+
+  // ✅ Prompt: Add this to summary-dashboard.js or inline in summary.html
+  function getSelectedFilenames(filteredData) {
+    // Ensure input is an array and items have a 'filename' property
+    if (!Array.isArray(filteredData)) {
+        console.error('getSelectedFilenames: Input must be an array.');
+        return '';
+    }
+    return filteredData
+        .map(item => item && item.filename) // Get filename, handle potential null/undefined items
+        .filter(filename => filename) // Remove any null/undefined filenames
+        .join(",");
+  }
+
+  function goToFailsPage(filteredData) {
+    const filenamesParam = getSelectedFilenames(filteredData);
+    if (filenamesParam) {
+        // Construct the URL and navigate
+        const url = `/processing/fails?filenames=${encodeURIComponent(filenamesParam)}`;
+        console.log('Navigating to:', url);
+        window.location.href = url;
+    } else {
+        console.warn('No valid filenames found in filtered data. Cannot navigate.');
+        // Optionally, show all fails if the filtered list is empty but user wants to see fails?
+        // window.location.href = '/processing/fails'; 
+    }
+  }
+
+  // Replace the old initSummaryDashboard with the new one
+  function initSummaryDashboard() {
+    console.log("Dashboard initializing...");
+    const data = window.SUMMARY_DATA || []; // Use data variable for clarity
+    console.log("Summary Data:", data);
+
+    if (!Array.isArray(data)) {
+      console.error('SUMMARY_DATA is not an array!');
+      document.getElementById('summary-results').innerHTML = '<p class="text-danger">Error: Could not load summary data correctly.</p>';
+      return; // Stop initialization if data is bad
+    }
+
+    const allTypes = data.flatMap(b => b && b.failure_types ? b.failure_types : []);
+    const allProviders = data.map(b => b ? (b.provider || "Unknown") : "Unknown");
+
+    populateDropdown("filter-failure-type", allTypes);
+    populateDropdown("filter-provider", allProviders);
+
+    // Add event listeners using safe checks
+    const failureTypeSelect = document.getElementById("filter-failure-type");
+    const providerSelect = document.getElementById("filter-provider");
+    const viewFailsButton = document.getElementById("viewFailsBtn");
+
+    if (failureTypeSelect) {
+        failureTypeSelect.addEventListener("change", applyFilters);
+    } else {
+        console.error('Failure type dropdown not found!');
+    }
+
+    if (providerSelect) {
+        providerSelect.addEventListener("change", applyFilters);
+    } else {
+        console.error('Provider dropdown not found!');
+    }
+    
+    if (viewFailsButton) {
+        viewFailsButton.addEventListener("click", () => {
+            console.log("View Fails button clicked. Using filtered data:", filteredSummary);
+            // Use the existing goToFailsPage function which includes checks
+            goToFailsPage(filteredSummary);
+        });
+    } else {
+        console.error('View Fails button not found!');
+    }
+
+    applyFilters(); // initial load
+  }
+
+  // Assign the function to the window scope
+  window.initSummaryDashboard = initSummaryDashboard;
+
+  // Initialize dashboard once the DOM is ready
+  document.addEventListener('DOMContentLoaded', () => {
+    window.initSummaryDashboard();
+  });
+</script>
+{% endblock %} 

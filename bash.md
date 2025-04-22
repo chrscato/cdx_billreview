@@ -1,7 +1,7 @@
 --help with code directory
 
-tree "C:\Users\ChristopherCato\OneDrive - clarity-dx.com\code\bill_review" /F
 
+tree "C:\Users\ChristopherCato\OneDrive - clarity-dx.com\code\bill_review" /F
 
 --s3 directory
 

@@ -1,5 +1,5 @@
 # process/run.py
-
+import os
 from process.utils.loader import load_claim_from_s3, extract_procedure_data
 from process.utils.arthrogram_check import check_and_redirect_if_arthrogram
 from process.utils.extract_procedures import extract_from_service_lines, extract_from_line_items
@@ -59,10 +59,52 @@ def run_claim_validation(file_name: str):
     )
 
 
+def process_all_staging_files(limit=None):
+    """
+    Process all JSON files in the staging directory.
+    
+    Args:
+        limit (int, optional): Maximum number of files to process
+    """
+    from process.utils.loader import INPUT_PREFIX
+    from utils.s3_utils import list_objects
+    
+    # Get all JSON files in staging directory
+    json_keys = [k for k in list_objects(INPUT_PREFIX) if k.endswith('.json')]
+    
+    if not json_keys:
+        print("No JSON files found in staging directory")
+        return
+    
+    # Apply limit if specified
+    if limit and limit > 0:
+        json_keys = json_keys[:limit]
+    
+    print(f"Found {len(json_keys)} files to process")
+    
+    # Process each file
+    success_count = 0
+    for i, key in enumerate(json_keys, 1):
+        filename = os.path.basename(key)
+        print(f"Processing file {i}/{len(json_keys)}: {filename}")
+        try:
+            run_claim_validation(filename)
+            success_count += 1
+        except Exception as e:
+            print(f"Error processing {filename}: {str(e)}")
+    
+    print(f"Processing complete: {success_count}/{len(json_keys)} files processed")
+
 if __name__ == "__main__":
-    # For CLI testing or dev batch run
     import sys
-    if len(sys.argv) != 2:
-        print("Usage: python run.py <file_name.json>")
-    else:
+    if len(sys.argv) == 1:
+        # No arguments, process all files
+        process_all_staging_files()
+    elif len(sys.argv) == 2 and sys.argv[1].isdigit():
+        # Limit argument provided
+        process_all_staging_files(int(sys.argv[1]))
+    elif len(sys.argv) == 2:
+        # Single file processing
         run_claim_validation(sys.argv[1])
+    else:
+        print("Usage: python run.py [file_name.json | limit]")

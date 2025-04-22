@@ -8,6 +8,15 @@ import json
 from pathlib import Path
 from datetime import datetime
 import logging
+from flask import current_app
+import pprint
+from flask import Blueprint
+
+# Define BASE_DIR at the module level
+BASE_DIR = Path(__file__).resolve().parents[2]  # Assumes views/processing.py is two levels down from project root
+
+processing_bp = Blueprint("processing", __name__)
+
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -54,17 +63,43 @@ def processing():
 
 @processing_bp.route('/fails')
 def list_fail_files():
-    """List all files that failed processing validation."""
-    # Get list of files from S3
-    prefix = 'data/hcfa_json/valid/mapped/staging/fails/'
-    files = list_objects(prefix)
+    """List all files that failed processing validation (simplified)."""
+    json_path = BASE_DIR / "data" / "dashboard" / "failed_summary.json"
     
-    # Extract just the filenames from the full paths
-    filenames = [os.path.basename(f) for f in files if f.endswith('.json')]
-    
-    return render_template('processing/fails.html', 
-                        files=filenames,
-                        fails_count=len(filenames))
+    try:
+        with open(json_path, "r") as f:
+            # Handle potential JSON decode errors during loading
+            try:
+                all_files = json.load(f)
+                if not isinstance(all_files, list):
+                    logger.error(f"Expected a list in {json_path}, got {type(all_files)}.")
+                    all_files = [] # Default to empty list if not a list
+            except json.JSONDecodeError as e:
+                logger.error(f"Error decoding JSON from {json_path}: {e}")
+                all_files = [] # Default to empty list on decode error
+    except FileNotFoundError:
+        logger.error(f"Failed summary JSON not found at: {json_path}")
+        all_files = [] # Default to empty list if file not found
+    except Exception as e:
+        logger.error(f"Unexpected error reading {json_path}: {e}")
+        all_files = [] # Default to empty list on other errors
+
+    # ✅ Grab filenames from query param
+    filenames_param = request.args.get("filenames")
+    if filenames_param:
+        # Ensure filenames_param is treated as a string before splitting
+        selected = set(f.strip() for f in str(filenames_param).split(",") if f.strip())
+        # Filter safely using .get()
+        files = [f for f in all_files if isinstance(f, dict) and f.get("filename") in selected]
+    else:
+        files = all_files  # fallback: show all
+
+    return render_template(
+        "processing/fails.html",
+        bills_json=files,
+        fails_count=len(files)
+    )
+
 
 @processing_bp.route('/fails/<filename>')
 def view_fail_file(filename):
@@ -315,9 +350,7 @@ def assign_rates(filename):
                             TIN TEXT NOT NULL,
                             proc_cd TEXT NOT NULL,
                             modifier TEXT,
-                            rate REAL NOT NULL,
-                            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                            rate REAL NOT NULL
                         )
                     """)
                 
@@ -338,7 +371,7 @@ def assign_rates(filename):
                     if existing:
                         # Update existing record
                         cursor.execute("""
-                            UPDATE ppo SET rate = ?, updated_at = CURRENT_TIMESTAMP
+                            UPDATE ppo SET rate = ?
                             WHERE TIN = ? AND proc_cd = ? AND (modifier = ? OR (? IS NULL AND modifier IS NULL))
                         """, (rate, tin, cpt_code, modifier, modifier))
                         logger.info(f"Updated existing rate for TIN {tin}, CPT {cpt_code}, modifier {modifier}")
@@ -409,11 +442,136 @@ def assign_rates(filename):
         
         # Handle Out of Network rate assignments (OTA)
         else:
-            # This will be implemented separately
+            # Connect to database
+            conn = sqlite3.connect('filemaker.db')
+            cursor = conn.cursor()
+            
+            try:
+                # Check if current_otas table exists, create it if not
+                cursor.execute("""
+                    SELECT name FROM sqlite_master WHERE type='table' AND name='current_otas'
+                """)
+                
+                if not cursor.fetchone():
+                    # Create current_otas table if it doesn't exist
+                    cursor.execute("""
+                        CREATE TABLE "current_otas" (
+                          "ID_Order_PrimaryKey" TEXT,
+                          "CPT" TEXT,
+                          "modifier" TEXT,
+                          "rate" TEXT
+                        )
+                    """)
+                
+                # Extract Order Primary Key from JSON 
+                order_primary_key = None
+                
+                # Get the Order_ID from the correct path: filemaker->order->Order_ID
+                if ('filemaker' in json_data and 
+                    'order' in json_data['filemaker'] and 
+                    isinstance(json_data['filemaker']['order'], dict) and
+                    'Order_ID' in json_data['filemaker']['order']):
+                    
+                    order_primary_key = str(json_data['filemaker']['order']['Order_ID'])
+                    logger.info(f"Found order ID in filemaker.order.Order_ID: {order_primary_key}")
+                
+                # Fallback to TIN if no order ID found
+                if not order_primary_key:
+                    order_primary_key = tin
+                    logger.warning(f"No Order_ID found in JSON at filemaker.order.Order_ID, using TIN as fallback: {tin}")
+                
+                # Make sure the order_primary_key is a string
+                order_primary_key = str(order_primary_key)
+                
+                # Process each rate
+                for rate_data in rates:
+                    cpt_code = rate_data.get('cpt_code')
+                    rate_value = rate_data.get('rate')
+                    modifier = rate_data.get('modifier', '')
+                    
+                    # Format rate as string with dollar sign (since it's stored as TEXT)
+                    rate_formatted = f"${float(rate_value):.2f}"
+                    
+                    # Check if record already exists
+                    cursor.execute("""
+                        SELECT * FROM current_otas 
+                        WHERE ID_Order_PrimaryKey = ? AND CPT = ? AND (modifier = ? OR (? = '' AND modifier IS NULL OR modifier = ''))
+                    """, (order_primary_key, cpt_code, modifier, modifier))
+                    
+                    existing = cursor.fetchone()
+                    
+                    if existing:
+                        # Update existing record
+                        cursor.execute("""
+                            UPDATE current_otas SET rate = ?
+                            WHERE ID_Order_PrimaryKey = ? AND CPT = ? AND (modifier = ? OR (? = '' AND modifier IS NULL OR modifier = ''))
+                        """, (rate_formatted, order_primary_key, cpt_code, modifier, modifier))
+                        logger.info(f"Updated existing OTA rate for Order {order_primary_key}, CPT {cpt_code}, modifier {modifier}")
+                    else:
+                        # Insert new record
+                        cursor.execute("""
+                            INSERT INTO current_otas (ID_Order_PrimaryKey, CPT, modifier, rate)
+                            VALUES (?, ?, ?, ?)
+                        """, (order_primary_key, cpt_code, modifier, rate_formatted))
+                        logger.info(f"Inserted new OTA rate for Order {order_primary_key}, CPT {cpt_code}, modifier {modifier}")
+                
+                # Commit changes
+                conn.commit()
+            except sqlite3.Error as e:
+                conn.rollback()
+                raise e
+            finally:
+                conn.close()
+            
+            # Add rate assignment info to JSON
+            if 'rate_assignment' not in json_data:
+                json_data['rate_assignment'] = {}
+                
+            json_data['rate_assignment'] = {
+                'tin': tin,
+                'order_id': order_primary_key,
+                'rates': rates,
+                'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                'user': 'admin_user@clarity-dx.com',  # TODO: Replace with actual user
+                'notes': notes,
+                'provider_network': provider_network
+            }
+            
+            # Update validation status
+            if 'validation_info' not in json_data:
+                json_data['validation_info'] = {}
+            
+            # Remove the rate missing failure reasons
+            if 'failure_reasons' in json_data['validation_info']:
+                updated_reasons = []
+                for reason in json_data['validation_info'].get('failure_reasons', []):
+                    is_rate_issue = False
+                    for rate_data in rates:
+                        if reason.startswith(f'RATE_MISSING: {rate_data["cpt_code"]}'):
+                            is_rate_issue = True
+                            break
+                    if not is_rate_issue:
+                        updated_reasons.append(reason)
+                
+                json_data['validation_info']['failure_reasons'] = updated_reasons
+            
+            # If no more failures, update status and move to success folder
+            if not json_data['validation_info'].get('failure_reasons'):
+                json_data['validation_info']['status'] = 'PASS'
+                dest_key = f'data/hcfa_json/valid/mapped/staging/success/{filename}'
+                upload_json_to_s3(json_data, dest_key)
+                # Delete from fails folder
+                s3_client.delete_object(Bucket=S3_BUCKET, Key=key)
+                logger.info(f"File {filename} moved to success folder")
+            else:
+                # Still has other failures, save back to fails folder
+                upload_json_to_s3(json_data, key)
+                logger.info(f"File {filename} updated but still has failures: {json_data['validation_info'].get('failure_reasons')}")
+            
             return jsonify({
-                'success': False,
-                'error': 'OTA rate assignment not yet implemented'
-            }), 501
+                'success': True,
+                'message': 'OTA rate assigned successfully'
+            })
             
     except sqlite3.Error as e:
         logger.error(f"Database error assigning rates for {filename}: {str(e)}")
@@ -527,3 +685,38 @@ def deny_fail_file(filename):
             'status': 'error',
             'message': str(e)
         }), 500
+    
+
+# ✅ Prompt: Resolve the failed_summary.json path relative to the project root
+# so it works regardless of working directory or OS
+
+@processing_bp.route("/fails-debug")
+def debug_fails_json():
+    # Use the module-level BASE_DIR
+    json_path = BASE_DIR / "data" / "dashboard" / "failed_summary.json"
+
+    with open(json_path, "r") as f:
+        files = json.load(f)
+
+    return {
+        "type": str(type(files)),
+        "first_item": str(type(files[0])) if files else None,
+        "example": files[:1] if isinstance(files, list) else "not a list"
+    }
+
+# Add the new summary route
+@processing_bp.route('/summary')
+def summary_dashboard():
+    """Render the summary dashboard view."""
+    json_path = BASE_DIR / "data" / "dashboard" / "failed_summary.json"
+    try:
+        with open(json_path, "r") as f:
+            summary_data = json.load(f)
+    except FileNotFoundError:
+        logger.error(f"Failed summary JSON not found at: {json_path}")
+        summary_data = [] # Or provide some default structure
+    except json.JSONDecodeError:
+        logger.error(f"Error decoding JSON from: {json_path}")
+        summary_data = [] # Or provide some default structure
+
+    return render_template("processing/summary.html", summary_json=summary_data)

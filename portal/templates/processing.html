@@ -31,8 +31,8 @@
                         <span class="badge {% if fails_count > 0 %}bg-danger{% else %}bg-secondary{% endif %} ms-2">{{ fails_count }}</span>
                     </h5>
                     <p class="card-text">Files that failed validation during processing.</p>
-                    <a href="{{ url_for('processing.list_fail_files') }}" class="btn btn-danger">
-                        <i class="fas fa-exclamation-triangle me-2"></i>View Failed Files
+                    <a href="{{ url_for('processing.summary_dashboard') }}" class="btn btn-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>View Failed Files Dashboard
                     </a>
                 </div>
             </div>

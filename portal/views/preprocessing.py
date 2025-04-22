@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
-from utils.s3_utils import list_objects, get_s3_json, upload_json_to_s3, move
+from utils.s3_utils import list_objects, get_s3_json, upload_json_to_s3, move, download, move_with_confirmation
 import os
 import re
 import boto3
@@ -614,10 +614,23 @@ def search_filemaker_orders(filename):
 def assign_filemaker_order(filename):
     """
     Assign a FileMaker order to an unmapped file.
-    Accepts order_id via form or JSON body.
-    Updates the JSON with mapping info and moves the file to mapped directory.
+    
+    This function safely moves a JSON file from unmapped to mapped location
+    after adding FileMaker mapping information. Uses a robust move operation
+    with verification and retries to ensure data integrity.
+    
+    Args:
+        filename (str): The name of the unmapped file to assign
+        
+    Request body:
+        order_id (str): The FileMaker order ID to assign to this file
+        
+    Returns:
+        JSON response with success status and details
     """
     try:
+        logger.info(f"Starting assignment process for file: {filename}")
+        
         # Get order_id from request
         if request.is_json:
             data = request.get_json()
@@ -627,21 +640,140 @@ def assign_filemaker_order(filename):
 
         # Validate required parameter
         if not order_id:
+            logger.warning(f"Missing order_id in assignment request for {filename}")
             return jsonify({
                 'success': False,
                 'error': 'Missing required parameter',
-                'details': 'order_id is required'
+                'details': 'order_id is required',
+                'user_message': 'Please provide an order ID to assign this file.'
             }), 400
 
-        # Get the current JSON data
+        # Construct S3 keys
         unmapped_key = f'data/hcfa_json/valid/unmapped/{filename}'
-        json_data = get_s3_json(unmapped_key)
-
-        # Get FileMaker number from orders.parquet
-        filemaker_number = order_id  # Default to order_id if not found
+        mapped_key = f'data/hcfa_json/valid/mapped/{filename}'
+        
+        # Get the current JSON data
         try:
-            # Create temporary file for orders.parquet
-            with tempfile.NamedTemporaryFile(suffix='.parquet') as temp_file:
+            logger.info(f"Retrieving JSON data from unmapped location: {unmapped_key}")
+            json_data = get_s3_json(unmapped_key)
+        except Exception as e:
+            logger.error(f"Failed to get JSON from {unmapped_key}: {str(e)}")
+            return jsonify({
+                'success': False,
+                'error': 'File not found or could not be read',
+                'details': str(e),
+                'user_message': 'The file could not be found or accessed. It may have been moved or deleted.'
+            }), 404
+
+        # Get FileMaker number from order ID
+        filemaker_number = get_filemaker_number(order_id)
+        
+        # Add mapping info to JSON
+        json_data['mapping_info'] = {
+            'order_id': order_id,
+            'filemaker_number': filemaker_number,
+            'mapping_date': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            'mapped_by': request.environ.get('REMOTE_USER', 'unknown_user')
+        }
+
+        # Save modified JSON to a temporary location first
+        temp_unmapped_key = f'data/hcfa_json/valid/unmapped/.temp_{filename}'
+        try:
+            logger.info(f"Saving modified JSON to temporary location: {temp_unmapped_key}")
+            upload_json_to_s3(json_data, temp_unmapped_key)
+        except Exception as e:
+            logger.error(f"Failed to save modified JSON to temporary location: {str(e)}")
+            return jsonify({
+                'success': False,
+                'error': 'Failed to save modified file',
+                'details': str(e),
+                'user_message': 'An error occurred while processing the file. Please try again.'
+            }), 500
+
+        # Use the new robust move operation
+        logger.info(f"Starting robust move operation for {filename}")
+        move_success, move_result = move_with_confirmation(
+            source_key=temp_unmapped_key,
+            dest_key=mapped_key,
+            s3_client=s3_client,
+            max_retries=3
+        )
+        
+        # Clean up the original unmapped file if move succeeded
+        if move_success:
+            try:
+                logger.info(f"Move succeeded, deleting original unmapped file: {unmapped_key}")
+                s3_client.delete_object(Bucket=S3_BUCKET, Key=unmapped_key)
+                move_result['original_deleted'] = True
+            except Exception as e:
+                logger.warning(f"Move succeeded but failed to delete original unmapped file: {str(e)}")
+                move_result['original_deleted'] = False
+                move_result['original_delete_error'] = str(e)
+        else:
+            # If move failed, clean up the temporary file
+            try:
+                logger.warning(f"Move failed, cleaning up temporary file: {temp_unmapped_key}")
+                s3_client.delete_object(Bucket=S3_BUCKET, Key=temp_unmapped_key)
+            except Exception as e:
+                logger.warning(f"Failed to clean up temporary file: {str(e)}")
+        
+        # Handle the result of the move operation
+        if move_success:
+            logger.info(f"Successfully assigned {filename} to order {order_id} (FM#{filemaker_number})")
+            
+            # Return success response with details
+            return jsonify({
+                'success': True,
+                'message': f'Successfully assigned FileMaker order {order_id}',
+                'details': {
+                    'filename': filename,
+                    'order_id': order_id,
+                    'filemaker_number': filemaker_number,
+                    'mapping_date': json_data['mapping_info']['mapping_date'],
+                    'move_stats': {
+                        'verification': move_result['verification'],
+                        'retries': move_result['retries'],
+                        'original_deleted': move_result.get('original_deleted', False)
+                    }
+                },
+                'user_message': 'File has been successfully assigned.'
+            })
+        else:
+            logger.error(f"Failed to move file: {move_result['error']}")
+            return jsonify({
+                'success': False,
+                'error': 'Failed to move file',
+                'details': move_result['error'],
+                'move_result': move_result,
+                'user_message': 'An error occurred while assigning the file. Please try again or contact support.'
+            }), 500
+
+    except Exception as e:
+        logger.exception(f"Unexpected error in assign_filemaker_order for {filename}: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': 'Internal server error',
+            'details': str(e),
+            'user_message': 'An unexpected error occurred. Please try again or contact support.'
+        }), 500
+
+def get_filemaker_number(order_id):
+    """
+    Get FileMaker record number from order ID, falling back to order ID if not found.
+    
+    Args:
+        order_id (str): The FileMaker order ID to lookup
+        
+    Returns:
+        str: The FileMaker record number or the original order_id if not found
+    """
+    try:
+        logger.debug(f"Looking up FileMaker record number for order ID: {order_id}")
+        filemaker_number = order_id  # Default to order_id if not found
+        
+        # Create temporary file for orders.parquet
+        with tempfile.NamedTemporaryFile(suffix='.parquet') as temp_file:
+            try:
                 # Download orders.parquet
                 download('data/filemaker/orders.parquet', temp_file.name)
                 
@@ -653,40 +785,15 @@ def assign_filemaker_order(filename):
                 if not matching_order.empty:
                     # Get FileMaker number if available
                     filemaker_number = matching_order.iloc[0].get('FileMaker_Record_Number', order_id)
-        except Exception as e:
-            logger.warning(f"Could not get FileMaker number from orders.parquet: {str(e)}")
-            # Continue with order_id as fallback
-
-        # Add mapping info
-        json_data['mapping_info'] = {
-            'order_id': order_id,
-            'filemaker_number': filemaker_number,
-            'mapping_date': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        }
-
-        # Save to mapped location
-        mapped_key = f'data/hcfa_json/valid/mapped/{filename}'
-        upload_json_to_s3(json_data, mapped_key)
-
-        # Delete the old file
-        try:
-            s3_client.delete_object(Bucket=S3_BUCKET, Key=unmapped_key)
-        except Exception as e:
-            logger.error(f"Error deleting old file: {str(e)}")
-            # Continue even if delete fails
-
-        return jsonify({
-            'success': True,
-            'message': f'Successfully assigned FileMaker order {order_id} to {filename}'
-        })
-
+                    logger.debug(f"Found FileMaker record number: {filemaker_number}")
+            except Exception as e:
+                logger.warning(f"Error reading orders.parquet: {str(e)}")
+                # Continue with order_id as fallback
+                
+        return filemaker_number
     except Exception as e:
-        logger.error(f"Error assigning FileMaker order: {str(e)}")
-        return jsonify({
-            'success': False,
-            'error': 'Internal server error',
-            'details': str(e)
-        }), 500
+        logger.warning(f"Could not get FileMaker number: {str(e)}")
+        return order_id
 
 @preprocessing_bp.route('/unmapped/<filename>/escalate', methods=['POST'])
 def escalate_unmapped_file(filename):

@@ -69,7 +69,7 @@ def parse_date(date_str):
         return None
         
     date_str = clean_text(date_str)
-    for fmt in ("%m/%d/%y", "%m/%d/%Y"):
+    for fmt in ("%m/%d/%y", "%m/%d/%Y", "%Y-%m-%d"):
         try:
             return datetime.strptime(date_str, fmt).strftime("%Y-%m-%d")
         except ValueError:
@@ -108,8 +108,8 @@ def validate_json(data):
     # Define minimum required fields
     required_fields = {
         "patient_info": ["patient_name"],  # ZIP removed from required fields
-        "service_lines": ["date_of_service", "cpt_code", "charge_amount"],  # Reduced to essential fields
-        "billing_info": ["billing_provider_name", "total_charge"]  # Reduced to essential fields
+        "service_lines": ["date_of_service", "cpt_code", "charge_amount"]  # Reduced to essential fields
+        #"billing_info": ["billing_provider_name", "total_charge"]  # Reduced to essential fields
     }
     
     # Check required sections and fields

@@ -1,100 +1,85 @@
 import os
 import json
+import boto3
 import tempfile
 from pathlib import Path
 from datetime import datetime
 from dotenv import load_dotenv
+from botocore.exceptions import ClientError
 
-import sys
-project_root = str(Path(__file__).resolve().parents[1])
-sys.path.append(project_root)
-
-from utils.s3_utils import list_objects, download, upload, move
-
-# Load environment
+# Load env vars
 load_dotenv()
 S3_BUCKET = os.getenv('S3_BUCKET')
+REGION = os.getenv('AWS_DEFAULT_REGION')
+MAPPED_PREFIX = "data/hcfa_json/valid/mapped/"
+STAGING_FOLDER = r"C:\Users\ChristopherCato\OneDrive - clarity-dx.com\Documents\Bill_Review_INTERNAL\scripts\VAILIDATION\data\extracts\valid\mapped\staging"
 
-# S3 prefixes
-UNMAPPED_PREFIX = 'data/hcfa_json/valid/unmapped/'
-MAPPED_PREFIX = 'data/hcfa_json/valid/mapped/'
+# Setup S3 client
+s3 = boto3.client(
+    's3',
+    aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
+    aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'),
+    region_name=REGION
+)
 
-# Local staging folder path (update if needed)
-LOCAL_STAGING_FOLDER = r"C:\Users\ChristopherCato\OneDrive - clarity-dx.com\Documents\Bill_Review_INTERNAL\scripts\VAILIDATION\data\extracts\valid\mapped\staging"
+def extract_mapping_from_staging(filename):
+    local_path = os.path.join(STAGING_FOLDER, filename)
+    if not os.path.exists(local_path):
+        return None, None
 
-def extract_order_id_and_fm_number(json_data):
-    order_id = None
-    fm_number = None
+    with open(local_path, 'r') as f:
+        data = json.load(f)
 
-    # Check common locations for order ID
-    if "Order_ID" in json_data:
-        order_id = json_data["Order_ID"]
-    elif "order_id" in json_data:
-        order_id = json_data["order_id"]
-    elif "mapping_info" in json_data:
-        order_id = json_data["mapping_info"].get("order_id")
+    order_id = (
+        data.get("Order_ID")
+        or data.get("order_id")
+        or data.get("mapping_info", {}).get("order_id")
+    )
 
-    # Check for FM number
-    fm_number = json_data.get("filemaker_number") or \
-                json_data.get("filemaker_record_number") or \
-                json_data.get("mapping_info", {}).get("filemaker_number")
+    filemaker_number = (
+        data.get("filemaker_number")
+        or data.get("filemaker_record_number")
+        or data.get("mapping_info", {}).get("filemaker_number")
+    )
 
-    return order_id, fm_number
+    return order_id, filemaker_number
 
+def reinject_mapping_info(key):
+    filename = os.path.basename(key)
 
-def patch_from_staging():
-    print("🔍 Scanning S3 unmapped files...")
-    all_keys = list_objects(UNMAPPED_PREFIX)
-    json_keys = [k for k in all_keys if k.endswith('.json')]
+    # Step 1: Check for local staging match
+    order_id, fm_number = extract_mapping_from_staging(filename)
+    if not order_id:
+        print(f"⚠️ Skipping {filename} - no order_id found in staging")
+        return
 
-    print(f"Found {len(json_keys)} files in unmapped S3 folder.")
-    patched_count = 0
+    # Step 2: Pull S3 JSON
+    response = s3.get_object(Bucket=S3_BUCKET, Key=key)
+    json_data = json.loads(response['Body'].read().decode('utf-8'))
 
-    for s3_key in json_keys:
-        filename = os.path.basename(s3_key)
-        staging_path = os.path.join(LOCAL_STAGING_FOLDER, filename)
+    # Step 3: Inject mapping_info
+    json_data['mapping_info'] = {
+        "order_id": order_id,
+        "filemaker_number": fm_number or "",
+        "mapping_date": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    }
 
-        if not os.path.exists(staging_path):
-            continue  # No match in staging, skip
+    # Step 4: Save back to S3
+    s3.put_object(
+        Bucket=S3_BUCKET,
+        Key=key,
+        Body=json.dumps(json_data, indent=2).encode("utf-8")
+    )
 
-        with open(staging_path, 'r') as f:
-            staging_data = json.load(f)
+    print(f"🛠️ Injected mapping_info into: {filename}")
 
-        order_id, fm_number = extract_order_id_and_fm_number(staging_data)
-
-        if not order_id:
-            print(f"⚠️ Skipping {filename} — missing order_id in staging file.")
-            continue
-
-        # Download the S3 unmapped file locally
-        local_unmapped = os.path.join(tempfile.gettempdir(), filename)
-        download(s3_key, local_unmapped)
-
-        with open(local_unmapped, 'r') as f:
-            json_data = json.load(f)
-
-        # Inject mapping_info properly
-        json_data['mapping_info'] = {
-            "order_id": order_id,
-            "filemaker_number": fm_number or "",
-            "mapping_date": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        }
-
-        # Save updated JSON
-        with open(local_unmapped, 'w') as f:
-            json.dump(json_data, f, indent=4)
-
-        # Upload to mapped
-        mapped_key = f"{MAPPED_PREFIX}{filename}"
-        upload(local_unmapped, mapped_key)
-
-        # Move original from unmapped to mapped (overwrite allowed)
-        move(s3_key, mapped_key)
-
-        print(f"✔ Patched and moved: {filename} -> order_id {order_id}")
-        patched_count += 1
-
-    print(f"\n✅ Finished patching. Total files updated: {patched_count}")
+def main():
+    paginator = s3.get_paginator('list_objects_v2')
+    for page in paginator.paginate(Bucket=S3_BUCKET, Prefix=MAPPED_PREFIX):
+        for obj in page.get('Contents', []):
+            key = obj['Key']
+            if key.endswith('.json'):
+                reinject_mapping_info(key)
 
 if __name__ == "__main__":
-    patch_from_staging()
+    main()

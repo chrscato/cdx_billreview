@@ -366,6 +366,63 @@ function debounce(func, wait) {
     };
 }
 
+/**
+ * Navigate to the next file or fall back to the list if at the end
+ * @param {string} message - Optional message to show before navigation
+ * @param {string} type - Type of message: "success", "error", "info", "warning"
+ * @param {number} delay - Delay in ms before navigation
+ */
+function navigateToNextFile(message = null, type = "success", delay = 1500) {
+    // Get next file info
+    const nextFile = '{{ next_file }}';
+    
+    // Show loading overlay
+    const overlay = document.createElement('div');
+    overlay.className = 'position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center';
+    overlay.style.backgroundColor = 'rgba(0,0,0,0.3)';
+    overlay.style.zIndex = '9999';
+    overlay.id = 'navigation-overlay';
+    
+    // Create the content
+    let spinnerHTML = `
+        <div class="bg-white p-4 rounded shadow-lg text-center">
+            <div class="spinner-border text-primary mb-3" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+    `;
+    
+    // Add message if provided
+    if (message) {
+        spinnerHTML += `<p class="mb-0">${message}</p>`;
+    } else {
+        spinnerHTML += nextFile 
+            ? `<p class="mb-0">Loading next file...</p>` 
+            : `<p class="mb-0">Returning to file list...</p>`;
+    }
+    
+    spinnerHTML += `</div>`;
+    overlay.innerHTML = spinnerHTML;
+    
+    // Add to DOM
+    document.body.appendChild(overlay);
+    
+    // Show message toast if provided
+    if (message && typeof showToast === 'function') {
+        showToast(message, type);
+    }
+    
+    // Navigate after delay
+    setTimeout(() => {
+        if (nextFile) {
+            console.log('[DEBUG] Navigating to next file:', nextFile);
+            window.location.href = `/preprocessing/unmapped/${nextFile}`;
+        } else {
+            console.log('[DEBUG] No more files, returning to unmapped list');
+            window.location.href = "/preprocessing/unmapped";
+        }
+    }, delay);
+}
+
 // Function to highlight text in search results
 function highlightText(text, searchTerm) {
     if (!searchTerm || !text) return text;
@@ -953,23 +1010,186 @@ function prepopulateSearchFields() {
 
 // Assign mapping function
 function assignMapping(orderId) {
+    console.log(`[DEBUG] Starting assignment for order: ${orderId}`);
+    
+    // Prevent multiple submissions
+    const buttons = document.querySelectorAll(`button[onclick*="assignMapping('${orderId}')"]`);
+    buttons.forEach(btn => {
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Assigning...';
+    });
+    
+    // Create a loading toast and store its reference
+    const loadingToast = showToast("Assigning order...", "info");
+    
+    // Track request time for debugging
+    const requestStartTime = new Date();
+    
     fetch(`/preprocessing/unmapped/{{ filename }}/assign`, {
         method: "POST",
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: new URLSearchParams({ order_id: orderId })
     })
     .then(res => {
-        if (res.ok) {
-            alert("✅ Assigned successfully!");
-            window.location.href = "/preprocessing/unmapped";  // Redirect to unmapped list
+        console.log(`[DEBUG] Response received in ${new Date() - requestStartTime}ms with status: ${res.status}`);
+        
+        // First handle specific HTTP error codes with custom messages
+        if (!res.ok) {
+            if (res.status === 404) {
+                throw new Error("File not found. It may have been moved or deleted.");
+            } else if (res.status === 403) {
+                throw new Error("Permission denied. You don't have access to assign this file.");
+            } else if (res.status === 500) {
+                throw new Error("Server error. The system encountered an internal error.");
+            } else if (res.status === 429) {
+                throw new Error("Too many requests. Please try again later.");
+            }
+            
+            // Try to get more detailed error from response body
+            return res.json().then(data => {
+                console.error('[DEBUG] Error response body:', data);
+                throw new Error(data.error || data.details || `Server error (${res.status}): ${res.statusText}`);
+            }).catch(jsonError => {
+                // If JSON parsing fails, throw the original HTTP error
+                console.error('[DEBUG] Failed to parse error response as JSON:', jsonError);
+                throw new Error(`Server error (${res.status}): ${res.statusText}`);
+            });
+        }
+        
+        return res.json();
+    })
+    .then(data => {
+        console.log('[DEBUG] Assignment response data:', data);
+        
+        if (data.success) {
+            // Hide the loading toast
+            hideToast(loadingToast);
+            
+            // Show success message and navigate to next file
+            const userMessage = data.user_message || 'File has been successfully assigned.';
+            navigateToNextFile(userMessage, "success");
         } else {
-            alert("❌ Failed to assign. Please try again.");
+            // Handle case where response is OK but success flag is false
+            console.error('[DEBUG] Server indicated failure:', data);
+            throw new Error(data.error || data.details || "Unknown error occurred");
         }
     })
     .catch(error => {
-        console.error('Error:', error);
-        alert("❌ Failed to assign. Please try again.");
+        // Log the full error for debugging
+        console.error('[DEBUG] Assignment error:', error);
+        
+        // Hide the loading toast
+        hideToast(loadingToast);
+        
+        // Re-enable buttons
+        buttons.forEach(btn => {
+            btn.disabled = false;
+            btn.innerHTML = 'Assign This Order';
+        });
+        
+        // Create retry button
+        const retryButton = `<button onclick="assignMapping('${orderId}')" class="btn btn-sm btn-primary mt-2">Retry</button>`;
+        
+        // Show error toast with retry option
+        showToast(`❌ Failed to assign: ${error.message}<br>${retryButton}`, "error", 0); // 0 means don't auto-hide
+        
+        // Optionally, add a visual indicator on the UI that assignment failed
+        const orderElements = document.querySelectorAll(`[data-order-id="${orderId}"]`);
+        orderElements.forEach(el => {
+            el.classList.add('assignment-failed');
+        });
     });
+}
+
+/**
+ * Show a toast notification to the user
+ * @param {string} message - Message to display
+ * @param {string} type - Type of toast: "success", "error", "info", "warning"
+ * @param {number} duration - Time in ms to show toast, 0 for no auto-hide
+ * @returns {Object} Toast reference for later manipulation
+ */
+function showToast(message, type = "info", duration = 3000) {
+    // Create toast container if it doesn't exist
+    let toastContainer = document.getElementById("toast-container");
+    if (!toastContainer) {
+        toastContainer = document.createElement("div");
+        toastContainer.id = "toast-container";
+        toastContainer.className = "position-fixed bottom-0 end-0 p-3";
+        toastContainer.style.zIndex = "5000";
+        document.body.appendChild(toastContainer);
+    }
+    
+    // Create toast element
+    const toastId = `toast-${Date.now()}`;
+    const toast = document.createElement("div");
+    toast.id = toastId;
+    toast.className = `toast show ${type}-toast`;
+    toast.setAttribute("role", "alert");
+    toast.setAttribute("aria-live", "assertive");
+    toast.setAttribute("aria-atomic", "true");
+    
+    // Set background color based on type
+    let bgClass = "bg-info text-white";
+    if (type === "success") bgClass = "bg-success text-white";
+    if (type === "error") bgClass = "bg-danger text-white";
+    if (type === "warning") bgClass = "bg-warning text-dark";
+    
+    toast.innerHTML = `
+        <div class="toast-header ${bgClass}">
+            <strong class="me-auto">Bill Review Portal</strong>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close" 
+                    onclick="hideToast('${toastId}')"></button>
+        </div>
+        <div class="toast-body">
+            ${message}
+        </div>
+    `;
+    
+    // Add to container
+    toastContainer.appendChild(toast);
+    
+    // Auto-hide toast after duration if not 0
+    let timeoutId;
+    if (duration > 0) {
+        timeoutId = setTimeout(() => {
+            hideToast(toastId);
+        }, duration);
+    }
+    
+    // Return reference for later manipulation
+    return {
+        id: toastId,
+        element: toast,
+        timeoutId: timeoutId
+    };
+}
+
+/**
+ * Hide a toast notification
+ * @param {string|Object} toast - Toast ID or toast reference object
+ */
+function hideToast(toast) {
+    if (!toast) return;
+    
+    const toastId = typeof toast === 'string' ? toast : toast.id;
+    const toastElement = document.getElementById(toastId);
+    
+    if (toastElement) {
+        // Clear any existing timeout
+        if (typeof toast === 'object' && toast.timeoutId) {
+            clearTimeout(toast.timeoutId);
+        }
+        
+        // Add fade-out effect
+        toastElement.classList.remove("show");
+        
+        // Remove after animation completes
+        setTimeout(() => {
+            if (toastElement && toastElement.parentNode) {
+                toastElement.parentNode.removeChild(toastElement);
+            }
+        }, 500);
+    }
 }
 
 /**
@@ -1034,19 +1254,12 @@ function handleEscalationSubmit(event) {
         const modal = bootstrap.Modal.getInstance(modalElement);
         modal.hide();
         
-        // Show success alert
-        const alertHtml = `
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                <strong>Success!</strong> This file has been escalated for review.
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        `;
-        document.querySelector('.container-fluid').insertAdjacentHTML('afterbegin', alertHtml);
+        // Reset form
+        form.classList.remove('was-validated');
+        form.reset();
         
-        // Redirect to unmapped files list after a short delay
-        setTimeout(() => {
-            window.location.href = "/preprocessing/unmapped";
-        }, 2000);
+        // Navigate to next file with success message
+        navigateToNextFile('File has been successfully escalated for review', 'success');
     })
     .catch(error => {
         // Handle error
