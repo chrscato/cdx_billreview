@@ -13,15 +13,6 @@
     "age_days": 183
   },
   {
-    "filename": "20241217_1221.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "Image Care Centers-Radiology Center of Fair lawn",
-    "dos": "2024-04-26",
-    "age_days": 361
-  },
-  {
     "filename": "20241217_1262.json",
     "failure_types": [
       "RATE_MISSING"
@@ -500,15 +491,6 @@
     "provider": "RAYUS Radiology Murfreesboro",
     "dos": "2025-01-27",
     "age_days": 85
-  },
-  {
-    "filename": "20250204_1079.json",
-    "failure_types": [
-      "UNMATCHED_CPT"
-    ],
-    "provider": "Tower Radiology - Habana",
-    "dos": "2025-01-23",
-    "age_days": 89
   },
   {
     "filename": "20250204_1080.json",

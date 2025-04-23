@@ -1,0 +1,23 @@
+{
+  "timestamp": "2025-04-23 15:10:25",
+  "user": "admin_user@clarity-dx.com",
+  "filename": "20241217_1221.json",
+  "tin": "743134613",
+  "rate_type": "create_ota",
+  "source": "manual_correction",
+  "order_id": "E4D79C07-C4C0-4937-A289-43F7FEBB8DD8",
+  "rates": [
+    {
+      "cpt_code": "73721",
+      "rate": 375,
+      "modifier": null
+    }
+  ],
+  "ota_data": {
+    "provider_name": "Imagecare at Denville Diagnostic",
+    "provider_npi": "1346452612",
+    "provider_type": "",
+    "order_id": "E4D79C07-C4C0-4937-A289-43F7FEBB8DD8",
+    "notes": ""
+  }
+}
