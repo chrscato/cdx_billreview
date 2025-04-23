@@ -1,0 +1,23 @@
+{
+  "timestamp": "2025-04-23 11:09:27",
+  "user": "admin_user@clarity-dx.com",
+  "filename": "20241217_1069.json",
+  "tin": "540793767",
+  "rate_type": "create_ota",
+  "source": "manual_correction",
+  "order_id": "D4FBC4DC-D075-1942-A9E5-975E2E154C4A",
+  "rates": [
+    {
+      "cpt_code": "70450",
+      "rate": 250,
+      "modifier": null
+    }
+  ],
+  "ota_data": {
+    "provider_name": "ST MARYS HOSPITAL",
+    "provider_npi": "1356646004",
+    "provider_type": "",
+    "order_id": "D4FBC4DC-D075-1942-A9E5-975E2E154C4A",
+    "notes": ""
+  }
+}

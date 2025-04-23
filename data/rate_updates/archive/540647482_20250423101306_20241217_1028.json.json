@@ -1,0 +1,20 @@
+{
+  "timestamp": "2025-04-23 10:13:06",
+  "user": "admin_user@clarity-dx.com",
+  "filename": "20241217_1028.json",
+  "tin": "540647482",
+  "rate_type": "category",
+  "source": "manual_correction",
+  "category_rates": {
+    "ct_wo": 250
+  },
+  "cpt_assignments": {
+    "ct_wo": [
+      "72131",
+      "72192"
+    ]
+  },
+  "category_summary": {
+    "ct_wo": 2
+  }
+}

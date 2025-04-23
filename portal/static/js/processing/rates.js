@@ -205,9 +205,13 @@ function validateIndividualRates() {
 function formatCategorySummary(summary) {
     if (!summary || Object.keys(summary).length === 0) return '';
     
-    const summaryLines = Object.entries(summary).map(([category, count]) => {
-        return `- ${category}: ${count} CPT codes updated`;
-    });
+    const summaryLines = Object.entries(summary)
+        .filter(([_, count]) => count > 0)
+        .map(([category, count]) => {
+            return `- ${category}: ${count} CPT codes updated`;
+        });
+    
+    if (summaryLines.length === 0) return '';
     
     return '\n\nCategory Update Summary:\n' + summaryLines.join('\n');
 }
@@ -216,60 +220,72 @@ function formatCategorySummary(summary) {
  * Handle the rate assignment submission
  */
 async function handleRateAssignment() {
-    // Get data from the form
-    const form = document.getElementById('rateAssignmentForm');
-    if (!form) return;
-    
-    // Get filename and other common data
-    const filename = document.getElementById('filename').value;
-    
-    // Determine active tab
-    const activeTab = document.querySelector('.tab-pane.active');
-    const isIndividualRates = activeTab.id === 'individual-rates';
+    try {
+        // Get data from the form
+        const form = document.getElementById('rateAssignmentForm');
+        if (!form) return;
+        
+        // Get filename and other common data
+        const filename = document.getElementById('filename').value;
+        
+        // Determine active tab
+        const activeTab = document.querySelector('.tab-pane.active');
+        const isIndividualRates = activeTab.id === 'individual-rates';
 
-    // Validate based on active tab
-    let validationResult;
-    let rateType;
-    let requestData = {};
+        // Validate based on active tab
+        let validationResult;
+        let rateType;
+        let requestData = {};
 
-    if (isIndividualRates) {
-        validationResult = validateIndividualRates();
-        rateType = 'individual';
-        requestData.rates = validationResult.rateData;
-    } else {
-        validationResult = validateCategoryRates();
-        if (validationResult.categoryData.length === 0) {
-            showAlert('Please enable at least one category and provide its rate', 'warning');
+        if (isIndividualRates) {
+            validationResult = validateIndividualRates();
+            rateType = 'individual';
+            requestData.rates = validationResult.rateData;
+        } else {
+            validationResult = validateCategoryRates();
+            if (validationResult.categoryData.length === 0) {
+                showAlert('Please enable at least one category and provide its rate', 'warning');
+                return;
+            }
+            rateType = 'category';
+            
+            // Build category_rates object in the format the server expects
+            const categoryRates = {};
+            validationResult.categoryData.forEach(item => {
+                categoryRates[item.category] = item.rate;
+            });
+            requestData.category_rates = categoryRates;
+        }
+
+        if (!validationResult.isValid) {
+            showAlert('Please enter valid rates for all selected items', 'warning');
             return;
         }
-        rateType = 'category';
+
+        // Add common fields
+        requestData.rate_type = rateType;
         
-        // Build category_rates object in the format the server expects
-        const categoryRates = {};
-        validationResult.categoryData.forEach(item => {
-            categoryRates[item.category] = item.rate;
-        });
-        requestData.category_rates = categoryRates;
-    }
-
-    if (!validationResult.isValid) {
-        showAlert('Please enter valid rates for all selected items', 'warning');
-        return;
-    }
-
-    // Add common fields
-    requestData.rate_type = rateType;
-    
-    // Get filter parameters if they exist
-    if (form.querySelector('input[name="filter_params"]')) {
-        try {
-            requestData.filter_params = JSON.parse(form.querySelector('input[name="filter_params"]').value);
-        } catch (e) {
-            console.error('Error parsing filter parameters:', e);
+        // Get filter parameters if they exist
+        if (form.querySelector('input[name="filter_params"]')) {
+            try {
+                requestData.filter_params = JSON.parse(form.querySelector('input[name="filter_params"]').value);
+            } catch (e) {
+                console.error('Error parsing filter parameters:', e);
+            }
         }
-    }
-    
-    try {
+        
+        // Set button to loading state
+        const submitButton = isIndividualRates ? 
+            document.getElementById('assignRatesBtn') : 
+            document.getElementById('createOTABtn');
+        
+        let originalButtonText = '';
+        if (submitButton) {
+            originalButtonText = submitButton.innerHTML;
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
+        }
+        
         // Submit to server
         const response = await fetch(`/processing/fails/${filename}/assign-rates`, {
             method: 'POST',
@@ -316,27 +332,42 @@ async function handleRateAssignment() {
                 // Add to container
                 alertContainer.appendChild(alertElement);
                 
-                // Auto-dismiss after 10 seconds for category summaries (longer than usual)
-                setTimeout(() => {
-                    alertElement.classList.remove('show');
-                    setTimeout(() => {
-                        alertContainer.removeChild(alertElement);
-                    }, 150);
-                }, 10000);
+                // Hide modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById('rateAssignmentModal'));
+                if (modal) {
+                    modal.hide();
+                }
                 
-                // Redirect after a longer delay for category assignments
+                // CRITICAL FIX: Force redirect to list view instead of individual file
                 setTimeout(() => {
-                    window.location.href = result.redirect || '/processing/fails';
-                }, 3000);
+                    window.location.href = '/processing/fails';
+                }, 2000);
             } else {
                 showAlert(result.message || 'Error assigning rates', 'danger');
+                // Reset button state
+                if (submitButton) {
+                    submitButton.disabled = false;
+                    submitButton.innerHTML = originalButtonText;
+                }
             }
         } else {
             const errorData = await response.json();
             showAlert(errorData.message || `Server error: ${response.status}`, 'danger');
+            // Reset button state
+            if (submitButton) {
+                submitButton.disabled = false;
+                submitButton.innerHTML = originalButtonText;
+            }
         }
     } catch (error) {
         showAlert(`Error assigning rate: ${error.message}`, 'danger');
+        // Reset button state
+        const submitButton = document.querySelector('#assignRatesBtn, #createOTABtn');
+        if (submitButton) {
+            submitButton.disabled = false;
+            submitButton.innerHTML = submitButton.id === 'assignRatesBtn' ? 
+                'Assign Rate & Save' : 'Create OTA & Save';
+        }
     }
 }
 
@@ -353,6 +384,7 @@ function showAlert(message, type = 'info') {
         alertContainer.style.top = '20px';
         alertContainer.style.right = '20px';
         alertContainer.style.zIndex = '9999';
+        alertContainer.style.maxWidth = '400px';
         document.body.appendChild(alertContainer);
     }
     
@@ -360,6 +392,7 @@ function showAlert(message, type = 'info') {
     const alert = document.createElement('div');
     alert.className = `alert alert-${type} alert-dismissible fade show`;
     alert.role = 'alert';
+    alert.style.whiteSpace = 'pre-line'; // Preserve line breaks in the message
     alert.innerHTML = `
         ${message}
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
@@ -372,7 +405,9 @@ function showAlert(message, type = 'info') {
     setTimeout(() => {
         alert.classList.remove('show');
         setTimeout(() => {
-            alertContainer.removeChild(alert);
+            if (alertContainer.contains(alert)) {
+                alertContainer.removeChild(alert);
+            }
         }, 150);
     }, 5000);
 }

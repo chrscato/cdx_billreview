@@ -1,0 +1,15 @@
+{
+  "timestamp": "2025-04-23 09:52:43",
+  "user": "admin_user@clarity-dx.com",
+  "filename": "20241217_1042.json",
+  "tin": "204363724",
+  "rate_type": "category",
+  "source": "manual_correction",
+  "category_rates": {
+    "xray": 25
+  },
+  "cpt_assignments": {
+    "xray": []
+  },
+  "category_summary": {}
+}

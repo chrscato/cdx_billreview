@@ -1,0 +1,23 @@
+{
+  "timestamp": "2025-04-23 11:37:07",
+  "user": "admin_user@clarity-dx.com",
+  "filename": "20241217_1086.json",
+  "tin": "611352417",
+  "rate_type": "create_ota",
+  "source": "manual_correction",
+  "order_id": "AE2B7093-FB0E-4E71-91F1-8FD4A83A94B6",
+  "rates": [
+    {
+      "cpt_code": "73221",
+      "rate": 375,
+      "modifier": null
+    }
+  ],
+  "ota_data": {
+    "provider_name": "NEBRASKA HEALTH IMAGING LLC",
+    "provider_npi": "1417950239",
+    "provider_type": "",
+    "order_id": "AE2B7093-FB0E-4E71-91F1-8FD4A83A94B6",
+    "notes": ""
+  }
+}

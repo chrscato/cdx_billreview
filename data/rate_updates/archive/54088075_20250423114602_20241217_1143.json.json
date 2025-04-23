@@ -1,0 +1,23 @@
+{
+  "timestamp": "2025-04-23 11:46:02",
+  "user": "admin_user@clarity-dx.com",
+  "filename": "20241217_1143.json",
+  "tin": "54088075",
+  "rate_type": "create_ota",
+  "source": "manual_correction",
+  "order_id": "53DFC964-3179-4904-9574-36B6AD979722",
+  "rates": [
+    {
+      "cpt_code": "72148",
+      "rate": 100,
+      "modifier": null
+    }
+  ],
+  "ota_data": {
+    "provider_name": "RADIOLOGY ASSOC. OF RICHMOND",
+    "provider_npi": "1447297577",
+    "provider_type": "",
+    "order_id": "53DFC964-3179-4904-9574-36B6AD979722",
+    "notes": ""
+  }
+}

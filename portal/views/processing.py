@@ -20,17 +20,27 @@ from contextlib import contextmanager
 # Define BASE_DIR at the module level
 BASE_DIR = Path(__file__).resolve().parents[2]  # Assumes views/processing.py is two levels down from project root
 
-# Database path
-FILEMAKER_DB = BASE_DIR / "data" / "filemaker.db"
+# Database path - filemaker.db is in the root directory, not in data/
+FILEMAKER_DB = BASE_DIR / "filemaker.db"
 
 @contextmanager
 def get_db_connection():
-    """Context manager for database connections."""
-    conn = sqlite3.connect(FILEMAKER_DB)
+    """Context manager for database connections with explicit logging."""
+    logger.info(f"Opening database connection to {FILEMAKER_DB}")
     try:
+        conn = sqlite3.connect(FILEMAKER_DB)
+        logger.info("Database connection established successfully")
         yield conn
+    except sqlite3.Error as e:
+        logger.error(f"SQLite error during connection: {str(e)}", exc_info=True)
+        raise
+    except Exception as e:
+        logger.error(f"Unexpected error in database connection: {str(e)}", exc_info=True)
+        raise
     finally:
-        conn.close()
+        if 'conn' in locals():
+            logger.info("Closing database connection")
+            conn.close()
 
 def get_cpt_codes_by_category() -> Dict[str, List[str]]:
     """
@@ -92,7 +102,7 @@ def get_cpt_codes_by_category() -> Dict[str, List[str]]:
         return result
 
 # Set up logging
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 # Initialize Blueprint
@@ -698,11 +708,11 @@ def escalate_fail_file(filename):
         filter_params = get_filter_params_from_request(request)
         
         # Get escalation reason from form
-        escalation_reason = request.form.get('escalation_reason', 'No reason provided')
+        escalation_reason = request.form.get('reason', 'No reason provided')
         
         # Get current JSON data
-        key = f'data/hcfa_json/valid/mapped/staging/fails/{filename}'
-        json_data = get_s3_json(key)
+        source_key = f'data/hcfa_json/valid/mapped/staging/fails/{filename}'
+        json_data = get_s3_json(source_key)
         
         # Add escalation info to JSON
         if 'escalation' not in json_data:
@@ -720,8 +730,21 @@ def escalate_fail_file(filename):
             json_data['validation_info'] = {}
         json_data['validation_info']['status'] = 'ESCALATED'
         
-        # Save back to S3
-        upload_json_to_s3(json_data, key)
+        # Save to escalations folder
+        dest_key = f'data/hcfa_json/valid/mapped/staging/escalations/{filename}'
+        upload_json_to_s3(json_data, dest_key)
+        
+        # Delete from fails folder
+        s3_client.delete_object(Bucket=S3_BUCKET, Key=source_key)
+        
+        # Remove from failed summary
+        try:
+            if remove_from_summary(filename):
+                logger.info(f"Removed {filename} from failed summary")
+            else:
+                logger.warning(f"Failed to remove {filename} from summary - entry may not exist")
+        except Exception as e:
+            logger.error(f"Error removing {filename} from summary: {str(e)}")
         
         # Create success message
         success_message = f"File {filename} has been escalated to the support team."
@@ -822,11 +845,201 @@ def deny_fail_file(filename):
             flash(error_message, 'danger')
             return redirect(url_for('processing.view_fail_file', filename=filename))
 
+@processing_bp.route('/fails/<filename>/move-to-readyforprocess', methods=['POST'])
+def move_to_readyforprocess(filename):
+    """Move a file from fails folder to readyforprocess folder."""
+    try:
+        # Extract filter parameters
+        filter_params = get_filter_params_from_request(request)
+        
+        # Get current JSON data
+        source_key = f'data/hcfa_json/valid/mapped/staging/fails/{filename}'
+        try:
+            json_data = get_s3_json(source_key)
+        except Exception as e:
+            logger.error(f"Error retrieving file {filename} from S3: {str(e)}")
+            return jsonify({
+                'status': 'error',
+                'message': f"Could not retrieve file: {str(e)}"
+            }), 404
+
+        # Add metadata about the move
+        if 'processing_info' not in json_data:
+            json_data['processing_info'] = {}
+        
+        json_data['processing_info'].update({
+            'moved_to_readyforprocess': True,
+            'moved_timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            'moved_by': 'admin_user@clarity-dx.com',  # TODO: Replace with actual user
+            'prior_status': json_data.get('validation_info', {}).get('status', 'UNKNOWN')
+        })
+        
+        # Update validation status
+        if 'validation_info' not in json_data:
+            json_data['validation_info'] = {}
+        json_data['validation_info']['status'] = 'READY_FOR_PROCESS'
+        
+        # Move to readyforprocess folder
+        dest_key = f'data/hcfa_json/readyforprocess/{filename}'
+        upload_json_to_s3(json_data, dest_key)
+        
+        # Delete from fails folder
+        s3_client.delete_object(Bucket=S3_BUCKET, Key=source_key)
+        
+        # Remove from failed summary
+        try:
+            if remove_from_summary(filename):
+                logger.info(f"Removed {filename} from failed summary")
+            else:
+                logger.warning(f"Failed to remove {filename} from summary - entry may not exist")
+        except Exception as e:
+            logger.error(f"Error removing {filename} from summary: {str(e)}")
+        
+        # Create success message
+        success_message = f"File {filename} has been moved to ready for process queue."
+        
+        if 'X-Requested-With' in request.headers and request.headers['X-Requested-With'] == 'XMLHttpRequest':
+            # For AJAX requests
+            return jsonify({
+                'status': 'success',
+                'message': success_message,
+                'redirect': build_redirect_url(url_for('processing.list_fail_files'), filter_params)
+            })
+        else:
+            # For regular form submissions
+            flash(success_message, 'success')
+            return redirect(build_redirect_url(url_for('processing.list_fail_files'), filter_params))
+            
+    except Exception as e:
+        logger.error(f"Error moving file {filename} to readyforprocess: {str(e)}")
+        error_message = f"Failed to move file: {str(e)}"
+        if 'X-Requested-With' in request.headers and request.headers['X-Requested-With'] == 'XMLHttpRequest':
+            return jsonify({
+                'status': 'error',
+                'message': error_message
+            }), 500
+        else:
+            flash(error_message, 'danger')
+            return redirect(url_for('processing.view_fail_file', filename=filename))
+
 def clean_tin(tin: str) -> str:
     """Clean and standardize TIN format by removing non-numeric characters."""
     if not tin:
         return ""
-    return re.sub(r'[^0-9]', '', tin)
+    cleaned = re.sub(r'[^0-9]', '', tin)
+    logger.info(f"Cleaned TIN: original='{tin}', cleaned='{cleaned}'")
+    return cleaned
+
+def validate_db_connection():
+    """Validate database connection and schema."""
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Check if ppo table exists
+            cursor.execute("""
+                SELECT name FROM sqlite_master 
+                WHERE type='table' AND name='ppo'
+            """)
+            if not cursor.fetchone():
+                logger.error("PPO table does not exist in database")
+                return False
+            
+            # Get table schema
+            cursor.execute("PRAGMA table_info(ppo)")
+            columns = {col[1]: col[2] for col in cursor.fetchall()}
+            logger.debug(f"PPO table schema: {columns}")
+            
+            # Verify required columns
+            required_columns = {
+                'TIN': 'TEXT',
+                'proc_cd': 'TEXT',
+                'rate': 'REAL',
+                'proc_category': 'TEXT'
+            }
+            
+            for col, type_ in required_columns.items():
+                if col not in columns:
+                    logger.error(f"Required column {col} missing from ppo table")
+                    return False
+                if not columns[col].upper().startswith(type_):
+                    logger.error(f"Column {col} has incorrect type: {columns[col]} (expected {type_})")
+                    return False
+            
+            # Test insert
+            try:
+                cursor.execute("BEGIN TRANSACTION")
+                cursor.execute("""
+                    INSERT OR REPLACE INTO ppo (TIN, proc_cd, rate, proc_category)
+                    VALUES ('TEST123', 'TEST456', 100.0, 'TEST_CAT')
+                """)
+                cursor.execute("SELECT * FROM ppo WHERE TIN = 'TEST123'")
+                result = cursor.fetchone()
+                logger.debug(f"Test insert result: {result}")
+                cursor.execute("ROLLBACK")
+                
+                return True
+            except sqlite3.Error as e:
+                logger.error(f"Database test insert failed: {str(e)}")
+                return False
+                
+    except sqlite3.Error as e:
+        logger.error(f"Database validation failed: {str(e)}")
+        return False
+    except Exception as e:
+        logger.error(f"Unexpected error during database validation: {str(e)}")
+        return False
+
+@contextmanager
+def get_db_connection():
+    """Context manager for database connections with enhanced logging."""
+    logger.debug(f"Opening database connection to {FILEMAKER_DB}")
+    if not os.path.exists(FILEMAKER_DB):
+        logger.error(f"Database file does not exist at {FILEMAKER_DB}")
+        raise FileNotFoundError(f"Database file not found: {FILEMAKER_DB}")
+        
+    conn = None
+    try:
+        conn = sqlite3.connect(FILEMAKER_DB)
+        logger.debug("Database connection established")
+        yield conn
+    except sqlite3.Error as e:
+        logger.error(f"Database connection error: {str(e)}")
+        raise
+    finally:
+        if conn:
+            conn.close()
+            logger.debug("Database connection closed")
+
+def insert_rate_to_db(conn, tin: str, proc_cd: str, rate: float, category: str) -> bool:
+    """Helper function to insert a rate into the database with proper error handling."""
+    try:
+        cursor = conn.cursor()
+        logger.debug(f"Inserting rate: TIN={tin}, proc_cd={proc_cd}, rate={rate}, category={category}")
+        
+        cursor.execute("""
+            INSERT OR REPLACE INTO ppo 
+            (TIN, proc_cd, rate, proc_category) 
+            VALUES (?, ?, ?, ?)
+        """, (tin, proc_cd, rate, category))
+        
+        # Verify the insert
+        cursor.execute("SELECT * FROM ppo WHERE TIN = ? AND proc_cd = ?", (tin, proc_cd))
+        result = cursor.fetchone()
+        if result:
+            logger.debug(f"Successfully inserted/updated rate: {result}")
+            return True
+        else:
+            logger.error("Rate insertion failed - no record found after insert")
+            return False
+            
+    except sqlite3.Error as e:
+        logger.error(f"Database error during rate insertion: {str(e)}")
+        raise
+
+# Validate database on module load
+if not validate_db_connection():
+    logger.error("Database validation failed - rate assignment functionality may not work correctly")
 
 @processing_bp.route('/fails/<filename>/assign-rates', methods=['POST'])
 def assign_rates(filename):
@@ -838,6 +1051,7 @@ def assign_rates(filename):
         # Get rate assignment data from request body
         if request.is_json:
             rate_data = request.get_json()
+            logger.info(f"Received JSON data: {rate_data}")
         else:
             # Handle form data
             rate_data = {'rate_type': request.form.get('rate_type', 'individual')}
@@ -857,26 +1071,26 @@ def assign_rates(filename):
                 
                 rate_data['category_rates'] = category_rates
                 
-                # Log the parsed category rates
-                logger.info(f"Parsed category rates: {category_rates}")
-                
-                if not category_rates:
-                    return jsonify({
-                        'status': 'error',
-                        'message': 'No valid category rates provided'
-                    }), 400
             else:
                 # Handle individual rates from form
-                rate_data['rates'] = {}
+                rates = []
                 for key, value in request.form.items():
-                    if key.startswith('rate_'):
-                        cpt_code = key.replace('rate_', '')
+                    if key.startswith('rate-input-'):
+                        cpt_code = key.replace('rate-input-', '')
+                        modifier = request.form.get(f'modifier-{cpt_code}', '')
+                        
                         try:
-                            rate_data['rates'][cpt_code] = float(value)
+                            rates.append({
+                                'cpt_code': cpt_code,
+                                'rate': float(value),
+                                'modifier': modifier if modifier else None
+                            })
                         except ValueError:
                             continue
+                
+                rate_data['rates'] = rates
         
-        # Log the received data for debugging
+        # Log the processed data
         logger.info(f"Processed rate data for {filename}: {rate_data}")
         
         # Get current JSON data
@@ -885,190 +1099,295 @@ def assign_rates(filename):
             json_data = get_s3_json(source_key)
         except Exception as e:
             logger.error(f"Error retrieving file {filename} from S3: {str(e)}")
-            error_msg = f"Could not retrieve file: {str(e)}"
-            if 'X-Requested-With' in request.headers and request.headers['X-Requested-With'] == 'XMLHttpRequest':
-                return jsonify({'status': 'error', 'message': error_msg}), 404
-            else:
-                flash(error_msg, 'danger')
-                return redirect(url_for('processing.list_fail_files'))
+            return jsonify({
+                'status': 'error',
+                'message': f"Could not retrieve file: {str(e)}"
+            }), 404
         
-        # Extract provider info for better messaging
-        provider_name = json_data.get('filemaker', {}).get('provider', {}).get('Billing Name', 
-                       json_data.get('billing_info', {}).get('billing_provider_name', 'Unknown Provider'))
-        
-        # Extract TIN from JSON data and clean it
-        tin = json_data.get('filemaker', {}).get('provider', {}).get('Tax ID', '')
+        # Extract TIN from JSON and clean it
+        tin = json_data.get('filemaker', {}).get('provider', {}).get('TIN', '')
+        logger.info(f"Cleaned TIN: original='{tin}', cleaned='{clean_tin(tin)}'")
         clean_tin_value = clean_tin(tin)
         if not clean_tin_value:
-            logger.error(f"No valid TIN found for {filename}")
             return jsonify({
                 'status': 'error',
                 'message': 'No valid TIN found in file'
             }), 400
         
-        # Extract CPT codes for better messaging
-        cpt_codes = []
-        for line in json_data.get('service_lines', []):
-            if 'cpt_code' in line:
-                cpt_codes.append(line['cpt_code'])
+        # Get Order ID from FileMaker data if available
+        order_id = json_data.get('filemaker', {}).get('order', {}).get('Order_ID', '')
         
-        # Extract total charge for better messaging
-        total_charge = json_data.get('billing_info', {}).get('total_charge', '$0.00')
-        
-        # Determine rate type (individual or category)
-        rate_type = rate_data.get('rate_type', 'individual')
+        # Process based on rate type
+        rate_type = rate_data.get('rate_type')
         
         # Initialize category summary
         category_summary = {}
         
-        # Handle individual rate assignment
+        # Prepare rate update data for saving to file
+        rate_update_data = {
+            'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            'user': 'admin_user@clarity-dx.com',  # Replace with actual user when auth is added
+            'filename': filename,
+            'tin': clean_tin_value,
+            'rate_type': rate_type,
+            'source': 'manual_correction'
+        }
+        
+        # Add order_id if available
+        if order_id:
+            rate_update_data['order_id'] = order_id
+        
         if rate_type == 'individual':
-            # Update rates in JSON data
+            rates = rate_data.get('rates', [])
             rates_updated = False
-            for line in json_data.get('service_lines', []):
-                if 'cpt_code' in line and line['cpt_code'] in rate_data.get('rates', {}):
-                    line['rate'] = rate_data['rates'][line['cpt_code']]
-                    rates_updated = True
+            
+            # Add rates to update data
+            rate_update_data['rates'] = []
+            
+            for rate_item in rates:
+                cpt_code = rate_item.get('cpt_code')
+                rate_value = rate_item.get('rate')
+                modifier = rate_item.get('modifier')
+                
+                # Add to rate update data
+                rate_update_data['rates'].append({
+                    'cpt_code': cpt_code,
+                    'rate': rate_value,
+                    'modifier': modifier
+                })
+                
+                logger.info(f"Processing individual rate for CPT {cpt_code}: ${rate_value}")
+                
+                # Update the service line with the rate
+                for line in json_data.get('service_lines', []):
+                    if line.get('cpt_code') == cpt_code:
+                        line['assigned_rate'] = rate_value
+                        rates_updated = True
+                        logger.info(f"Updated service line for CPT {cpt_code} with rate ${rate_value}")
+                
+                # Try to insert into database if it exists
+                try:
+                    db_path = FILEMAKER_DB
+                    if os.path.exists(db_path):
+                        with get_db_connection() as conn:
+                            cursor = conn.cursor()
+                            logger.info(f"Inserting into ppo table: TIN={clean_tin_value}, proc_cd={cpt_code}, modifier={modifier}, rate=${rate_value}")
+                            cursor.execute("""
+                                INSERT OR REPLACE INTO ppo 
+                                (TIN, proc_cd, modifier, rate) 
+                                VALUES (?, ?, ?, ?)
+                            """, (clean_tin_value, cpt_code, modifier, rate_value))
+                            conn.commit()
+                            logger.info(f"Successfully inserted/updated rate for CPT {cpt_code} in database")
+                    else:
+                        logger.warning(f"Database file not found at {db_path}, skipping database update for CPT {cpt_code}")
+                except Exception as e:
+                    # Log error but continue with other CPTs
+                    logger.error(f"Database error for CPT {cpt_code}: {str(e)}", exc_info=True)
             
             if not rates_updated:
                 logger.warning(f"No rates were updated for {filename}")
         
-        # Handle category rate assignment
         elif rate_type == 'category':
-            # Get category rates from rate_data
             category_rates = rate_data.get('category_rates', {})
             
+            # Add category rates to update data
+            rate_update_data['category_rates'] = category_rates
+            
+            logger.info(f"Processing category rates: {category_rates}")
+            
             if not category_rates:
-                logger.error(f"No category rates provided for {filename}")
+                logger.error("No category rates provided")
                 return jsonify({
                     'status': 'error',
                     'message': 'No category rates provided'
                 }), 400
             
-            # Get CPT codes by category mapping
+            # Get CPT codes by category
             cpt_by_category = get_cpt_codes_by_category()
             
-            # Initialize category summary
-            for category in category_rates.keys():
-                category_summary[category] = 0
+            # Track which CPT codes were assigned for each category
+            rate_update_data['cpt_assignments'] = {category: [] for category in category_rates.keys()}
             
-            try:
-                with get_db_connection() as conn:
-                    cursor = conn.cursor()
+            # Update rates based on CPT code's category
+            for line in json_data.get('service_lines', []):
+                cpt_code = line.get('cpt_code')
+                if not cpt_code:
+                    continue
                     
-                    # Start a transaction
-                    cursor.execute("BEGIN TRANSACTION")
-                    
-                    try:
-                        # Update rates for each service line based on its CPT code's category
-                        rates_updated = False
-                        for line in json_data.get('service_lines', []):
-                            cpt_code = line.get('cpt_code')
-                            if not cpt_code:
-                                continue
-                                
-                            # Find which category this CPT code belongs to
-                            for category, cpt_list in cpt_by_category.items():
-                                if cpt_code in cpt_list and category in category_rates:
-                                    rate = category_rates[category]
-                                    line['rate'] = rate
-                                    category_summary[category] += 1
-                                    rates_updated = True
-                                    
-                                    # Insert rate into ppo table
+                # Find which category this CPT belongs to
+                for category, cpt_list in cpt_by_category.items():
+                    if cpt_code in cpt_list and category in category_rates:
+                        rate = category_rates[category]
+                        line['assigned_rate'] = rate
+                        if category not in category_summary:
+                            category_summary[category] = 0
+                        category_summary[category] += 1
+                        
+                        # Add to rate update data
+                        rate_update_data['cpt_assignments'][category].append(cpt_code)
+                        
+                        logger.info(f"Matched CPT {cpt_code} to category {category}, assigning rate ${rate}")
+                        
+                        # Try to insert into database
+                        try:
+                            db_path = FILEMAKER_DB
+                            if os.path.exists(db_path):
+                                with get_db_connection() as conn:
+                                    cursor = conn.cursor()
+                                    logger.info(f"Inserting into ppo table: TIN={clean_tin_value}, proc_cd={cpt_code}, rate=${rate}, category={category}")
                                     cursor.execute("""
                                         INSERT OR REPLACE INTO ppo 
-                                        (tin, proc_cd, rate, proc_category) 
+                                        (TIN, proc_cd, rate, proc_category) 
                                         VALUES (?, ?, ?, ?)
                                     """, (clean_tin_value, cpt_code, rate, category))
-                                    
-                                    logger.info(f"Updated rate for CPT {cpt_code} to {rate} (category: {category})")
-                                    break
-                        
-                        if not rates_updated:
-                            logger.warning(f"No rates were updated for {filename}")
-                        
-                        # Commit the transaction
-                        conn.commit()
-                        logger.info(f"Successfully committed {sum(category_summary.values())} rate updates to database")
-                        
-                    except Exception as e:
-                        # Rollback on error
-                        conn.rollback()
-                        logger.error(f"Database error while updating rates: {str(e)}")
-                        raise
-                        
-            except sqlite3.Error as e:
-                logger.error(f"Database error in assign_rates: {str(e)}")
+                                    conn.commit()
+                                    logger.info(f"Successfully inserted/updated rate for CPT {cpt_code} in category {category}")
+                            else:
+                                logger.warning(f"Database file not found at {db_path}, skipping database update for CPT {cpt_code}")
+                        except Exception as e:
+                            # Log error but continue
+                            logger.error(f"Database error for CPT {cpt_code}: {str(e)}", exc_info=True)
+                        break
+            
+            # Add category summary to rate update data
+            rate_update_data['category_summary'] = category_summary
+            logger.info(f"Category summary after processing: {category_summary}")
+        
+        # Create custom OTA case if specified
+        elif rate_type == 'create_ota':
+            # Add OTA-specific data
+            rates = rate_data.get('rates', [])
+            if not rates:
+                logger.error("No rates provided for OTA creation")
                 return jsonify({
                     'status': 'error',
-                    'message': f'Database error: {str(e)}'
-                }), 500
+                    'message': 'No rates provided for OTA creation'
+                }), 400
                 
-        else:
-            return jsonify({
-                'status': 'error',
-                'message': f'Invalid rate type: {rate_type}'
-            }), 400
+            # Add rates to update data
+            rate_update_data['rates'] = []
+            rate_update_data['ota_data'] = {
+                'provider_name': json_data.get('filemaker', {}).get('provider', {}).get('Billing Name', ''),
+                'provider_npi': json_data.get('filemaker', {}).get('provider', {}).get('NPI', ''),
+                'provider_type': json_data.get('filemaker', {}).get('provider', {}).get('Provider_Type', ''),
+                'order_id': order_id,
+                'notes': rate_data.get('notes', '')
+            }
             
+            for rate_item in rates:
+                cpt_code = rate_item.get('cpt_code')
+                rate_value = rate_item.get('rate')
+                modifier = rate_item.get('modifier')
+                
+                # Add to rate update data
+                rate_update_data['rates'].append({
+                    'cpt_code': cpt_code,
+                    'rate': rate_value,
+                    'modifier': modifier
+                })
+                
+                logger.info(f"Processing OTA rate for CPT {cpt_code}: ${rate_value}")
+                
+                # Update the service line with the rate
+                for line in json_data.get('service_lines', []):
+                    if line.get('cpt_code') == cpt_code:
+                        line['assigned_rate'] = rate_value
+                        line['rate_source'] = 'OTA'
+                        logger.info(f"Updated service line for CPT {cpt_code} with OTA rate ${rate_value}")
+            
+            logger.info(f"Processing OTA case creation: {rate_update_data['ota_data']}")
+        
         # Add rate assignment metadata
         if 'rate_assignment' not in json_data:
             json_data['rate_assignment'] = {}
         
         json_data['rate_assignment'].update({
             'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-            'user': request.form.get('user', 'admin_user@clarity-dx.com'),  # TODO: Replace with actual user
+            'user': 'admin_user@clarity-dx.com',  # Replace with actual user when auth is added
             'rate_type': rate_type
         })
         
-        # If it was a category assignment, store the category rates and summary
+        # If category assignment, add category data
         if rate_type == 'category':
             json_data['rate_assignment'].update({
-                'category_rates': rate_data.get('category_rates', {}),
+                'category_rates': category_rates,
                 'category_summary': category_summary
             })
         
-        # Update validation status
+        # Save rate update data to local file
+        try:
+            # Create unique filename with timestamp
+            timestamp_str = datetime.now().strftime('%Y%m%d%H%M%S')
+            update_filename = f"{clean_tin_value}_{timestamp_str}_{filename}.json"
+            update_filepath = os.path.join('data', 'rate_updates', update_filename)
+            
+            # Ensure directory exists
+            os.makedirs(os.path.dirname(update_filepath), exist_ok=True)
+            
+            # Write JSON file
+            with open(update_filepath, 'w') as f:
+                json.dump(rate_update_data, f, indent=2)
+            
+            logger.info(f"Saved rate update data to {update_filepath}")
+        except Exception as e:
+            logger.error(f"Error saving rate update data to file: {str(e)}", exc_info=True)
+        
+        # Update validation info
         if 'validation_info' not in json_data:
             json_data['validation_info'] = {}
         
-        json_data['validation_info']['rate_assignment_complete'] = True
+        # Remove rate-related failure reasons
+        updated_reasons = []
+        for reason in json_data['validation_info'].get('failure_reasons', []):
+            if not reason.startswith('RATE_MISSING:'):
+                updated_reasons.append(reason)
         
-        # Upload updated JSON back to S3
-        upload_json_to_s3(json_data, source_key)
+        json_data['validation_info']['failure_reasons'] = updated_reasons
         
-        # Create detailed success message
-        provider_info = f" from {provider_name}" if provider_name and provider_name != 'Unknown Provider' else ""
-        cpt_info = f" (CPT: {', '.join(cpt_codes)})" if cpt_codes else ""
-        charge_info = f" with total charge {total_charge}" if total_charge and total_charge != '$0.00' else ""
-        rate_type_info = "category" if rate_type == 'category' else "individual"
-        
-        success_message = f"{rate_type_info.capitalize()} rates assigned successfully for file {filename}{provider_info}{charge_info}{cpt_info}"
-        
-        # Set flash message for regular form submission
-        flash(success_message, 'success')
-        
-        if 'X-Requested-With' in request.headers and request.headers['X-Requested-With'] == 'XMLHttpRequest':
-            return jsonify({
-                'status': 'success',
-                'message': success_message,
-                'redirect': build_redirect_url(url_for('processing.list_fail_files'), filter_params)
-            })
-        else:
-            return redirect(build_redirect_url(url_for('processing.list_fail_files'), filter_params))
+        # Determine next steps based on remaining failure reasons
+        if not updated_reasons:
+            # All validations pass - move to success folder
+            json_data['validation_info']['status'] = 'PASS'
             
+            # Save to success folder
+            dest_key = f'data/hcfa_json/valid/mapped/staging/success/{filename}'
+            upload_json_to_s3(json_data, dest_key)
+            
+            # Delete from fails folder
+            s3_client.delete_object(Bucket=S3_BUCKET, Key=source_key)
+            
+            # Remove from failed summary
+            try:
+                if remove_from_summary(filename):
+                    logger.info(f"Removed {filename} from failed summary")
+                else:
+                    logger.warning(f"Failed to remove {filename} from summary - entry may not exist")
+            except Exception as e:
+                logger.error(f"Error removing {filename} from summary: {str(e)}")
+            
+            success_message = "Rates assigned and file processed successfully!"
+        else:
+            # Other failures remain - keep in fails folder
+            upload_json_to_s3(json_data, source_key)
+            success_message = "Rates assigned successfully, but other validation issues remain."
+        
+        # Return success response
+        return jsonify({
+            'status': 'success',
+            'message': success_message,
+            'category_summary': category_summary if rate_type == 'category' else None,
+            'redirect': url_for('processing.list_fail_files')  # Always redirect to list view
+        })
+        
     except Exception as e:
         logger.error(f"Error assigning rates for {filename}: {str(e)}", exc_info=True)
-        error_message = f"Failed to assign rates: {str(e)}"
-        if 'X-Requested-With' in request.headers and request.headers['X-Requested-With'] == 'XMLHttpRequest':
-            return jsonify({
-                'status': 'error',
-                'message': error_message
-            }), 500
-        else:
-            flash(error_message, 'danger')
-            return redirect(url_for('processing.view_fail_file', filename=filename))
-
+        return jsonify({
+            'status': 'error',
+            'message': f"Failed to assign rates: {str(e)}"
+        }), 500
+    
+    
 def get_s3_json(key):
     """Get JSON data from S3."""
     try:

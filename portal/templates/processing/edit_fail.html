@@ -411,12 +411,15 @@
             <button type="button" class="btn btn-success me-2" onclick="confirmMoveToStaging()">
                 <i class="fas fa-arrow-up me-1"></i>Move to Staging
             </button>
-            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#rateAssignmentModal">
+            <button type="button" class="btn btn-success me-2" data-bs-toggle="modal" data-bs-target="#rateAssignmentModal">
                 {% if json_data.filemaker.provider['Provider Network'] == 'In Network' %}
                 Assign PPO Rates
                 {% else %}
-                Create OTA
+                Create OTA (Individual)
                 {% endif %}
+            </button>
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#readyForProcessModal">
+                <i class="fas fa-check-circle me-1"></i>Move to Ready for Process
             </button>
         </div>
     </form>
@@ -430,13 +433,13 @@
                         {% if json_data.filemaker.provider['Provider Network'] == 'In Network' %}
                         In Network Rate Assignment
                         {% else %}
-                        Out of Network Rate Assignment (OTA)
+                        Out of Network Rate Assignment (OTA) - Individual Rates
                         {% endif %}
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <form id="rateAssignmentForm">
+                    <form id="rateAssignmentForm" action="{{ url_for('processing.assign_rates', filename=filename) }}" method="POST">
                         <!-- Hidden data fields for JS access -->
                         <input type="hidden" id="filename" value="{{ filename }}">
                         <input type="hidden" id="clean-tin" value="{{ json_data.filemaker.provider.TIN|replace('-', '') }}">
@@ -453,7 +456,7 @@
                         </div>
                         {% else %}
                         <div class="alert alert-warning">
-                            <strong>OTA Rate Assignment:</strong> This will create an OTA record for this provider/CPT combination.
+                            <strong>OTA Rate Assignment:</strong> This will create an OTA record for this provider/CPT combination. OTA cases only support individual rate corrections.
                         </div>
                         {% endif %}
                         
@@ -482,6 +485,7 @@
                                     Individual CPT Rates
                                 </button>
                             </li>
+                            {% if json_data.filemaker.provider['Provider Network'] == 'In Network' %}
                             <li class="nav-item" role="presentation">
                                 <button class="nav-link" id="category-rates-tab" data-bs-toggle="tab" 
                                         data-bs-target="#category-rates" type="button" role="tab" 
@@ -489,6 +493,7 @@
                                     Category Rates
                                 </button>
                             </li>
+                            {% endif %}
                         </ul>
 
                         <!-- Tabs Content -->
@@ -522,8 +527,8 @@
                                                                             {% set mod = m %}
                                                                         {% endif %}
                                                                     {% endfor %}
+                                                                    <input type="hidden" name="modifier-{{ line.cpt_code }}" value="{{ mod }}">
                                                                     {{ mod }}
-                                                                    <input type="hidden" name="modifier" value="{{ mod }}">
                                                                 </td>
                                                                 <td>{{ line.charge_amount }}</td>
                                                                 <td>
@@ -705,9 +710,58 @@
                     {% if json_data.filemaker.provider['Provider Network'] == 'In Network' %}
                     <button type="button" class="btn btn-success" id="assignRatesBtn">Assign Rate & Save</button>
                     {% else %}
-                    <button type="button" class="btn btn-warning" id="createOTABtn">Create OTA & Save</button>
+                    <button type="button" class="btn btn-warning" id="createOTABtn">Create OTA with Individual Rates</button>
                     {% endif %}
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ready For Process Modal -->
+    <div class="modal fade" id="readyForProcessModal" tabindex="-1" aria-labelledby="readyForProcessModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="readyForProcessModalLabel">Move to Ready For Process</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="ready-for-process-form" method="POST" action="{{ url_for('processing.move_to_readyforprocess', filename=filename) }}">
+                    <div class="modal-body">
+                        <!-- Add hidden field for filter parameters -->
+                        {% if filter_params %}
+                        <input type="hidden" name="filter_params" value="{{ filter_params|tojson }}">
+                        {% endif %}
+                        
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-1"></i>
+                            <strong>Ready For Process Queue</strong>
+                            <p class="mb-0 mt-1">This action will move the file to the ready for process queue in S3 (data/hcfa_json/readyforprocess/). The file will be processed by the automated system.</p>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Bill Information</label>
+                            <ul class="list-group mb-3">
+                                <li class="list-group-item"><strong>Filename:</strong> {{ filename }}</li>
+                                <li class="list-group-item"><strong>Provider:</strong> {{ json_data.filemaker.provider['Billing Name']|default(json_data.billing_info.billing_provider_name, true)|default('Unknown Provider', true) }}</li>
+                                <li class="list-group-item"><strong>Total Charge:</strong> {{ json_data.billing_info.total_charge|default('N/A', true) }}</li>
+                                <li class="list-group-item">
+                                    <strong>CPT Codes:</strong> 
+                                    {% for line in json_data.service_lines %}
+                                        {{ line.cpt_code }}{% if not loop.last %}, {% endif %}
+                                    {% else %}
+                                        None available
+                                    {% endfor %}
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-check-circle me-1"></i>Move to Ready For Process
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -725,12 +779,140 @@
         const escalateForm = document.getElementById('escalate-form');
         const denyModal = document.getElementById('denyModal');
         const denyForm = document.getElementById('deny-form');
+        const readyForProcessModal = document.getElementById('readyForProcessModal');
+        const readyForProcessForm = document.getElementById('ready-for-process-form');
         const reasonTextarea = document.getElementById('escalate-reason');
         const rateAssignmentForm = document.getElementById('rateAssignmentForm');
         
         // Create Bootstrap modal instances
         const escalateModalInstance = new bootstrap.Modal(escalateModal);
         const denyModalInstance = new bootstrap.Modal(denyModal);
+        const readyForProcessModalInstance = new bootstrap.Modal(readyForProcessModal);
+        
+        // Handle ajax form submission for rate assignment
+        const assignRatesBtn = document.getElementById('assignRatesBtn');
+        const createOTABtn = document.getElementById('createOTABtn');
+        
+        // Set up click handler for rate assignment buttons
+        if (assignRatesBtn) {
+            assignRatesBtn.addEventListener('click', handleRateSubmission);
+        }
+        if (createOTABtn) {
+            createOTABtn.addEventListener('click', handleRateSubmission);
+        }
+        
+        function handleRateSubmission(e) {
+            e.preventDefault();
+            
+            // Get form data
+            const form = document.getElementById('rateAssignmentForm');
+            if (!form) return;
+            
+            // Get provider network status
+            const providerNetwork = document.getElementById('provider-network').value;
+            const isInNetwork = providerNetwork === 'In Network';
+            
+            // Get active tab
+            const activeTab = document.querySelector('.tab-pane.active');
+            const isIndividualRates = activeTab.id === 'individual-rates';
+            
+            // Prepare request data
+            let requestData = {
+                rate_type: isInNetwork ? (isIndividualRates ? 'individual' : 'category') : 'create_ota'
+            };
+            
+            // Collect data based on active tab
+            if (isIndividualRates || !isInNetwork) {
+                const rates = [];
+                document.querySelectorAll('[data-cpt-code]').forEach(el => {
+                    const cptCode = el.dataset.cptCode;
+                    const rateInput = document.getElementById(`rate-input-${cptCode}`);
+                    const modifierInput = el.querySelector(`[name="modifier-${cptCode}"]`);
+                    const modifier = modifierInput ? modifierInput.value : '';
+                    
+                    if (rateInput && rateInput.value) {
+                        rates.push({
+                            cpt_code: cptCode,
+                            rate: parseFloat(rateInput.value),
+                            modifier: modifier || null
+                        });
+                    }
+                });
+                requestData.rates = rates;
+            } else {
+                const categoryRates = {};
+                document.querySelectorAll('[name^="category_enabled["]').forEach(checkbox => {
+                    if (checkbox.checked) {
+                        const categoryName = checkbox.name.match(/\[(.*?)\]/)[1];
+                        const rateInput = document.querySelector(`[name="category_rate[${categoryName}]"]`);
+                        
+                        if (rateInput && rateInput.value) {
+                            categoryRates[categoryName] = parseFloat(rateInput.value);
+                        }
+                    }
+                });
+                requestData.category_rates = categoryRates;
+            }
+            
+            // Add notes if provided
+            const notesTextarea = document.getElementById('rate-notes');
+            if (notesTextarea && notesTextarea.value.trim()) {
+                requestData.notes = notesTextarea.value.trim();
+            }
+            
+            console.log("Sending rate data:", requestData);
+            
+            // Show loading state
+            const button = this;
+            const originalText = button.innerHTML;
+            button.disabled = true;
+            button.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Processing...';
+            
+            // Get the filename
+            const filename = document.getElementById('filename').value;
+            
+            // Send AJAX request
+            const url = `/processing/fails/${filename}/assign-rates`;
+            console.log("Sending request to:", url);
+            
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify(requestData)
+            })
+            .then(response => {
+                console.log("Received response status:", response.status);
+                return response.json();
+            })
+            .then(data => {
+                console.log("Response data:", data);
+                if (data.status === 'success') {
+                    // Show success message
+                    alert(data.message);
+                    
+                    // Hide modal
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('rateAssignmentModal'));
+                    if (modal) modal.hide();
+                    
+                    // CRITICAL FIX: Force redirect to the list view
+                    console.log("Redirecting to /processing/fails");
+                    window.location.href = '/processing/fails';
+                } else {
+                    alert(data.message || 'Error assigning rates');
+                    button.disabled = false;
+                    button.innerHTML = originalText;
+                }
+            })
+            .catch(error => {
+                console.error("Error submitting rate data:", error);
+                alert('Error: ' + error.message);
+                button.disabled = false;
+                button.innerHTML = originalText;
+            });
+        }
 
         // Handle category rate checkbox changes
         document.querySelectorAll('[name^="category_enabled["]').forEach(checkbox => {
@@ -759,6 +941,10 @@
                 const individualRatesInputs = document.querySelectorAll('#individual-rates input[name="rate"]');
                 const categoryRatesCheckboxes = document.querySelectorAll('[name^="category_enabled["]');
                 
+                // Get provider network status
+                const providerNetwork = document.getElementById('provider-network').value;
+                const isInNetwork = providerNetwork === 'In Network';
+                
                 // Toggle required fields based on active tab
                 if (activeTab === 'individual-rates-tab') {
                     individualRatesInputs.forEach(input => input.required = true);
@@ -767,118 +953,23 @@
                         rateInput.required = false;
                     });
                 } else {
-                    individualRatesInputs.forEach(input => input.required = false);
-                    categoryRatesCheckboxes.forEach(checkbox => {
-                        const rateInput = checkbox.closest('.col-md-4, .col-md-6').querySelector('[name^="category_rate["]');
-                        rateInput.required = checkbox.checked;
-                    });
+                    // Only apply category rates if it's in-network
+                    if (isInNetwork) {
+                        individualRatesInputs.forEach(input => input.required = false);
+                        categoryRatesCheckboxes.forEach(checkbox => {
+                            const rateInput = checkbox.closest('.col-md-4, .col-md-6').querySelector('[name^="category_rate["]');
+                            rateInput.required = checkbox.checked;
+                        });
+                    } else {
+                        // Force back to individual rates for OTA
+                        const individualTab = document.getElementById('individual-rates-tab');
+                        if (individualTab) {
+                            individualTab.click();
+                        }
+                    }
                 }
             });
         });
-
-        // Handle form submission
-        if (rateAssignmentForm) {
-            const assignRatesBtn = document.getElementById('assignRatesBtn');
-            const createOTABtn = document.getElementById('createOTABtn');
-            const submitButton = assignRatesBtn || createOTABtn;
-
-            if (submitButton) {
-                submitButton.addEventListener('click', async function(event) {
-                    event.preventDefault();
-
-                    // Validate active tab
-                    const activeTab = document.querySelector('.tab-pane.active');
-                    const isIndividualRates = activeTab.id === 'individual-rates';
-                    let isValid = true;
-
-                    if (isIndividualRates) {
-                        // Validate individual rates
-                        const rateInputs = activeTab.querySelectorAll('input[name="rate"]');
-                        rateInputs.forEach(input => {
-                            if (input.required && !input.value) {
-                                isValid = false;
-                                input.classList.add('is-invalid');
-                            }
-                        });
-                    } else {
-                        // Validate category rates
-                        const enabledCategories = activeTab.querySelectorAll('input[type="checkbox"]:checked');
-                        enabledCategories.forEach(checkbox => {
-                            const rateInput = checkbox.closest('.col-md-4, .col-md-6').querySelector('[name^="category_rate["]');
-                            if (!rateInput.value) {
-                                isValid = false;
-                                rateInput.classList.add('is-invalid');
-                            }
-                        });
-
-                        if (enabledCategories.length === 0) {
-                            isValid = false;
-                            showAlert('error', 'Please enable at least one category and provide its rate');
-                            return;
-                        }
-                    }
-
-                    if (!isValid) {
-                        showAlert('error', 'Please fill in all required rates');
-                        return;
-                    }
-
-                    // Show loading state
-                    const originalButtonText = submitButton.innerHTML;
-                    submitButton.disabled = true;
-                    submitButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
-
-                    try {
-                        // Prepare form data
-                        const formData = new FormData(rateAssignmentForm);
-                        formData.append('rate_type', isIndividualRates ? 'individual' : 'category');
-
-                        // Submit form
-                        const response = await fetch(rateAssignmentForm.action, {
-                            method: 'POST',
-                            body: formData,
-                            headers: {
-                                'X-Requested-With': 'XMLHttpRequest'
-                            }
-                        });
-
-                        const data = await response.json();
-
-                        if (data.status === 'success') {
-                            showAlert('success', data.message);
-                            // Hide modal and refresh page after short delay
-                            setTimeout(() => {
-                                const modal = bootstrap.Modal.getInstance(document.getElementById('rateAssignmentModal'));
-                                modal.hide();
-                                window.location.reload();
-                            }, 1500);
-                        } else {
-                            showAlert('error', data.message || 'An error occurred while assigning rates');
-                            submitButton.disabled = false;
-                            submitButton.innerHTML = originalButtonText;
-                        }
-                    } catch (error) {
-                        showAlert('error', 'Error assigning rates: ' + error.message);
-                        submitButton.disabled = false;
-                        submitButton.innerHTML = originalButtonText;
-                    }
-                });
-            }
-
-            // Reset form when modal is hidden
-            document.getElementById('rateAssignmentModal').addEventListener('hidden.bs.modal', function() {
-                rateAssignmentForm.reset();
-                document.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
-                document.querySelectorAll('[name^="category_rate["]').forEach(input => {
-                    input.disabled = true;
-                    input.required = false;
-                });
-                // Switch back to individual rates tab
-                const individualRatesTab = document.getElementById('individual-rates-tab');
-                const tab = new bootstrap.Tab(individualRatesTab);
-                tab.show();
-            });
-        }
 
         // Handle PDF view button
         viewPdfButton.addEventListener('click', async function() {
@@ -1084,6 +1175,59 @@
                 const submitButton = denyForm.querySelector('button[type="submit"]');
                 submitButton.disabled = false;
                 submitButton.innerHTML = '<i class="fas fa-ban me-1"></i>Deny Bill';
+            });
+        }
+
+        // Handle form submission for ready for process form
+        if (readyForProcessForm) {
+            readyForProcessForm.addEventListener('submit', function(event) {
+                // Prevent default form submission
+                event.preventDefault();
+                
+                // Show loading state
+                const submitButton = readyForProcessForm.querySelector('button[type="submit"]');
+                const originalButtonText = submitButton.innerHTML;
+                submitButton.disabled = true;
+                submitButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
+                
+                // Submit form using fetch API
+                fetch(readyForProcessForm.action, {
+                    method: 'POST',
+                    body: new FormData(readyForProcessForm),
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        // Show success message
+                        showAlert('success', data.message);
+                        
+                        // Hide modal
+                        readyForProcessModalInstance.hide();
+                        
+                        // Redirect after a short delay
+                        setTimeout(() => {
+                            window.location.href = data.redirect;
+                        }, 1500);
+                    } else {
+                        // Show error message
+                        showAlert('error', data.message || 'An error occurred during the process');
+                        
+                        // Reset button
+                        submitButton.disabled = false;
+                        submitButton.innerHTML = originalButtonText;
+                    }
+                })
+                .catch(error => {
+                    // Show error message
+                    showAlert('error', 'Error: ' + error.message);
+                    
+                    // Reset button
+                    submitButton.disabled = false;
+                    submitButton.innerHTML = originalButtonText;
+                });
             });
         }
 
