@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+
+{% block title %}Add User{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <div class="card mt-5">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+          <h3 class="card-title mb-0">Add User</h3>
+          <a href="{{ url_for('auth.manage_users') }}" class="btn btn-sm btn-light">Back to Users</a>
+        </div>
+        <div class="card-body">
+          <form method="POST" action="{{ url_for('auth.add_user') }}">
+            {{ form.hidden_tag() }}
+            
+            <div class="mb-3">
+              {{ form.username.label(class="form-label") }}
+              {{ form.username(class="form-control", placeholder="Enter username") }}
+              {% if form.username.errors %}
+                <div class="text-danger">
+                  {% for error in form.username.errors %}
+                    <small>{{ error }}</small>
+                  {% endfor %}
+                </div>
+              {% endif %}
+            </div>
+            
+            <div class="mb-3">
+              {{ form.password.label(class="form-label") }}
+              {{ form.password(class="form-control", placeholder="Enter password") }}
+              {% if form.password.errors %}
+                <div class="text-danger">
+                  {% for error in form.password.errors %}
+                    <small>{{ error }}</small>
+                  {% endfor %}
+                </div>
+              {% endif %}
+            </div>
+            
+            <div class="mb-3">
+              {{ form.confirm_password.label(class="form-label") }}
+              {{ form.confirm_password(class="form-control", placeholder="Confirm password") }}
+              {% if form.confirm_password.errors %}
+                <div class="text-danger">
+                  {% for error in form.confirm_password.errors %}
+                    <small>{{ error }}</small>
+                  {% endfor %}
+                </div>
+              {% endif %}
+            </div>
+            
+            <div class="mb-3 form-check">
+              {{ form.is_admin(class="form-check-input") }}
+              {{ form.is_admin.label(class="form-check-label") }}
+            </div>
+            
+            <div class="d-grid gap-2">
+              {{ form.submit(class="btn btn-primary") }}
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %} 

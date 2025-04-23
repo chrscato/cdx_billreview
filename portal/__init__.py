@@ -1,5 +1,6 @@
 from flask import Flask
-from flask_bootstrap5 import Bootstrap
+from flask_bootstrap import Bootstrap
+from flask_login import LoginManager
 from pathlib import Path
 import os
 import sys
@@ -18,6 +19,24 @@ def create_app():
     # Set secret key - use environment variable or fallback to a random key
     app.config['SECRET_KEY'] = os.environ.get('FLASK_SECRET_KEY', os.urandom(24))
     
+    # Configure session to be more secure
+    app.config['SESSION_COOKIE_HTTPONLY'] = True
+    app.config['REMEMBER_COOKIE_DURATION'] = 30 * 24 * 60 * 60  # 30 days
+    app.config['REMEMBER_COOKIE_SECURE'] = False  # Set to True if using HTTPS
+    app.config['REMEMBER_COOKIE_HTTPONLY'] = True
+    
+    # Initialize Flask-Login
+    login_manager = LoginManager()
+    login_manager.init_app(app)
+    login_manager.login_view = 'auth.login'
+    login_manager.login_message = 'Please log in to access this page.'
+    login_manager.login_message_category = 'warning'
+    
+    @login_manager.user_loader
+    def load_user(user_id):
+        from .models import User
+        return User.get(user_id)
+    
     # Ensure the failed_summary.json file exists and is valid
     try:
         if ensure_summary_file():
@@ -32,11 +51,13 @@ def create_app():
     from .views.preprocessing import preprocessing_bp
     from .views.processing import processing_bp
     from .views.postprocessing import postprocessing_bp
+    from .views.auth import auth_bp
     
     app.register_blueprint(home_bp, url_prefix='/')
     app.register_blueprint(preprocessing_bp, url_prefix='/preprocessing')
     app.register_blueprint(processing_bp, url_prefix='/processing')
     app.register_blueprint(postprocessing_bp, url_prefix='/postprocessing')
+    app.register_blueprint(auth_bp, url_prefix='/auth')
     
     # Register CLI commands
     @app.cli.command('refresh-summary')

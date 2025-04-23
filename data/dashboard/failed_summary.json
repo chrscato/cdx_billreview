@@ -13,24 +13,6 @@
     "age_days": 183
   },
   {
-    "filename": "20241217_1262.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "Midwest Radiology Outpatient Imaging - Burnsville",
-    "dos": "2024-08-01",
-    "age_days": 264
-  },
-  {
-    "filename": "20241217_1280.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "Vero Radiology Imaging Center",
-    "dos": "2024-09-24",
-    "age_days": 210
-  },
-  {
     "filename": "20250103_1007.json",
     "failure_types": [
       "RATE_MISSING"
@@ -38,114 +20,6 @@
     "provider": "Open MRI of Tifton",
     "dos": "2024-12-24",
     "age_days": 119
-  },
-  {
-    "filename": "20250109_1017.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "ODC of Huntsville",
-    "dos": "2024-11-09",
-    "age_days": 164
-  },
-  {
-    "filename": "20250109_1021.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "Holmdel Imaging",
-    "dos": "2024-06-21",
-    "age_days": 305
-  },
-  {
-    "filename": "20250109_1022.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "ODC of Athens",
-    "dos": "2024-06-18",
-    "age_days": 308
-  },
-  {
-    "filename": "20250109_1046.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "Reynolds Imaging Center",
-    "dos": "2024-11-19",
-    "age_days": 154
-  },
-  {
-    "filename": "20250109_1062.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "Hollywood Diagnostics Center",
-    "dos": "2025-01-02",
-    "age_days": 110
-  },
-  {
-    "filename": "20250109_1069.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "OutPatient Imaging",
-    "dos": "2024-12-17",
-    "age_days": 126
-  },
-  {
-    "filename": "20250109_1081.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "Optimum Diagnostic Imaging",
-    "dos": "2024-10-21",
-    "age_days": 183
-  },
-  {
-    "filename": "20250109_1114.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "Greenville Community Hospital",
-    "dos": "2024-12-19",
-    "age_days": 124
-  },
-  {
-    "filename": "20250109_1132.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "FirstHealth Southern Pines Diagnostic Imaging",
-    "dos": "2024-11-04",
-    "age_days": 169
-  },
-  {
-    "filename": "20250109_1145.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "Open Air MRI of CENLA",
-    "dos": "2024-12-26",
-    "age_days": 117
-  },
-  {
-    "filename": "20250112_1018.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "U H S Imaging Johnson City",
-    "dos": "2024-12-02",
-    "age_days": 141
-  },
-  {
-    "filename": "20250112_1024.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "Stockton Diagnostic Imaging - March Lane",
-    "dos": "2024-11-01",
-    "age_days": 172
   },
   {
     "filename": "20250112_1028.json",
@@ -166,15 +40,6 @@
     "age_days": 193
   },
   {
-    "filename": "20250112_1039.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "Chesterfield Imaging",
-    "dos": "2024-10-02",
-    "age_days": 202
-  },
-  {
     "filename": "20250112_1040.json",
     "failure_types": [
       "RATE_MISSING"
@@ -182,15 +47,6 @@
     "provider": "Simplified Medical Management, LLC",
     "dos": "2024-12-09",
     "age_days": 134
-  },
-  {
-    "filename": "20250112_1058.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "Iowa Radiology",
-    "dos": "2024-11-21",
-    "age_days": 152
   },
   {
     "filename": "20250114_1044.json",
@@ -493,15 +349,6 @@
     "age_days": 85
   },
   {
-    "filename": "20250204_1080.json",
-    "failure_types": [
-      "UNMATCHED_CPT"
-    ],
-    "provider": "Tower Radiology - Habana",
-    "dos": "2025-01-23",
-    "age_days": 89
-  },
-  {
     "filename": "20250204_1094.json",
     "failure_types": [
       "RATE_MISSING"
@@ -548,16 +395,6 @@
     "age_days": 85
   },
   {
-    "filename": "20250204_1127.json",
-    "failure_types": [
-      "UNMATCHED_CPT",
-      "UNMATCHED_CPT"
-    ],
-    "provider": "Akumin - Wellington",
-    "dos": "2024-08-29",
-    "age_days": 236
-  },
-  {
     "filename": "20250204_1131.json",
     "failure_types": [
       "RATE_MISSING"
@@ -583,34 +420,6 @@
     "provider": "Outpatient Diagnostic Center",
     "dos": "2025-01-17",
     "age_days": 95
-  },
-  {
-    "filename": "20250206_1002.json",
-    "failure_types": [
-      "UNMATCHED_CPT",
-      "UNMATCHED_CPT"
-    ],
-    "provider": "Simonmed Imaging - San Vicente",
-    "dos": "2024-10-18",
-    "age_days": 186
-  },
-  {
-    "filename": "20250206_1007.json",
-    "failure_types": [
-      "UNMATCHED_CPT"
-    ],
-    "provider": "Simonmed Imaging",
-    "dos": "2025-01-22",
-    "age_days": 90
-  },
-  {
-    "filename": "20250206_1021.json",
-    "failure_types": [
-      "UNMATCHED_CPT"
-    ],
-    "provider": "Halo Diagnostic - Indio",
-    "dos": "2024-10-17",
-    "age_days": 187
   },
   {
     "filename": "20250206_1025.json",
@@ -645,15 +454,6 @@
       "TOO_MANY_UNITS"
     ],
     "provider": "Advanced Imaging Concepts",
-    "dos": "2025-01-31",
-    "age_days": 81
-  },
-  {
-    "filename": "20250208_1009.json",
-    "failure_types": [
-      "UNMATCHED_CPT"
-    ],
-    "provider": "MRI Associates - Highland",
     "dos": "2025-01-31",
     "age_days": 81
   },
@@ -721,15 +521,6 @@
     "age_days": 95
   },
   {
-    "filename": "20250212_1017.json",
-    "failure_types": [
-      "UNMATCHED_CPT"
-    ],
-    "provider": "American Health Imaging of Athens",
-    "dos": "2025-01-23",
-    "age_days": 89
-  },
-  {
     "filename": "20250212_1019.json",
     "failure_types": [
       "RATE_MISSING"
@@ -757,15 +548,6 @@
     "age_days": 81
   },
   {
-    "filename": "20250212_1034.json",
-    "failure_types": [
-      "UNMATCHED_CPT"
-    ],
-    "provider": "Northside Hospital",
-    "dos": "2025-01-24",
-    "age_days": 88
-  },
-  {
     "filename": "20250212_1035.json",
     "failure_types": [
       "RATE_MISSING"
@@ -773,24 +555,6 @@
     "provider": "One Step Diagnostic IX LP",
     "dos": "2024-07-29",
     "age_days": 267
-  },
-  {
-    "filename": "20250212_1036.json",
-    "failure_types": [
-      "UNMATCHED_CPT"
-    ],
-    "provider": "SimonMed Imaging - Brandon",
-    "dos": "2024-10-28",
-    "age_days": 176
-  },
-  {
-    "filename": "20250212_1042.json",
-    "failure_types": [
-      "UNMATCHED_CPT"
-    ],
-    "provider": "Simonmed Imaging - Carlsbad",
-    "dos": "2024-10-24",
-    "age_days": 180
   },
   {
     "filename": "20250213_1016.json",
@@ -811,16 +575,6 @@
     "age_days": 211
   },
   {
-    "filename": "20250213_1032.json",
-    "failure_types": [
-      "UNMATCHED_CPT",
-      "UNMATCHED_CPT"
-    ],
-    "provider": "Outpatient Diagnostic Center",
-    "dos": "2025-01-28",
-    "age_days": 84
-  },
-  {
     "filename": "20250213_1033.json",
     "failure_types": [
       "RATE_MISSING"
@@ -837,24 +591,6 @@
     "provider": "U H S Imaging Johnson City",
     "dos": "2024-12-02",
     "age_days": 141
-  },
-  {
-    "filename": "20250224_1015.json",
-    "failure_types": [
-      "UNMATCHED_CPT"
-    ],
-    "provider": "Simonmed Fl Lake Nona",
-    "dos": "2024-10-30",
-    "age_days": 174
-  },
-  {
-    "filename": "20250224_1019.json",
-    "failure_types": [
-      "UNMATCHED_CPT"
-    ],
-    "provider": "SimonMed Imaging - St Petersburg",
-    "dos": "2024-08-08",
-    "age_days": 257
   },
   {
     "filename": "20250224_1023.json",
@@ -1478,9 +1214,9 @@
     "failure_types": [
       "RATE_MISSING"
     ],
-    "provider": "American Health Imaging of Greenville",
+    "provider": "AMERICAN HEALTH IMAGING OF GREENVILLE",
     "dos": "2024-11-21",
-    "age_days": 152
+    "age_days": 153
   },
   {
     "filename": "20250319_114129009.json",

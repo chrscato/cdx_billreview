@@ -1,0 +1,23 @@
+{
+  "timestamp": "2025-04-23 15:41:52",
+  "user": "admin_user@clarity-dx.com",
+  "filename": "20241217_1262.json",
+  "tin": "411769631",
+  "rate_type": "create_ota",
+  "source": "manual_correction",
+  "order_id": "6201CF94-70E9-41CE-8547-06548F9480F4",
+  "rates": [
+    {
+      "cpt_code": "73721",
+      "rate": 303,
+      "modifier": null
+    }
+  ],
+  "ota_data": {
+    "provider_name": "Midwest Radiology Outpatient Imaging - Burnsville",
+    "provider_npi": "1720059264",
+    "provider_type": "",
+    "order_id": "6201CF94-70E9-41CE-8547-06548F9480F4",
+    "notes": ""
+  }
+}

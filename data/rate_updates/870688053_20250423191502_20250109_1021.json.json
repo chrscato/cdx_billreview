@@ -1,0 +1,23 @@
+{
+  "timestamp": "2025-04-23 19:15:02",
+  "user": "admin_user@clarity-dx.com",
+  "filename": "20250109_1021.json",
+  "tin": "870688053",
+  "rate_type": "create_ota",
+  "source": "manual_correction",
+  "order_id": "436C509E-F2F1-4A3C-B1C4-918B10DAF3DC",
+  "rates": [
+    {
+      "cpt_code": 72148,
+      "rate": 375,
+      "modifier": null
+    }
+  ],
+  "ota_data": {
+    "provider_name": "HOLMDEL IMAGING LLC",
+    "provider_npi": "1043205081",
+    "provider_type": "",
+    "order_id": "436C509E-F2F1-4A3C-B1C4-918B10DAF3DC",
+    "notes": ""
+  }
+}

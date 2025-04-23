@@ -1,0 +1,26 @@
+[
+    {
+        "id": 1,
+        "username": "ccato",
+        "password_hash": "scrypt:32768:8:1$8uqURyefqFGGLpUj$3c34f05881e7a8f80fd90ea860088ac114ff061289703b4a23612180d98846257b12df5da4168e53aa61c3d00c2f2844c095c941f8de3db645cdafbd7662a621",
+        "is_admin": true
+    },
+    {
+        "id": 2,
+        "username": "username",
+        "password_hash": "scrypt:32768:8:1$GvhyrpHQHA8pet5Q$43d554718d04300fbb1b65ddd1d572fef276eee4e82027584bb54fd91ed89fc90193a288d6d603c48af253173811fc7ca7e859f852ecc3f7a21e3395089f2e88",
+        "is_admin": false
+    },
+    {
+        "id": 3,
+        "username": "nicole",
+        "password_hash": "scrypt:32768:8:1$VNc34oW4ejDlCTGu$8ed9a614a1fff34f3caea76cf06a9f1c88f88f92572a24df9e19184b7fe3533f9ef815895f0bceedb5b7bd54cee664e04d65f13a8528bbbad678b7b23f46bccd",
+        "is_admin": false
+    },
+    {
+        "id": 4,
+        "username": "kim",
+        "password_hash": "scrypt:32768:8:1$oOutCTJ8popKyFpn$2e0168efdaab12712f7823a2455398f76677823c805617b4aafd0bbd3d6d4228ed461170b47bd20724d9eae7cb4de58513675052d44c05b20fa40955bc15695c",
+        "is_admin": false
+    }
+]

@@ -1,0 +1,23 @@
+{
+  "timestamp": "2025-04-23 19:44:19",
+  "user": "admin_user@clarity-dx.com",
+  "filename": "20250112_1018.json",
+  "tin": "161165049",
+  "rate_type": "create_ota",
+  "source": "manual_correction",
+  "order_id": "E69D85FE-7A12-485E-9E8A-4A4E33637B91",
+  "rates": [
+    {
+      "cpt_code": 72148,
+      "rate": 100,
+      "modifier": null
+    }
+  ],
+  "ota_data": {
+    "provider_name": "UNITED HEALTH SERVICES",
+    "provider_npi": "1760447692",
+    "provider_type": "",
+    "order_id": "E69D85FE-7A12-485E-9E8A-4A4E33637B91",
+    "notes": ""
+  }
+}

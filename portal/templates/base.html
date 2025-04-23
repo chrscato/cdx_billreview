@@ -1,44 +1,146 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Bill Review Portal{% endblock %}</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
-</head>
-<body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+{% extends "bootstrap/base.html" %}
+
+{% block title %}Bill Review Portal{% endblock %}
+
+{% block styles %}
+    {{super()}}
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <style>
+        /* Additional custom styles */
+        .navbar-default {
+            background-color: #f8f9fa;
+            border-color: #e7e7e7;
+        }
+        .navbar-default .navbar-brand,
+        .navbar-default .navbar-nav > li > a {
+            color: #333;
+        }
+        .navbar-default .navbar-brand:hover,
+        .navbar-default .navbar-nav > li > a:hover {
+            color: #000;
+        }
+        .panel {
+            margin-bottom: 20px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-shadow: 0 1px 1px rgba(0,0,0,.05);
+        }
+        .panel-heading {
+            padding: 10px 15px;
+            border-bottom: 1px solid #ddd;
+            border-top-left-radius: 3px;
+            border-top-right-radius: 3px;
+            background-color: #f5f5f5;
+        }
+        .panel-body {
+            padding: 15px;
+        }
+        .btn {
+            font-weight: 400;
+        }
+        .form-control:focus {
+            border-color: #66afe9;
+            outline: 0;
+            box-shadow: inset 0 1px 1px rgba(0,0,0,.075), 0 0 8px rgba(102,175,233,.6);
+        }
+        /* Bootstrap 3 compatibility fixes */
+        .modal-header .close {
+            margin-top: -2px;
+        }
+        .close {
+            float: right;
+            font-size: 21px;
+            font-weight: 700;
+            line-height: 1;
+            color: #000;
+            text-shadow: 0 1px 0 #fff;
+            filter: alpha(opacity=20);
+            opacity: .2;
+        }
+        .btn-close {
+            display: none;
+        }
+        .modal-header .close {
+            padding: 0;
+            cursor: pointer;
+            background: transparent;
+            border: 0;
+            -webkit-appearance: none;
+            float: right;
+            font-size: 21px;
+            font-weight: 700;
+            line-height: 1;
+            color: #000;
+            text-shadow: 0 1px 0 #fff;
+            filter: alpha(opacity=20);
+            opacity: .2;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <nav class="navbar navbar-default">
         <div class="container">
-            <a class="navbar-brand" href="{{ url_for('home.home') }}">Bill Review Portal</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav">
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('preprocessing.index') }}">Preprocessing</a>
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-collapse">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="{{ url_for('home.home') }}">Bill Review Portal</a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar-collapse">
+                <ul class="nav navbar-nav">
+                    <li>
+                        <a href="{{ url_for('preprocessing.index') }}">Preprocessing</a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('processing.processing') }}">Processing</a>
+                    <li>
+                        <a href="{{ url_for('processing.processing') }}">Processing</a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('postprocessing.postprocessing') }}">Postprocessing</a>
+                    <li>
+                        <a href="{{ url_for('postprocessing.postprocessing') }}">Postprocessing</a>
                     </li>
+                </ul>
+                <ul class="nav navbar-nav navbar-right">
+                    {% if current_user.is_authenticated %}
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+                            <i class="fa fa-user-circle"></i> {{ current_user.username }} <span class="caret"></span>
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a href="{{ url_for('auth.profile') }}"><i class="fa fa-user fa-fw"></i> My Profile</a></li>
+                            {% if current_user.is_admin %}
+                            <li><a href="{{ url_for('auth.users_list') }}"><i class="fa fa-users fa-fw"></i> Manage Users</a></li>
+                            {% endif %}
+                            <li role="separator" class="divider"></li>
+                            <li><a href="{{ url_for('auth.logout') }}"><i class="fa fa-sign-out fa-fw"></i> Logout</a></li>
+                        </ul>
+                    </li>
+                    {% else %}
+                    <li>
+                        <a href="{{ url_for('auth.login') }}"><i class="fa fa-sign-in fa-fw"></i> Login</a>
+                    </li>
+                    {% endif %}
                 </ul>
             </div>
         </div>
     </nav>
 
     <!-- Flash message area -->
-    <div class="container mt-2">
+    <div class="container">
         <div id="flash-message-container">
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
                     {% for category, message in messages %}
-                        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        <div class="alert alert-{{ category }} alert-dismissible" role="alert">
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
                             {{ message }}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                         </div>
                     {% endfor %}
                 {% endif %}
@@ -46,13 +148,14 @@
         </div>
     </div>
 
-    <div class="container mt-4">
-        {% block content %}{% endblock %}
+    <div class="container">
+        {% block main %}{% endblock %}
     </div>
+{% endblock %}
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- Common JavaScript (load first so other scripts can use it) -->
+{% block scripts %}
+    {{super()}}
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
     <script src="{{ url_for('static', filename='js/common.js') }}"></script>
-    {% block scripts %}{% endblock %}
-</body>
-</html> 
+{% endblock %} 

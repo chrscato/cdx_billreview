@@ -33,10 +33,10 @@
             <button id="view-pdf" class="btn btn-outline-primary">
                 <i class="fas fa-file-pdf me-1"></i>View PDF
             </button>
-            <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#escalateModal">
+            <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#escalateModal">
                 <i class="fas fa-exclamation-triangle me-1"></i>Escalate
             </button>
-            <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#denyModal">
+            <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#denyModal">
                 <i class="fas fa-ban me-1"></i>Deny Bill
             </button>
         </div>
@@ -411,32 +411,34 @@
             <button type="button" class="btn btn-success me-2" onclick="confirmMoveToStaging()">
                 <i class="fas fa-arrow-up me-1"></i>Move to Staging
             </button>
-            <button type="button" class="btn btn-success me-2" data-bs-toggle="modal" data-bs-target="#rateAssignmentModal">
+            <button type="button" class="btn btn-success me-2" data-toggle="modal" data-target="#rateAssignmentModal">
                 {% if json_data.filemaker.provider['Provider Network'] == 'In Network' %}
                 Assign PPO Rates
                 {% else %}
                 Create OTA (Individual)
                 {% endif %}
             </button>
-            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#readyForProcessModal">
+            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#readyForProcessModal">
                 <i class="fas fa-check-circle me-1"></i>Move to Ready for Process
             </button>
         </div>
     </form>
 
     <!-- Rate Assignment Modal -->
-    <div class="modal fade" id="rateAssignmentModal" tabindex="-1" aria-labelledby="rateAssignmentModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
+    <div class="modal fade" id="rateAssignmentModal" tabindex="-1" role="dialog" aria-labelledby="rateAssignmentModalLabel">
+        <div class="modal-dialog modal-lg" role="document">
             <div class="modal-content">
-                <div class="modal-header bg-success text-white">
-                    <h5 class="modal-title" id="rateAssignmentModalLabel">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <h4 class="modal-title" id="rateAssignmentModalLabel">
                         {% if json_data.filemaker.provider['Provider Network'] == 'In Network' %}
                         In Network Rate Assignment
                         {% else %}
                         Out of Network Rate Assignment (OTA) - Individual Rates
                         {% endif %}
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </h4>
                 </div>
                 <div class="modal-body">
                     <form id="rateAssignmentForm" action="{{ url_for('processing.assign_rates', filename=filename) }}" method="POST">
@@ -477,21 +479,17 @@
                         </div>
 
                         <!-- Tabs Navigation -->
-                        <ul class="nav nav-tabs mb-3" id="rateAssignmentTabs" role="tablist">
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link active" id="individual-rates-tab" data-bs-toggle="tab" 
-                                        data-bs-target="#individual-rates" type="button" role="tab" 
-                                        aria-controls="individual-rates" aria-selected="true">
+                        <ul class="nav nav-tabs" id="rateAssignmentTabs" role="tablist">
+                            <li class="active" role="presentation">
+                                <a href="#individual-rates" id="individual-rates-tab" role="tab" data-toggle="tab" aria-controls="individual-rates" aria-selected="true">
                                     Individual CPT Rates
-                                </button>
+                                </a>
                             </li>
                             {% if json_data.filemaker.provider['Provider Network'] == 'In Network' %}
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link" id="category-rates-tab" data-bs-toggle="tab" 
-                                        data-bs-target="#category-rates" type="button" role="tab" 
-                                        aria-controls="category-rates" aria-selected="false">
+                            <li role="presentation">
+                                <a href="#category-rates" id="category-rates-tab" role="tab" data-toggle="tab" aria-controls="category-rates" aria-selected="false">
                                     Category Rates
-                                </button>
+                                </a>
                             </li>
                             {% endif %}
                         </ul>
@@ -499,15 +497,15 @@
                         <!-- Tabs Content -->
                         <div class="tab-content" id="rateAssignmentTabContent">
                             <!-- Individual CPT Rates Tab -->
-                            <div class="tab-pane fade show active" id="individual-rates" role="tabpanel" 
-                                 aria-labelledby="individual-rates-tab">
+                            <div class="tab-pane active" id="individual-rates" role="tabpanel">
                                 <h5 class="mt-3">Missing Rate CPT Codes</h5>
                                 <div class="table-responsive">
                                     <table class="table table-bordered">
                                         <thead>
                                             <tr>
                                                 <th>CPT Code</th>
-                                                <th>Modifier</th>
+                                                <th>Current Modifier</th>
+                                                <th>New Modifier</th>
                                                 <th>Billed Amount</th>
                                                 <th>Assigned Rate</th>
                                             </tr>
@@ -527,8 +525,14 @@
                                                                             {% set mod = m %}
                                                                         {% endif %}
                                                                     {% endfor %}
-                                                                    <input type="hidden" name="modifier-{{ line.cpt_code }}" value="{{ mod }}">
                                                                     {{ mod }}
+                                                                </td>
+                                                                <td>
+                                                                    <select class="form-control" id="modifier-input-{{ line.cpt_code }}" name="modifier">
+                                                                        <option value="">None</option>
+                                                                        <option value="26" {% if mod == '26' %}selected{% endif %}>26</option>
+                                                                        <option value="TC" {% if mod == 'TC' %}selected{% endif %}>TC</option>
+                                                                    </select>
                                                                 </td>
                                                                 <td>{{ line.charge_amount }}</td>
                                                                 <td>
@@ -551,8 +555,7 @@
                             </div>
 
                             <!-- Category Rates Tab -->
-                            <div class="tab-pane fade" id="category-rates" role="tabpanel" 
-                                 aria-labelledby="category-rates-tab">
+                            <div class="tab-pane" id="category-rates" role="tabpanel">
                                 <div class="row g-3">
                                     <!-- MRI Categories -->
                                     <div class="col-md-12">
@@ -706,7 +709,7 @@
                     </form>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
                     {% if json_data.filemaker.provider['Provider Network'] == 'In Network' %}
                     <button type="button" class="btn btn-success" id="assignRatesBtn">Assign Rate & Save</button>
                     {% else %}
@@ -771,35 +774,39 @@
 
 {% block scripts %}
 {{ super() }}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    $(document).ready(function() {
         // Initialize components
-        const viewPdfButton = document.getElementById('view-pdf');
-        const escalateModal = document.getElementById('escalateModal');
         const escalateForm = document.getElementById('escalate-form');
-        const denyModal = document.getElementById('denyModal');
         const denyForm = document.getElementById('deny-form');
-        const readyForProcessModal = document.getElementById('readyForProcessModal');
         const readyForProcessForm = document.getElementById('ready-for-process-form');
         const reasonTextarea = document.getElementById('escalate-reason');
         const rateAssignmentForm = document.getElementById('rateAssignmentForm');
         
-        // Create Bootstrap modal instances
-        const escalateModalInstance = new bootstrap.Modal(escalateModal);
-        const denyModalInstance = new bootstrap.Modal(denyModal);
-        const readyForProcessModalInstance = new bootstrap.Modal(readyForProcessModal);
+        // Handle PDF viewer
+        $('#view-pdf').on('click', function(e) {
+            e.preventDefault();
+            const filename = $('#filename').val();
+            
+            // Fetch the PDF URL
+            $.get(`/processing/fails/${filename}/pdf`, function(response) {
+                if (response && response.url) {
+                    // Open the PDF URL in a new tab
+                    window.open(response.url, '_blank');
+                } else {
+                    showAlert('error', 'Error getting PDF URL');
+                }
+            })
+            .fail(function(jqXHR, textStatus, errorThrown) {
+                console.error("Error getting PDF URL:", errorThrown);
+                showAlert('error', 'Error getting PDF URL');
+            });
+        });
         
-        // Handle ajax form submission for rate assignment
-        const assignRatesBtn = document.getElementById('assignRatesBtn');
-        const createOTABtn = document.getElementById('createOTABtn');
-        
-        // Set up click handler for rate assignment buttons
-        if (assignRatesBtn) {
-            assignRatesBtn.addEventListener('click', handleRateSubmission);
-        }
-        if (createOTABtn) {
-            createOTABtn.addEventListener('click', handleRateSubmission);
-        }
+        // Handle rate assignment button clicks
+        $('#assignRatesBtn, #createOTABtn').on('click', handleRateSubmission);
         
         function handleRateSubmission(e) {
             e.preventDefault();
@@ -809,12 +816,29 @@
             if (!form) return;
             
             // Get provider network status
-            const providerNetwork = document.getElementById('provider-network').value;
+            const providerNetwork = $('#provider-network').val();
             const isInNetwork = providerNetwork === 'In Network';
             
             // Get active tab
-            const activeTab = document.querySelector('.tab-pane.active');
-            const isIndividualRates = activeTab.id === 'individual-rates';
+            const activeTab = $('.tab-pane.active');
+            const isIndividualRates = activeTab.attr('id') === 'individual-rates';
+            
+            // Validate form data
+            if (isIndividualRates || !isInNetwork) {
+                let hasRates = false;
+                $('[data-cpt-code]').each(function() {
+                    const cptCode = $(this).data('cpt-code');
+                    const rateInput = $(`#rate-input-${cptCode}`);
+                    if (rateInput.length && rateInput.val()) {
+                        hasRates = true;
+                    }
+                });
+                
+                if (!hasRates) {
+                    alert('Please enter at least one rate before submitting.');
+                    return;
+                }
+            }
             
             // Prepare request data
             let requestData = {
@@ -824,30 +848,29 @@
             // Collect data based on active tab
             if (isIndividualRates || !isInNetwork) {
                 const rates = [];
-                document.querySelectorAll('[data-cpt-code]').forEach(el => {
-                    const cptCode = el.dataset.cptCode;
-                    const rateInput = document.getElementById(`rate-input-${cptCode}`);
-                    const modifierInput = el.querySelector(`[name="modifier-${cptCode}"]`);
-                    const modifier = modifierInput ? modifierInput.value : '';
+                $('[data-cpt-code]').each(function() {
+                    const cptCode = $(this).data('cpt-code');
+                    const rateInput = $(`#rate-input-${cptCode}`);
+                    const modifierInput = $(`#modifier-input-${cptCode}`);
                     
-                    if (rateInput && rateInput.value) {
+                    if (rateInput.length && rateInput.val()) {
                         rates.push({
                             cpt_code: cptCode,
-                            rate: parseFloat(rateInput.value),
-                            modifier: modifier || null
+                            rate: parseFloat(rateInput.val()),
+                            modifier: modifierInput.val() || null
                         });
                     }
                 });
                 requestData.rates = rates;
             } else {
                 const categoryRates = {};
-                document.querySelectorAll('[name^="category_enabled["]').forEach(checkbox => {
-                    if (checkbox.checked) {
-                        const categoryName = checkbox.name.match(/\[(.*?)\]/)[1];
-                        const rateInput = document.querySelector(`[name="category_rate[${categoryName}]"]`);
+                $('[name^="category_enabled["]').each(function() {
+                    if ($(this).is(':checked')) {
+                        const categoryName = $(this).attr('name').match(/\[(.*?)\]/)[1];
+                        const rateInput = $(`[name="category_rate[${categoryName}]"]`);
                         
-                        if (rateInput && rateInput.value) {
-                            categoryRates[categoryName] = parseFloat(rateInput.value);
+                        if (rateInput.length && rateInput.val()) {
+                            categoryRates[categoryName] = parseFloat(rateInput.val());
                         }
                     }
                 });
@@ -855,386 +878,107 @@
             }
             
             // Add notes if provided
-            const notesTextarea = document.getElementById('rate-notes');
-            if (notesTextarea && notesTextarea.value.trim()) {
-                requestData.notes = notesTextarea.value.trim();
+            const notesTextarea = $('#rate-notes');
+            if (notesTextarea.length && notesTextarea.val().trim()) {
+                requestData.notes = notesTextarea.val().trim();
             }
+            
+            // Add TIN to request data
+            const cleanTin = $('#clean-tin').val();
+            requestData.tin = cleanTin;
             
             console.log("Sending rate data:", requestData);
             
             // Show loading state
-            const button = this;
-            const originalText = button.innerHTML;
-            button.disabled = true;
-            button.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Processing...';
+            const button = $(this);
+            const originalText = button.html();
+            button.prop('disabled', true);
+            button.html('<span class="spinner-border spinner-border-sm"></span> Processing...');
             
             // Get the filename
-            const filename = document.getElementById('filename').value;
+            const filename = $('#filename').val();
             
             // Send AJAX request
             const url = `/processing/fails/${filename}/assign-rates`;
             console.log("Sending request to:", url);
             
-            fetch(url, {
+            $.ajax({
+                url: url,
                 method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(requestData),
                 headers: {
-                    'Content-Type': 'application/json',
                     'X-Requested-With': 'XMLHttpRequest'
-                },
-                body: JSON.stringify(requestData)
+                }
             })
-            .then(response => {
-                console.log("Received response status:", response.status);
-                return response.json();
-            })
-            .then(data => {
+            .done(function(data) {
                 console.log("Response data:", data);
                 if (data.status === 'success') {
                     // Show success message
-                    alert(data.message);
+                    showAlert('success', data.message || 'Rates assigned successfully');
                     
-                    // Hide modal
-                    const modal = bootstrap.Modal.getInstance(document.getElementById('rateAssignmentModal'));
-                    if (modal) modal.hide();
+                    // Clear form inputs
+                    $('[data-cpt-code] input[type="number"]').val('');
+                    $('[data-cpt-code] select').val('');
+                    $('[name^="category_rate["]').val('');
+                    $('[name^="category_enabled["]').prop('checked', false);
+                    $('#rate-notes').val('');
                     
-                    // CRITICAL FIX: Force redirect to the list view
-                    console.log("Redirecting to /processing/fails");
+                    // Hide modal and reset button
+                    $('#rateAssignmentModal').modal('hide');
+                    button.prop('disabled', false);
+                    button.html(originalText);
+                    
+                    // Redirect to the list view after a short delay
+                    setTimeout(function() {
                     window.location.href = '/processing/fails';
+                    }, 1500);
                 } else {
-                    alert(data.message || 'Error assigning rates');
-                    button.disabled = false;
-                    button.innerHTML = originalText;
+                    throw new Error(data.message || 'Error assigning rates');
                 }
             })
-            .catch(error => {
-                console.error("Error submitting rate data:", error);
-                alert('Error: ' + error.message);
-                button.disabled = false;
-                button.innerHTML = originalText;
+            .fail(function(jqXHR, textStatus, errorThrown) {
+                console.error("Error submitting rate data:", errorThrown);
+                showAlert('error', errorThrown || 'Error assigning rates');
+                button.prop('disabled', false);
+                button.html(originalText);
             });
         }
-
-        // Handle category rate checkbox changes
-        document.querySelectorAll('[name^="category_enabled["]').forEach(checkbox => {
-            checkbox.addEventListener('change', function() {
-                const rateInput = this.closest('.col-md-4, .col-md-6').querySelector('[name^="category_rate["]');
-                if (this.checked) {
-                    rateInput.required = true;
-                    rateInput.disabled = false;
-                } else {
-                    rateInput.required = false;
-                    rateInput.disabled = true;
-                    rateInput.value = '';
-                }
-            });
-
-            // Initialize state
-            const rateInput = checkbox.closest('.col-md-4, .col-md-6').querySelector('[name^="category_rate["]');
-            rateInput.disabled = !checkbox.checked;
-            rateInput.required = checkbox.checked;
-        });
-
-        // Handle tab switching
-        document.querySelectorAll('button[data-bs-toggle="tab"]').forEach(tab => {
-            tab.addEventListener('shown.bs.tab', function(event) {
-                const activeTab = event.target.getAttribute('id');
-                const individualRatesInputs = document.querySelectorAll('#individual-rates input[name="rate"]');
-                const categoryRatesCheckboxes = document.querySelectorAll('[name^="category_enabled["]');
-                
-                // Get provider network status
-                const providerNetwork = document.getElementById('provider-network').value;
-                const isInNetwork = providerNetwork === 'In Network';
-                
-                // Toggle required fields based on active tab
-                if (activeTab === 'individual-rates-tab') {
-                    individualRatesInputs.forEach(input => input.required = true);
-                    categoryRatesCheckboxes.forEach(checkbox => {
-                        const rateInput = checkbox.closest('.col-md-4, .col-md-6').querySelector('[name^="category_rate["]');
-                        rateInput.required = false;
-                    });
-                } else {
-                    // Only apply category rates if it's in-network
-                    if (isInNetwork) {
-                        individualRatesInputs.forEach(input => input.required = false);
-                        categoryRatesCheckboxes.forEach(checkbox => {
-                            const rateInput = checkbox.closest('.col-md-4, .col-md-6').querySelector('[name^="category_rate["]');
-                            rateInput.required = checkbox.checked;
-                        });
-                    } else {
-                        // Force back to individual rates for OTA
-                        const individualTab = document.getElementById('individual-rates-tab');
-                        if (individualTab) {
-                            individualTab.click();
-                        }
-                    }
-                }
-            });
-        });
-
-        // Handle PDF view button
-        viewPdfButton.addEventListener('click', async function() {
-            try {
-                const response = await fetch(`/processing/fails/{{ filename }}/pdf`);
-                const data = await response.json();
-                
-                if (data.url) {
-                    window.open(data.url, '_blank');
-                } else {
-                    showAlert('error', 'PDF not found or error occurred');
-                }
-            } catch (error) {
-                showAlert('error', 'Error fetching PDF: ' + error.message);
-            }
-        });
 
         // Function to show alerts
         function showAlert(type, message) {
-            const alertDiv = document.createElement('div');
-            alertDiv.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show`;
-            alertDiv.innerHTML = `
+            const alertDiv = $('<div>')
+                .addClass(`alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible`)
+                .html(`
                 ${message}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            `;
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                `);
             
             // Insert alert at the top of the page
-            const container = document.querySelector('.container-fluid');
-            container.insertBefore(alertDiv, container.firstChild);
+            $('.container-fluid').prepend(alertDiv);
             
             // Auto-dismiss after 5 seconds
-            setTimeout(() => {
-                alertDiv.remove();
+            setTimeout(function() {
+                alertDiv.fadeOut(400, function() { $(this).remove(); });
             }, 5000);
         }
 
-        // Function to confirm moving a file back to staging
-        function confirmMoveToStaging() {
-            if (confirm('Are you sure you want to move this file back to staging?\n\nThis will clear all validation failures and submit the file for reprocessing.')) {
-                document.getElementById('form-action').value = 'back_to_staging';
-                document.querySelector('form[action*="submit_fail_file"]').submit();
+        // Initialize Bootstrap 3 components
+        $('[data-toggle="popover"]').popover();
+        
+        // Handle tab switching
+        $('a[data-toggle="tab"]').on('shown.bs.tab', function(e) {
+            const target = $(e.target).attr('href');
+            const isIndividualRates = target === '#individual-rates';
+            const providerNetwork = $('#provider-network').val();
+            const isInNetwork = providerNetwork === 'In Network';
+            
+            if (!isInNetwork && !isIndividualRates) {
+                // Force back to individual rates for OTA
+                $('a[href="#individual-rates"]').tab('show');
             }
-        }
-
-        // Handle form validation for escalation form
-        if (escalateForm) {
-            // Real-time validation on reason field
-            reasonTextarea.addEventListener('input', function() {
-                if (this.value.trim()) {
-                    this.classList.remove('is-invalid');
-                }
-            });
-            
-            // Form validation before submission
-            escalateForm.addEventListener('submit', function(event) {
-                // Prevent default form submission
-                event.preventDefault();
-                
-                // Validate reason field
-                const reason = reasonTextarea.value.trim();
-                if (!reason) {
-                    reasonTextarea.classList.add('is-invalid');
-                    showAlert('error', 'Please provide a reason for escalation');
-                    return false;
-                }
-                
-                // Remove any previous validation styling
-                reasonTextarea.classList.remove('is-invalid');
-                
-                // Show loading state
-                const submitButton = escalateForm.querySelector('button[type="submit"]');
-                const originalButtonText = submitButton.innerHTML;
-                submitButton.disabled = true;
-                submitButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
-                
-                // Submit form using fetch API for better control
-                fetch(escalateForm.action, {
-                    method: 'POST',
-                    body: new FormData(escalateForm),
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === 'success') {
-                        // Show success message
-                        showAlert('success', data.message);
-                        
-                        // Hide modal
-                        escalateModalInstance.hide();
-                        
-                        // Redirect after a short delay
-                        setTimeout(() => {
-                            window.location.href = data.redirect;
-                        }, 1500);
-                    } else {
-                        // Show error message
-                        showAlert('error', data.message || 'An error occurred during escalation');
-                        
-                        // Reset button
-                        submitButton.disabled = false;
-                        submitButton.innerHTML = originalButtonText;
-                    }
-                })
-                .catch(error => {
-                    // Show error message
-                    showAlert('error', 'Error during escalation: ' + error.message);
-                    
-                    // Reset button
-                    submitButton.disabled = false;
-                    submitButton.innerHTML = originalButtonText;
-                });
-            });
-            
-            // Reset form when modal is hidden
-            escalateModal.addEventListener('hidden.bs.modal', function() {
-                escalateForm.reset();
-                reasonTextarea.classList.remove('is-invalid');
-                
-                // Reset any loading states
-                const submitButton = escalateForm.querySelector('button[type="submit"]');
-                submitButton.disabled = false;
-                submitButton.innerHTML = '<i class="fas fa-exclamation-triangle me-1"></i>Escalate File';
-            });
-        }
-
-        // Handle form validation for denial form
-        if (denyForm) {
-            // Form validation before submission
-            denyForm.addEventListener('submit', function(event) {
-                // Prevent default form submission
-                event.preventDefault();
-                
-                // Get form elements
-                const reasonInputs = denyForm.querySelectorAll('input[name="reason"]');
-                let reasonSelected = false;
-                
-                // Check if any reason is selected
-                reasonInputs.forEach(input => {
-                    if (input.checked) {
-                        reasonSelected = true;
-                    }
-                });
-                
-                // Prevent submission if no reason selected
-                if (!reasonSelected) {
-                    showAlert('error', 'Please select a reason for denial');
-                    return false;
-                }
-                
-                // Show loading state
-                const submitButton = denyForm.querySelector('button[type="submit"]');
-                const originalButtonText = submitButton.innerHTML;
-                submitButton.disabled = true;
-                submitButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
-                
-                // Submit form using fetch API for better control
-                fetch(denyForm.action, {
-                    method: 'POST',
-                    body: new FormData(denyForm),
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === 'success') {
-                        // Show success message
-                        showAlert('success', data.message);
-                        
-                        // Hide modal
-                        denyModalInstance.hide();
-                        
-                        // Redirect after a short delay
-                        setTimeout(() => {
-                            window.location.href = data.redirect;
-                        }, 1500);
-                    } else {
-                        // Show error message
-                        showAlert('error', data.message || 'An error occurred during denial');
-                        
-                        // Reset button
-                        submitButton.disabled = false;
-                        submitButton.innerHTML = originalButtonText;
-                    }
-                })
-                .catch(error => {
-                    // Show error message
-                    showAlert('error', 'Error during denial: ' + error.message);
-                    
-                    // Reset button
-                    submitButton.disabled = false;
-                    submitButton.innerHTML = originalButtonText;
-                });
-            });
-            
-            // Reset form when modal is hidden
-            denyModal.addEventListener('hidden.bs.modal', function() {
-                denyForm.reset();
-                
-                // Reset any loading states
-                const submitButton = denyForm.querySelector('button[type="submit"]');
-                submitButton.disabled = false;
-                submitButton.innerHTML = '<i class="fas fa-ban me-1"></i>Deny Bill';
-            });
-        }
-
-        // Handle form submission for ready for process form
-        if (readyForProcessForm) {
-            readyForProcessForm.addEventListener('submit', function(event) {
-                // Prevent default form submission
-                event.preventDefault();
-                
-                // Show loading state
-                const submitButton = readyForProcessForm.querySelector('button[type="submit"]');
-                const originalButtonText = submitButton.innerHTML;
-                submitButton.disabled = true;
-                submitButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
-                
-                // Submit form using fetch API
-                fetch(readyForProcessForm.action, {
-                    method: 'POST',
-                    body: new FormData(readyForProcessForm),
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === 'success') {
-                        // Show success message
-                        showAlert('success', data.message);
-                        
-                        // Hide modal
-                        readyForProcessModalInstance.hide();
-                        
-                        // Redirect after a short delay
-                        setTimeout(() => {
-                            window.location.href = data.redirect;
-                        }, 1500);
-                    } else {
-                        // Show error message
-                        showAlert('error', data.message || 'An error occurred during the process');
-                        
-                        // Reset button
-                        submitButton.disabled = false;
-                        submitButton.innerHTML = originalButtonText;
-                    }
-                })
-                .catch(error => {
-                    // Show error message
-                    showAlert('error', 'Error: ' + error.message);
-                    
-                    // Reset button
-                    submitButton.disabled = false;
-                    submitButton.innerHTML = originalButtonText;
-                });
-            });
-        }
-
-        // Initialize popovers
-        var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'))
-        var popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
-            return new bootstrap.Popover(popoverTriggerEl)
         });
     });
 </script>
