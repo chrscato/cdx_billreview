@@ -11,6 +11,23 @@ let failureTypesChart = null;
 let providersChart = null;
 let ageChart = null;
 
+// Constants for localStorage keys
+const STORAGE_KEYS = {
+    FAILURE_TYPE: 'failed_bills_filter_type',
+    PROVIDER: 'failed_bills_filter_provider',
+    AGE: 'failed_bills_filter_age',
+    SEARCH: 'failed_bills_filter_search'
+};
+
+// Constants for URL parameter names
+const URL_PARAMS = {
+    FAILURE_TYPE: 'type',
+    PROVIDER: 'provider',
+    AGE: 'age',
+    SEARCH: 'q',
+    FILENAMES: 'filenames'
+};
+
 // Constants for failure types and their display properties
 const FAILURE_TYPES = {
     'RATE_MISSING': { label: 'Missing Rate', color: '#dc3545', icon: 'fa-dollar-sign' },
@@ -21,6 +38,8 @@ const FAILURE_TYPES = {
 // Utility function to populate dropdown filters
 function populateDropdown(id, values, defaultLabel) {
     const select = document.getElementById(id);
+    if (!select) return;
+    
     select.innerHTML = "";
 
     const defaultOption = document.createElement("option");
@@ -43,9 +62,404 @@ function safeGetById(id) {
     return document.getElementById(id);
 }
 
+/**
+ * Fetch filter state from server
+ * @returns {Promise} - Promise resolving to filter state object
+ */
+function fetchFilterState() {
+    return fetch('/processing/fails/filters')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`Network response was not ok: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                return data.filters || {};
+            } else {
+                console.error('Error fetching filter state:', data.error);
+                return {};
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching filter state:', error);
+            return {};
+        });
+}
+
+/**
+ * Save filter state to server
+ * @param {Object} filterState - Current filter state to save
+ * @returns {Promise} - Promise resolving to success status
+ */
+function saveFilterState(filterState) {
+    return fetch('/processing/fails/filters', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(filterState)
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`Network response was not ok: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (!data.success) {
+            console.error('Error saving filter state:', data.error);
+        }
+        return data.success;
+    })
+    .catch(error => {
+        console.error('Error saving filter state:', error);
+        return false;
+    });
+}
+
+/**
+ * Save current filter selections to localStorage and server
+ */
+function saveFiltersToLocalStorage() {
+    const typeFilter = safeGetById("filter-failure-type");
+    const providerFilter = safeGetById("filter-provider");
+    const ageFilter = safeGetById("filter-age");
+    const searchInput = safeGetById("search-filename");
+    
+    // Create filter state object
+    const filterState = {};
+    
+    if (typeFilter && typeFilter.value !== "All Types") {
+        localStorage.setItem(STORAGE_KEYS.FAILURE_TYPE, typeFilter.value);
+        filterState.type = typeFilter.value;
+    } else {
+        localStorage.removeItem(STORAGE_KEYS.FAILURE_TYPE);
+    }
+    
+    if (providerFilter && providerFilter.value !== "All Providers") {
+        localStorage.setItem(STORAGE_KEYS.PROVIDER, providerFilter.value);
+        filterState.provider = providerFilter.value;
+    } else {
+        localStorage.removeItem(STORAGE_KEYS.PROVIDER);
+    }
+    
+    if (ageFilter && ageFilter.value !== "All Dates") {
+        localStorage.setItem(STORAGE_KEYS.AGE, ageFilter.value);
+        filterState.age = ageFilter.value;
+    } else {
+        localStorage.removeItem(STORAGE_KEYS.AGE);
+    }
+    
+    if (searchInput && searchInput.value.trim() !== "") {
+        localStorage.setItem(STORAGE_KEYS.SEARCH, searchInput.value);
+        filterState.q = searchInput.value;
+    } else {
+        localStorage.removeItem(STORAGE_KEYS.SEARCH);
+    }
+    
+    // If we have filenames in URL, preserve them
+    const params = new URLSearchParams(window.location.search);
+    const filenamesParam = params.get(URL_PARAMS.FILENAMES);
+    if (filenamesParam) {
+        filterState.filenames = filenamesParam;
+    }
+    
+    // Save to server if we have filters
+    if (Object.keys(filterState).length > 0) {
+        saveFilterState(filterState);
+    }
+}
+
+/**
+ * Restore filter selections from localStorage and server
+ */
+function restoreFiltersFromLocalStorage() {
+    // Attempt to fetch from server first
+    fetchFilterState().then(serverFilters => {
+        const typeFilter = safeGetById("filter-failure-type");
+        const providerFilter = safeGetById("filter-provider");
+        const ageFilter = safeGetById("filter-age");
+        const searchInput = safeGetById("search-filename");
+        
+        // Apply server filters first if available
+        if (Object.keys(serverFilters).length > 0) {
+            if (typeFilter && serverFilters.type) {
+                if (Array.from(typeFilter.options).some(opt => opt.value === serverFilters.type)) {
+                    typeFilter.value = serverFilters.type;
+                }
+            }
+            
+            if (providerFilter && serverFilters.provider) {
+                if (Array.from(providerFilter.options).some(opt => opt.value === serverFilters.provider)) {
+                    providerFilter.value = serverFilters.provider;
+                }
+            }
+            
+            if (ageFilter && serverFilters.age) {
+                if (Array.from(ageFilter.options).some(opt => opt.value === serverFilters.age)) {
+                    ageFilter.value = serverFilters.age;
+                }
+            }
+            
+            if (searchInput && serverFilters.q) {
+                searchInput.value = serverFilters.q;
+            }
+            
+            // Filter and render after applying server filters
+            filterAndRender();
+            return;
+        }
+        
+        // Fallback to localStorage if server filters not available
+        if (typeFilter) {
+            const savedType = localStorage.getItem(STORAGE_KEYS.FAILURE_TYPE);
+            if (savedType && Array.from(typeFilter.options).some(opt => opt.value === savedType)) {
+                typeFilter.value = savedType;
+            }
+        }
+        
+        if (providerFilter) {
+            const savedProvider = localStorage.getItem(STORAGE_KEYS.PROVIDER);
+            if (savedProvider && Array.from(providerFilter.options).some(opt => opt.value === savedProvider)) {
+                providerFilter.value = savedProvider;
+            }
+        }
+        
+        if (ageFilter) {
+            const savedAge = localStorage.getItem(STORAGE_KEYS.AGE);
+            if (savedAge && Array.from(ageFilter.options).some(opt => opt.value === savedAge)) {
+                ageFilter.value = savedAge;
+            }
+        }
+        
+        if (searchInput) {
+            const savedSearch = localStorage.getItem(STORAGE_KEYS.SEARCH);
+            if (savedSearch) {
+                searchInput.value = savedSearch;
+            }
+        }
+    });
+}
+
+/**
+ * Restore filters from URL parameters (takes precedence over localStorage)
+ */
+function restoreFiltersFromURL() {
+    const params = new URLSearchParams(window.location.search);
+    
+    const typeFilter = safeGetById("filter-failure-type");
+    const providerFilter = safeGetById("filter-provider");
+    const ageFilter = safeGetById("filter-age");
+    const searchInput = safeGetById("search-filename");
+    
+    if (typeFilter && params.has(URL_PARAMS.FAILURE_TYPE)) {
+        const urlType = params.get(URL_PARAMS.FAILURE_TYPE);
+        if (Array.from(typeFilter.options).some(opt => opt.value === urlType)) {
+            typeFilter.value = urlType;
+        }
+    }
+    
+    if (providerFilter && params.has(URL_PARAMS.PROVIDER)) {
+        const urlProvider = params.get(URL_PARAMS.PROVIDER);
+        if (Array.from(providerFilter.options).some(opt => opt.value === urlProvider)) {
+            providerFilter.value = urlProvider;
+        }
+    }
+    
+    if (ageFilter && params.has(URL_PARAMS.AGE)) {
+        const urlAge = params.get(URL_PARAMS.AGE);
+        if (Array.from(ageFilter.options).some(opt => opt.value === urlAge)) {
+            ageFilter.value = urlAge;
+        }
+    }
+    
+    if (searchInput && params.has(URL_PARAMS.SEARCH)) {
+        searchInput.value = params.get(URL_PARAMS.SEARCH);
+    }
+}
+
+/**
+ * Update URL parameters based on current filter selections
+ */
+function updateURLWithFilters() {
+    const typeFilter = safeGetById("filter-failure-type");
+    const providerFilter = safeGetById("filter-provider");
+    const ageFilter = safeGetById("filter-age");
+    const searchInput = safeGetById("search-filename");
+    
+    const params = new URLSearchParams(window.location.search);
+    
+    // Preserve the filenames parameter if it exists
+    const filenamesParam = params.get(URL_PARAMS.FILENAMES);
+    
+    // Clear all params except filenames
+    params.forEach((value, key) => {
+        if (key !== URL_PARAMS.FILENAMES) {
+            params.delete(key);
+        }
+    });
+    
+    // Set filter parameters if they differ from defaults
+    if (typeFilter && typeFilter.value !== "All Types") {
+        params.set(URL_PARAMS.FAILURE_TYPE, typeFilter.value);
+    }
+    
+    if (providerFilter && providerFilter.value !== "All Providers") {
+        params.set(URL_PARAMS.PROVIDER, providerFilter.value);
+    }
+    
+    if (ageFilter && ageFilter.value !== "All Dates") {
+        params.set(URL_PARAMS.AGE, ageFilter.value);
+    }
+    
+    if (searchInput && searchInput.value.trim() !== "") {
+        params.set(URL_PARAMS.SEARCH, searchInput.value.trim());
+    }
+    
+    // Update URL without reloading the page
+    const newURL = window.location.pathname + (params.toString() ? `?${params.toString()}` : "");
+    window.history.pushState({}, "", newURL);
+}
+
+/**
+ * Generate a URL with the current filter parameters
+ * @param {Object} overrideParams - Optional parameters to override current filters
+ * @returns {string} - URL with filter parameters
+ */
+function generateFilterURL(overrideParams = {}) {
+    const typeFilter = safeGetById("filter-failure-type");
+    const providerFilter = safeGetById("filter-provider");
+    const ageFilter = safeGetById("filter-age");
+    const searchInput = safeGetById("search-filename");
+    
+    const params = new URLSearchParams(window.location.search);
+    
+    // Preserve the filenames parameter if it exists
+    const filenamesParam = params.get(URL_PARAMS.FILENAMES);
+    if (filenamesParam && !overrideParams.hasOwnProperty(URL_PARAMS.FILENAMES)) {
+        overrideParams[URL_PARAMS.FILENAMES] = filenamesParam;
+    }
+    
+    // Create a new URLSearchParams object
+    const newParams = new URLSearchParams();
+    
+    // Add current filter values if they differ from defaults (unless overridden)
+    if (!overrideParams.hasOwnProperty(URL_PARAMS.FAILURE_TYPE) && typeFilter && typeFilter.value !== "All Types") {
+        newParams.set(URL_PARAMS.FAILURE_TYPE, typeFilter.value);
+    }
+    
+    if (!overrideParams.hasOwnProperty(URL_PARAMS.PROVIDER) && providerFilter && providerFilter.value !== "All Providers") {
+        newParams.set(URL_PARAMS.PROVIDER, providerFilter.value);
+    }
+    
+    if (!overrideParams.hasOwnProperty(URL_PARAMS.AGE) && ageFilter && ageFilter.value !== "All Dates") {
+        newParams.set(URL_PARAMS.AGE, ageFilter.value);
+    }
+    
+    if (!overrideParams.hasOwnProperty(URL_PARAMS.SEARCH) && searchInput && searchInput.value.trim() !== "") {
+        newParams.set(URL_PARAMS.SEARCH, searchInput.value.trim());
+    }
+    
+    // Add override parameters
+    Object.entries(overrideParams).forEach(([key, value]) => {
+        if (value === null) {
+            newParams.delete(key);
+        } else {
+            newParams.set(key, value);
+        }
+    });
+    
+    return window.location.pathname + (newParams.toString() ? `?${newParams.toString()}` : "");
+}
+
+/**
+ * Update all forms to include current filter parameters as hidden inputs
+ */
+function updateFormsWithFilterParams() {
+    const forms = document.querySelectorAll('form');
+    const typeFilter = safeGetById("filter-failure-type");
+    const providerFilter = safeGetById("filter-provider");
+    const ageFilter = safeGetById("filter-age");
+    const searchInput = safeGetById("search-filename");
+    
+    // Create a filter parameters object
+    const filterParams = {};
+    
+    // Add current filter values if they differ from defaults
+    if (typeFilter && typeFilter.value !== "All Types") {
+        filterParams[URL_PARAMS.FAILURE_TYPE] = typeFilter.value;
+    }
+    
+    if (providerFilter && providerFilter.value !== "All Providers") {
+        filterParams[URL_PARAMS.PROVIDER] = providerFilter.value;
+    }
+    
+    if (ageFilter && ageFilter.value !== "All Dates") {
+        filterParams[URL_PARAMS.AGE] = ageFilter.value;
+    }
+    
+    if (searchInput && searchInput.value.trim() !== "") {
+        filterParams[URL_PARAMS.SEARCH] = searchInput.value.trim();
+    }
+    
+    // Add filenames parameter from URL if it exists
+    const params = new URLSearchParams(window.location.search);
+    const filenamesParam = params.get(URL_PARAMS.FILENAMES);
+    if (filenamesParam) {
+        filterParams[URL_PARAMS.FILENAMES] = filenamesParam;
+    }
+    
+    // Update each form with filter parameters
+    forms.forEach(form => {
+        // Remove any existing filter_params input
+        const existingInput = form.querySelector('input[name="filter_params"]');
+        if (existingInput) {
+            existingInput.remove();
+        }
+        
+        // Only add the input if we have filter parameters
+        if (Object.keys(filterParams).length > 0) {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'filter_params';
+            input.value = JSON.stringify(filterParams);
+            form.appendChild(input);
+        }
+    });
+    
+    // Save the filter state to server
+    saveFilterState(filterParams);
+}
+
+// Update all links to include current filter parameters
+function updateLinksWithFilterParams() {
+    const fileLinks = document.querySelectorAll('a[href^="/processing/fails/"]');
+    
+    fileLinks.forEach(link => {
+        // Skip links that are not to specific files
+        if (link.getAttribute('href').includes('?') || link.getAttribute('href') === '/processing/fails/') {
+            return;
+        }
+        
+        // Get current href
+        const currentHref = link.getAttribute('href');
+        
+        // Add filter parameters to href
+        const filterParams = new URLSearchParams(window.location.search);
+        
+        if (filterParams.toString()) {
+            link.setAttribute('href', `${currentHref}?${filterParams.toString()}`);
+        }
+    });
+}
+
 // Render the bill list with the filtered data
 function renderBillList(bills) {
     const container = document.getElementById("bill-list-container");
+    if (!container) return;
+    
     container.innerHTML = "";
 
     if (!bills.length) {
@@ -57,11 +471,21 @@ function renderBillList(bills) {
         const div = document.createElement("div");
         div.className = "bill-card";
 
+        // Get filenames from URL for passing along
+        const params = new URLSearchParams(window.location.search);
+        const filenamesParam = params.get('filenames');
+        
+        // Construct the view URL with filter parameters
+        let viewUrl = `/processing/fails/${bill.filename}`;
+        if (filenamesParam) {
+            viewUrl += `?filenames=${encodeURIComponent(filenamesParam)}`;
+        }
+
         div.innerHTML = `
             <div class="card mb-3 p-3 border">
                 <div class="d-flex justify-content-between align-items-center">
                     <strong>${bill.filename}</strong>
-                    <a href="/processing/fails/${bill.filename}" class="btn btn-sm btn-outline-primary">View</a>
+                    <a href="${viewUrl}" class="btn btn-sm btn-outline-primary">View</a>
                 </div>
                 <div>
                     <span class="badge text-bg-warning me-2">${bill.provider || "Unknown Provider"}</span>
@@ -76,14 +500,18 @@ function renderBillList(bills) {
 
         container.appendChild(div);
     });
+    
+    // Update forms and links with current filter parameters
+    updateFormsWithFilterParams();
+    updateLinksWithFilterParams();
 }
 
 // Filter and re-render the bill list
 function filterAndRender() {
-    const type = document.getElementById("filter-failure-type").value;
-    const provider = document.getElementById("filter-provider").value;
-    const age = document.getElementById("filter-age").value;
-    const search = document.getElementById("search-filename").value.toLowerCase();
+    const type = safeGetById("filter-failure-type")?.value || "All Types";
+    const provider = safeGetById("filter-provider")?.value || "All Providers";
+    const age = safeGetById("filter-age")?.value || "All Dates";
+    const search = safeGetById("search-filename")?.value.toLowerCase() || "";
 
     let filtered = [...allFailedBills];
 
@@ -108,6 +536,13 @@ function filterAndRender() {
         filtered = filtered.filter(b => b.filename.toLowerCase().includes(search));
     }
 
+    // Save filters to localStorage and server
+    saveFiltersToLocalStorage();
+    
+    // Update URL with current filters
+    updateURLWithFilters();
+    
+    // Render the filtered list
     renderBillList(filtered);
     
     // Update count badge
@@ -164,15 +599,88 @@ function initDashboard() {
     populateDropdown("filter-failure-type", failureTypes, "All Types");
     populateDropdown("filter-provider", providers, "All Providers");
     populateDropdown("filter-age", ageBuckets, "All Dates");
+    
+    // Check for server filters first
+    if (window.SERVER_FILTERS && Object.keys(window.SERVER_FILTERS).length > 0) {
+        console.log("✅ Using server-provided filters:", window.SERVER_FILTERS);
+        
+        const typeFilter = safeGetById("filter-failure-type");
+        const providerFilter = safeGetById("filter-provider");
+        const ageFilter = safeGetById("filter-age");
+        const searchInput = safeGetById("search-filename");
+        
+        if (typeFilter && window.SERVER_FILTERS.type) {
+            if (Array.from(typeFilter.options).some(opt => opt.value === window.SERVER_FILTERS.type)) {
+                typeFilter.value = window.SERVER_FILTERS.type;
+            }
+        }
+        
+        if (providerFilter && window.SERVER_FILTERS.provider) {
+            if (Array.from(providerFilter.options).some(opt => opt.value === window.SERVER_FILTERS.provider)) {
+                providerFilter.value = window.SERVER_FILTERS.provider;
+            }
+        }
+        
+        if (ageFilter && window.SERVER_FILTERS.age) {
+            if (Array.from(ageFilter.options).some(opt => opt.value === window.SERVER_FILTERS.age)) {
+                ageFilter.value = window.SERVER_FILTERS.age;
+            }
+        }
+        
+        if (searchInput && window.SERVER_FILTERS.q) {
+            searchInput.value = window.SERVER_FILTERS.q;
+        }
+    } else {
+        // If no server filters, restore from localStorage or URL
+        restoreFiltersFromLocalStorage();
+        restoreFiltersFromURL();
+    }
 
     // Set up event listeners
-    document.getElementById("filter-failure-type").addEventListener("change", filterAndRender);
-    document.getElementById("filter-provider").addEventListener("change", filterAndRender);
-    document.getElementById("filter-age").addEventListener("change", filterAndRender);
-    document.getElementById("search-filename").addEventListener("input", filterAndRender);
+    const typeFilter = safeGetById("filter-failure-type");
+    const providerFilter = safeGetById("filter-provider");
+    const ageFilter = safeGetById("filter-age");
+    const searchInput = safeGetById("search-filename");
+    
+    if (typeFilter) typeFilter.addEventListener("change", filterAndRender);
+    if (providerFilter) providerFilter.addEventListener("change", filterAndRender);
+    if (ageFilter) ageFilter.addEventListener("change", filterAndRender);
+    if (searchInput) {
+        searchInput.addEventListener("input", filterAndRender);
+        // Also trigger on Enter key
+        searchInput.addEventListener("keydown", function(e) {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                filterAndRender();
+            }
+        });
+    }
 
-    filterAndRender();  // render after populating filters
+    // Initialize with filters applied
+    filterAndRender();
 }
+
+/**
+ * Initialize when document is ready
+ */
+document.addEventListener('DOMContentLoaded', function() {
+    // If global BILLS_DATA exists, initialize the dashboard
+    if (window.BILLS_DATA) {
+        initDashboard();
+        
+        // Add refresh button to UI
+        addRefreshButton();
+    }
+    
+    // Allow renderBillList to be called directly (for basic page rendering)
+    window.renderBillList = renderBillList;
+    
+    // Expose filter URL generator for other scripts
+    window.generateFilterURL = generateFilterURL;
+    
+    // Expose refresh function
+    window.refreshBillData = refreshBillData;
+});
 
 /**
  * Load failed bills data
@@ -1026,8 +1534,185 @@ function switchGrouping(groupBy) {
     displayBills(viewType, groupBy);
 }
 
-// Initialize dashboard when DOM is loaded
-document.addEventListener('DOMContentLoaded', initDashboard);
+/**
+ * Refresh bill data via AJAX without full page reload
+ * @param {string} refreshUrl - The URL to fetch fresh bill data (defaults to current URL)
+ */
+function refreshBillData(refreshUrl = null) {
+    // Default to current URL with filters preserved
+    if (!refreshUrl) {
+        // Get current filter state
+        const typeFilter = safeGetById("filter-failure-type");
+        const providerFilter = safeGetById("filter-provider");
+        const ageFilter = safeGetById("filter-age");
+        const searchInput = safeGetById("search-filename");
+        
+        // Create params object
+        const params = new URLSearchParams();
+        params.append('format', 'json');
+        
+        // Add current filters
+        if (typeFilter && typeFilter.value !== "All Types") {
+            params.append('type', typeFilter.value);
+        }
+        
+        if (providerFilter && providerFilter.value !== "All Providers") {
+            params.append('provider', providerFilter.value);
+        }
+        
+        if (ageFilter && ageFilter.value !== "All Dates") {
+            params.append('age', ageFilter.value);
+        }
+        
+        if (searchInput && searchInput.value.trim() !== "") {
+            params.append('q', searchInput.value.trim());
+        }
+        
+        // Preserve filenames param if it exists
+        const currentParams = new URLSearchParams(window.location.search);
+        if (currentParams.has('filenames')) {
+            params.append('filenames', currentParams.get('filenames'));
+        }
+        
+        refreshUrl = `${window.location.pathname}?${params.toString()}`;
+    }
+    
+    // Show loading indicator
+    const container = document.getElementById("bill-list-container");
+    if (container) {
+        container.innerHTML = `
+            <div class="text-center my-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2">Refreshing bill data...</p>
+            </div>
+        `;
+    }
+    
+    // Store current filter selections
+    const currentFilters = {
+        type: safeGetById("filter-failure-type")?.value,
+        provider: safeGetById("filter-provider")?.value,
+        age: safeGetById("filter-age")?.value,
+        search: safeGetById("search-filename")?.value
+    };
+    
+    // Make AJAX request
+    fetch(refreshUrl)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`Network response was not ok: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            // Update global bill data
+            if (Array.isArray(data.bills)) {
+                allFailedBills = data.bills;
+                console.log(`✅ Refreshed failed bills: ${allFailedBills.length}`);
+                
+                // Restore filter selections
+                const typeFilter = safeGetById("filter-failure-type");
+                const providerFilter = safeGetById("filter-provider");
+                const ageFilter = safeGetById("filter-age");
+                const searchInput = safeGetById("search-filename");
+                
+                if (typeFilter && currentFilters.type) typeFilter.value = currentFilters.type;
+                if (providerFilter && currentFilters.provider) providerFilter.value = currentFilters.provider;
+                if (ageFilter && currentFilters.age) ageFilter.value = currentFilters.age;
+                if (searchInput && currentFilters.search) searchInput.value = currentFilters.search;
+                
+                // Update URL with current filters
+                updateURLWithFilters();
+                
+                // Save filters to server
+                saveFiltersToLocalStorage();
+                
+                // Re-initialize dashboard with new data but preserve filters
+                initDashboard();
+                
+                // Show success message
+                showRefreshMessage("Data refreshed successfully", "success");
+            } else {
+                console.error("❌ Invalid data format received");
+                showRefreshMessage("Error: Invalid data received", "danger");
+            }
+        })
+        .catch(error => {
+            console.error('❌ Error refreshing data:', error);
+            showRefreshMessage(`Error refreshing data: ${error.message}`, "danger");
+            
+            // Still render with existing data
+            filterAndRender();
+        });
+}
 
-// Export the initialization function
-window.initFailedBillsDashboard = initDashboard;
+/**
+ * Show a temporary refresh message/alert
+ * @param {string} message - The message to display
+ * @param {string} type - The message type (success, danger, etc.)
+ */
+function showRefreshMessage(message, type = "info") {
+    const container = document.getElementById("refresh-message-container");
+    if (!container) {
+        // Create container if it doesn't exist
+        const newContainer = document.createElement("div");
+        newContainer.id = "refresh-message-container";
+        newContainer.className = "position-fixed top-0 start-50 translate-middle-x mt-3 z-index-1050";
+        document.body.appendChild(newContainer);
+        
+        // Use the newly created container
+        showRefreshMessage(message, type);
+        return;
+    }
+    
+    // Create alert
+    const alert = document.createElement("div");
+    alert.className = `alert alert-${type} alert-dismissible fade show`;
+    alert.role = "alert";
+    alert.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    `;
+    
+    // Add to container
+    container.appendChild(alert);
+    
+    // Auto-dismiss after 5 seconds
+    setTimeout(() => {
+        alert.classList.remove("show");
+        setTimeout(() => alert.remove(), 150);
+    }, 5000);
+}
+
+/**
+ * Create and add refresh button to UI
+ */
+function addRefreshButton() {
+    const filterRow = document.querySelector(".row.mb-3");
+    if (!filterRow) return;
+    
+    // Check if a refresh button already exists
+    if (document.getElementById("refresh-bills-btn")) return;
+    
+    // Create a column for the refresh button
+    const refreshCol = document.createElement("div");
+    refreshCol.className = "col-auto ms-auto";
+    
+    // Create refresh button
+    refreshCol.innerHTML = `
+        <button id="refresh-bills-btn" class="btn btn-outline-primary">
+            <i class="fas fa-sync-alt"></i> Refresh Data
+        </button>
+    `;
+    
+    // Add to filter row
+    filterRow.appendChild(refreshCol);
+    
+    // Add event listener
+    document.getElementById("refresh-bills-btn").addEventListener("click", function(e) {
+        e.preventDefault();
+        refreshBillData();
+    });
+}

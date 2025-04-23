@@ -18,15 +18,6 @@
     "age_days": 244
   },
   {
-    "filename": "20241217_1043.json",
-    "failure_types": [
-      "UNMATCHED_CPT"
-    ],
-    "provider": "Partners Imaging Center of Sarasota",
-    "dos": "2024-08-21",
-    "age_days": 244
-  },
-  {
     "filename": "20241217_1052.json",
     "failure_types": [
       "UNMATCHED_CPT"

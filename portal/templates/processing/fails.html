@@ -22,24 +22,36 @@
         <div class="alert alert-info">
             <i class="fas fa-check-circle me-2"></i>
             No failed processing files found.
-            {% if request.args.get('filenames') %}
-                (Based on provided filter)
+            {% if filter_params %}
+                (Based on provided filters)
             {% else %}
                  All documents have been processed successfully or moved.
             {% endif %}
         </div>
     {% endif %}
 </div>
+
+<!-- Hidden containers for data transfer from server to client -->
+<div id="server-bills-data" style="display:none;" data-bills='{{ bills_json | tojson }}'></div>
+{% if filter_params %}
+<div id="server-filter-params" style="display:none;" data-filters='{{ filter_params | tojson }}'></div>
+{% endif %}
 {% endblock %}
 
 {% block scripts %}
 <!-- Include the view manager script (ensure renderBillList is defined here) -->
 <script src="{{ url_for('static', filename='js/failed-bills-view-manager.js') }}"></script>
 
-<!-- ✅ Prompt: In fails.html, just show whatever JSON is passed -->
 <script>
   document.addEventListener('DOMContentLoaded', function () {
-    window.BILLS_DATA = {{ bills_json | tojson | safe }};
+    // Get bill data from hidden element
+    const billsDataElement = document.getElementById('server-bills-data');
+    window.BILLS_DATA = billsDataElement ? JSON.parse(billsDataElement.dataset.bills || '[]') : [];
+    
+    // Get filter parameters from hidden element if available
+    const filterParamsElement = document.getElementById('server-filter-params');
+    window.SERVER_FILTERS = filterParamsElement ? JSON.parse(filterParamsElement.dataset.filters || '{}') : {};
+    
     // Ensure renderBillList exists in failed-bills-view-manager.js
     if (window.renderBillList) {
         window.renderBillList(window.BILLS_DATA);

@@ -10,6 +10,19 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
+def get_proc_desc(cursor, proc_cd):
+    """Get procedure description and category from dim_proc table."""
+    if not proc_cd:
+        return None, None
+    cursor.execute("SELECT proc_desc, category FROM dim_proc WHERE proc_cd = ?", (proc_cd,))
+    result = cursor.fetchone()
+    if result:
+        return {
+            'proc_desc': result['proc_desc'],
+            'category': result['category']
+        }
+    return None
+
 def process_json_file(s3_client, bucket_name, file_key, conn):
     try:
         # Skip if file is already in staging
@@ -61,10 +74,29 @@ def process_json_file(s3_client, bucket_name, file_key, conn):
         """, (provider_id,))
         provider_result = cursor.fetchone()
         
-        # Create filemaker section
+        # Add procedure descriptions to service lines
+        if 'service_lines' in json_data:
+            for service_line in json_data['service_lines']:
+                if 'cpt_code' in service_line:
+                    proc_info = get_proc_desc(cursor, service_line['cpt_code'])
+                    if proc_info:
+                        service_line['proc_desc'] = proc_info['proc_desc']
+                        service_line['category'] = proc_info['category']
+
+        # Create filemaker section with procedure descriptions for line items
+        line_items_with_desc = []
+        for item in line_items:
+            item_dict = dict(item)
+            if 'CPT' in item_dict:
+                proc_info = get_proc_desc(cursor, item_dict['CPT'])
+                if proc_info:
+                    item_dict['proc_desc'] = proc_info['proc_desc']
+                    item_dict['category'] = proc_info['category']
+            line_items_with_desc.append(item_dict)
+
         filemaker_data = {
             "order": dict(order_result) if order_result else None,
-            "line_items": [dict(item) for item in line_items],
+            "line_items": line_items_with_desc,
             "provider": dict(provider_result) if provider_result else None
         }
         

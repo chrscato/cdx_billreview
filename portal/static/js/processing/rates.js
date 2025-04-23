@@ -6,6 +6,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Initialize PDF viewer
     initPdfViewer();
+
+    // Initialize category rates functionality
+    initCategoryRates();
 });
 
 /**
@@ -33,6 +36,86 @@ function initPdfViewer() {
 }
 
 /**
+ * Initialize the category rates functionality
+ */
+function initCategoryRates() {
+    // Handle category checkbox changes
+    document.querySelectorAll('[name^="category_enabled["]').forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            handleCategoryToggle(this);
+        });
+
+        // Initialize state
+        handleCategoryToggle(checkbox);
+    });
+
+    // Handle tab switching
+    document.querySelectorAll('button[data-bs-toggle="tab"]').forEach(tab => {
+        tab.addEventListener('shown.bs.tab', function(event) {
+            handleTabSwitch(event.target.getAttribute('id'));
+        });
+    });
+
+    // Handle form submission
+    const form = document.getElementById('rateAssignmentForm');
+    if (form) {
+        form.addEventListener('submit', function(event) {
+            event.preventDefault(); // Prevent default form submission
+            handleRateAssignment(); // Use our AJAX handler instead
+        });
+    }
+}
+
+/**
+ * Handle toggling of category checkboxes
+ */
+function handleCategoryToggle(checkbox) {
+    const container = checkbox.closest('.col-md-4, .col-md-6');
+    const rateInput = container.querySelector('[name^="category_rate["]');
+    
+    if (checkbox.checked) {
+        rateInput.required = true;
+        rateInput.disabled = false;
+        rateInput.classList.remove('is-invalid');
+    } else {
+        rateInput.required = false;
+        rateInput.disabled = true;
+        rateInput.value = '';
+        rateInput.classList.remove('is-invalid');
+    }
+}
+
+/**
+ * Handle switching between individual and category rate tabs
+ */
+function handleTabSwitch(activeTabId) {
+    const individualRatesInputs = document.querySelectorAll('#individual-rates input[name="rate"]');
+    const categoryRatesCheckboxes = document.querySelectorAll('[name^="category_enabled["]');
+    
+    if (activeTabId === 'individual-rates-tab') {
+        // Enable validation for individual rates
+        individualRatesInputs.forEach(input => {
+            input.required = true;
+        });
+        // Disable validation for category rates
+        categoryRatesCheckboxes.forEach(checkbox => {
+            const rateInput = checkbox.closest('.col-md-4, .col-md-6').querySelector('[name^="category_rate["]');
+            rateInput.required = false;
+        });
+    } else {
+        // Disable validation for individual rates
+        individualRatesInputs.forEach(input => {
+            input.required = false;
+        });
+        // Enable validation for checked category rates
+        categoryRatesCheckboxes.forEach(checkbox => {
+            const rateInput = checkbox.closest('.col-md-4, .col-md-6').querySelector('[name^="category_rate["]');
+            rateInput.required = checkbox.checked;
+        });
+    }
+}
+
+/**
  * Initialize the rate assignment functionality
  */
 function initRateAssignment() {
@@ -46,10 +129,87 @@ function initRateAssignment() {
     
     // Handle OTA rate assignment
     if (createOTABtn) {
-        createOTABtn.addEventListener('click', function() {
-            showAlert('OTA rate assignment will be implemented separately', 'info');
-        });
+        createOTABtn.addEventListener('click', handleRateAssignment);
     }
+}
+
+/**
+ * Validate and collect category rate data
+ */
+function validateCategoryRates() {
+    const categoryData = [];
+    let isValid = true;
+
+    document.querySelectorAll('[name^="category_enabled["]').forEach(checkbox => {
+        if (checkbox.checked) {
+            const container = checkbox.closest('.col-md-4, .col-md-6');
+            const rateInput = container.querySelector('[name^="category_rate["]');
+            const rate = parseFloat(rateInput.value);
+
+            if (!rateInput.value || rate <= 0) {
+                rateInput.classList.add('is-invalid');
+                isValid = false;
+            } else {
+                rateInput.classList.remove('is-invalid');
+                // Extract category name from the input name (e.g., "category_rate[mri_wo]" -> "mri_wo")
+                const categoryName = rateInput.name.match(/\[(.*?)\]/)[1];
+                categoryData.push({
+                    category: categoryName,
+                    rate: rate
+                });
+            }
+        }
+    });
+
+    return {
+        isValid,
+        categoryData
+    };
+}
+
+/**
+ * Validate and collect individual rate data
+ */
+function validateIndividualRates() {
+    const rateData = [];
+    let isValid = true;
+
+    const cptCodeElements = document.querySelectorAll('[data-cpt-code]');
+    cptCodeElements.forEach(element => {
+        const cptCode = element.dataset.cptCode;
+        const rateInput = document.getElementById(`rate-input-${cptCode}`);
+        const modifierInput = element.querySelector('[name="modifier"]');
+        
+        if (rateInput.required && (!rateInput.value || parseFloat(rateInput.value) <= 0)) {
+            rateInput.classList.add('is-invalid');
+            isValid = false;
+        } else if (rateInput.value) {
+            rateInput.classList.remove('is-invalid');
+            rateData.push({
+                cpt_code: cptCode,
+                rate: parseFloat(rateInput.value),
+                modifier: modifierInput ? modifierInput.value : null
+            });
+        }
+    });
+
+    return {
+        isValid,
+        rateData
+    };
+}
+
+/**
+ * Format the category summary information into a readable message
+ */
+function formatCategorySummary(summary) {
+    if (!summary || Object.keys(summary).length === 0) return '';
+    
+    const summaryLines = Object.entries(summary).map(([category, count]) => {
+        return `- ${category}: ${count} CPT codes updated`;
+    });
+    
+    return '\n\nCategory Update Summary:\n' + summaryLines.join('\n');
 }
 
 /**
@@ -60,78 +220,120 @@ async function handleRateAssignment() {
     const form = document.getElementById('rateAssignmentForm');
     if (!form) return;
     
-    // Get filename
+    // Get filename and other common data
     const filename = document.getElementById('filename').value;
     
-    // Get CPT code(s) from the failure reasons
-    const cptCodeElements = document.querySelectorAll('[data-cpt-code]');
-    const cptCodes = Array.from(cptCodeElements).map(el => el.dataset.cptCode);
-    
-    if (cptCodes.length === 0) {
-        showAlert('No CPT codes found for rate assignment', 'danger');
-        return;
-    }
-    
-    // Validate rate inputs
-    let isValid = true;
-    const rateData = [];
-    
-    cptCodes.forEach(cptCode => {
-        const rateInput = document.getElementById(`rate-input-${cptCode}`);
-        const modifierInput = document.querySelector(`[data-cpt-code="${cptCode}"] [name="modifier"]`);
-        
-        if (!rateInput.value || parseFloat(rateInput.value) <= 0) {
-            rateInput.classList.add('is-invalid');
-            isValid = false;
-        } else {
-            rateInput.classList.remove('is-invalid');
-            
-            rateData.push({
-                cpt_code: cptCode,
-                rate: parseFloat(rateInput.value),
-                modifier: modifierInput ? modifierInput.value : null
-            });
+    // Determine active tab
+    const activeTab = document.querySelector('.tab-pane.active');
+    const isIndividualRates = activeTab.id === 'individual-rates';
+
+    // Validate based on active tab
+    let validationResult;
+    let rateType;
+    let requestData = {};
+
+    if (isIndividualRates) {
+        validationResult = validateIndividualRates();
+        rateType = 'individual';
+        requestData.rates = validationResult.rateData;
+    } else {
+        validationResult = validateCategoryRates();
+        if (validationResult.categoryData.length === 0) {
+            showAlert('Please enable at least one category and provide its rate', 'warning');
+            return;
         }
-    });
-    
-    if (!isValid) {
-        showAlert('Please enter valid rates for all CPT codes', 'warning');
+        rateType = 'category';
+        
+        // Build category_rates object in the format the server expects
+        const categoryRates = {};
+        validationResult.categoryData.forEach(item => {
+            categoryRates[item.category] = item.rate;
+        });
+        requestData.category_rates = categoryRates;
+    }
+
+    if (!validationResult.isValid) {
+        showAlert('Please enter valid rates for all selected items', 'warning');
         return;
     }
+
+    // Add common fields
+    requestData.rate_type = rateType;
     
-    // Get TIN and other data
-    const cleanTin = document.getElementById('clean-tin').value;
-    const notes = document.getElementById('rate-notes').value;
-    const providerNetwork = document.getElementById('provider-network').value;
+    // Get filter parameters if they exist
+    if (form.querySelector('input[name="filter_params"]')) {
+        try {
+            requestData.filter_params = JSON.parse(form.querySelector('input[name="filter_params"]').value);
+        } catch (e) {
+            console.error('Error parsing filter parameters:', e);
+        }
+    }
     
     try {
         // Submit to server
         const response = await fetch(`/processing/fails/${filename}/assign-rates`, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
             },
-            body: JSON.stringify({
-                tin: cleanTin,
-                rates: rateData,
-                notes: notes,
-                provider_network: providerNetwork
-            })
+            body: JSON.stringify(requestData)
         });
         
         if (response.ok) {
             const result = await response.json();
-            if (result.success) {
-                showAlert('Rate(s) assigned successfully!', 'success');
-                // Redirect after a short delay
+            if (result.status === 'success') {
+                let successMessage = result.message || 'Rates assigned successfully';
+                
+                // Add category summary information if available
+                if (rateType === 'category' && result.category_summary) {
+                    successMessage += formatCategorySummary(result.category_summary);
+                }
+                
+                // Create a more detailed alert for category assignments
+                const alertElement = document.createElement('div');
+                alertElement.className = 'alert alert-success alert-dismissible fade show';
+                alertElement.role = 'alert';
+                alertElement.style.whiteSpace = 'pre-line'; // Preserve line breaks
+                alertElement.innerHTML = `
+                    ${successMessage}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                `;
+                
+                // Replace showAlert with direct alert creation for better formatting
+                let alertContainer = document.getElementById('alert-container');
+                if (!alertContainer) {
+                    alertContainer = document.createElement('div');
+                    alertContainer.id = 'alert-container';
+                    alertContainer.style.position = 'fixed';
+                    alertContainer.style.top = '20px';
+                    alertContainer.style.right = '20px';
+                    alertContainer.style.zIndex = '9999';
+                    alertContainer.style.maxWidth = '400px';
+                    document.body.appendChild(alertContainer);
+                }
+                
+                // Add to container
+                alertContainer.appendChild(alertElement);
+                
+                // Auto-dismiss after 10 seconds for category summaries (longer than usual)
                 setTimeout(() => {
-                    window.location.href = '/processing/fails';
-                }, 1500);
+                    alertElement.classList.remove('show');
+                    setTimeout(() => {
+                        alertContainer.removeChild(alertElement);
+                    }, 150);
+                }, 10000);
+                
+                // Redirect after a longer delay for category assignments
+                setTimeout(() => {
+                    window.location.href = result.redirect || '/processing/fails';
+                }, 3000);
             } else {
-                showAlert(`Error: ${result.error}`, 'danger');
+                showAlert(result.message || 'Error assigning rates', 'danger');
             }
         } else {
-            showAlert(`Server error: ${response.status}`, 'danger');
+            const errorData = await response.json();
+            showAlert(errorData.message || `Server error: ${response.status}`, 'danger');
         }
     } catch (error) {
         showAlert(`Error assigning rate: ${error.message}`, 'danger');

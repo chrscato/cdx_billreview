@@ -1,0 +1,46 @@
+{
+    "filemaker": {
+        "provider": {
+            "Billing Name": "Test Provider",
+            "Provider ID": "TEST123"
+        },
+        "order": {
+            "Order ID": "ORD123",
+            "Patient Name": "Test Patient",
+            "DOS": "2024-02-04"
+        }
+    },
+    "billing_info": {
+        "total_charge": "$1,500.00",
+        "billing_provider_name": "Test Provider",
+        "billing_provider_id": "TEST123"
+    },
+    "service_lines": [
+        {
+            "cpt_code": "70551",
+            "charge_amount": "$500.00",
+            "units": 1,
+            "date_of_service": "2024-02-04",
+            "description": "MRI BRAIN WITHOUT CONTRAST"
+        },
+        {
+            "cpt_code": "70552",
+            "charge_amount": "$600.00",
+            "units": 1,
+            "date_of_service": "2024-02-04",
+            "description": "MRI BRAIN WITH CONTRAST"
+        },
+        {
+            "cpt_code": "71045",
+            "charge_amount": "$400.00",
+            "units": 1,
+            "date_of_service": "2024-02-04",
+            "description": "CHEST X-RAY"
+        }
+    ],
+    "validation_info": {
+        "status": "PENDING",
+        "failure_reasons": [],
+        "rate_assignment_complete": false
+    }
+} 
