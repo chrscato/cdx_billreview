@@ -822,6 +822,12 @@ def deny_fail_file(filename):
             flash(error_message, 'danger')
             return redirect(url_for('processing.view_fail_file', filename=filename))
 
+def clean_tin(tin: str) -> str:
+    """Clean and standardize TIN format by removing non-numeric characters."""
+    if not tin:
+        return ""
+    return re.sub(r'[^0-9]', '', tin)
+
 @processing_bp.route('/fails/<filename>/assign-rates', methods=['POST'])
 def assign_rates(filename):
     """Handle rate assignments for CPT codes with missing rates"""
@@ -890,6 +896,16 @@ def assign_rates(filename):
         provider_name = json_data.get('filemaker', {}).get('provider', {}).get('Billing Name', 
                        json_data.get('billing_info', {}).get('billing_provider_name', 'Unknown Provider'))
         
+        # Extract TIN from JSON data and clean it
+        tin = json_data.get('filemaker', {}).get('provider', {}).get('Tax ID', '')
+        clean_tin_value = clean_tin(tin)
+        if not clean_tin_value:
+            logger.error(f"No valid TIN found for {filename}")
+            return jsonify({
+                'status': 'error',
+                'message': 'No valid TIN found in file'
+            }), 400
+        
         # Extract CPT codes for better messaging
         cpt_codes = []
         for line in json_data.get('service_lines', []):
@@ -936,24 +952,59 @@ def assign_rates(filename):
             for category in category_rates.keys():
                 category_summary[category] = 0
             
-            # Update rates for each service line based on its CPT code's category
-            rates_updated = False
-            for line in json_data.get('service_lines', []):
-                cpt_code = line.get('cpt_code')
-                if not cpt_code:
-                    continue
+            try:
+                with get_db_connection() as conn:
+                    cursor = conn.cursor()
                     
-                # Find which category this CPT code belongs to
-                for category, cpt_list in cpt_by_category.items():
-                    if cpt_code in cpt_list and category in category_rates:
-                        line['rate'] = category_rates[category]
-                        category_summary[category] += 1
-                        rates_updated = True
-                        logger.info(f"Updated rate for CPT {cpt_code} to {category_rates[category]} (category: {category})")
-                        break
-            
-            if not rates_updated:
-                logger.warning(f"No rates were updated for {filename}")
+                    # Start a transaction
+                    cursor.execute("BEGIN TRANSACTION")
+                    
+                    try:
+                        # Update rates for each service line based on its CPT code's category
+                        rates_updated = False
+                        for line in json_data.get('service_lines', []):
+                            cpt_code = line.get('cpt_code')
+                            if not cpt_code:
+                                continue
+                                
+                            # Find which category this CPT code belongs to
+                            for category, cpt_list in cpt_by_category.items():
+                                if cpt_code in cpt_list and category in category_rates:
+                                    rate = category_rates[category]
+                                    line['rate'] = rate
+                                    category_summary[category] += 1
+                                    rates_updated = True
+                                    
+                                    # Insert rate into ppo table
+                                    cursor.execute("""
+                                        INSERT OR REPLACE INTO ppo 
+                                        (tin, proc_cd, rate, proc_category) 
+                                        VALUES (?, ?, ?, ?)
+                                    """, (clean_tin_value, cpt_code, rate, category))
+                                    
+                                    logger.info(f"Updated rate for CPT {cpt_code} to {rate} (category: {category})")
+                                    break
+                        
+                        if not rates_updated:
+                            logger.warning(f"No rates were updated for {filename}")
+                        
+                        # Commit the transaction
+                        conn.commit()
+                        logger.info(f"Successfully committed {sum(category_summary.values())} rate updates to database")
+                        
+                    except Exception as e:
+                        # Rollback on error
+                        conn.rollback()
+                        logger.error(f"Database error while updating rates: {str(e)}")
+                        raise
+                        
+            except sqlite3.Error as e:
+                logger.error(f"Database error in assign_rates: {str(e)}")
+                return jsonify({
+                    'status': 'error',
+                    'message': f'Database error: {str(e)}'
+                }), 500
+                
         else:
             return jsonify({
                 'status': 'error',
@@ -997,29 +1048,17 @@ def assign_rates(filename):
         # Set flash message for regular form submission
         flash(success_message, 'success')
         
-        # Build response with filter parameters preserved
-        redirect_url = url_for('processing.list_fail_files')
-        redirect_url_with_params = build_redirect_url(redirect_url, filter_params)
-        
         if 'X-Requested-With' in request.headers and request.headers['X-Requested-With'] == 'XMLHttpRequest':
-            # For AJAX requests
-            response_data = {
+            return jsonify({
                 'status': 'success',
                 'message': success_message,
-                'redirect': redirect_url_with_params
-            }
-            
-            # Add category summary for category assignments
-            if rate_type == 'category':
-                response_data['category_summary'] = category_summary
-            
-            return jsonify(response_data)
+                'redirect': build_redirect_url(url_for('processing.list_fail_files'), filter_params)
+            })
         else:
-            # For regular form submissions
-            return redirect(redirect_url_with_params)
+            return redirect(build_redirect_url(url_for('processing.list_fail_files'), filter_params))
             
     except Exception as e:
-        logger.error(f"Error assigning rates for {filename}: {str(e)}")
+        logger.error(f"Error assigning rates for {filename}: {str(e)}", exc_info=True)
         error_message = f"Failed to assign rates: {str(e)}"
         if 'X-Requested-With' in request.headers and request.headers['X-Requested-With'] == 'XMLHttpRequest':
             return jsonify({

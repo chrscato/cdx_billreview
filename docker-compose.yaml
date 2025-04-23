@@ -1,0 +1,17 @@
+version: "3.8"
+
+services:
+  bill-review:
+    build: .
+    container_name: bill-review
+    ports:
+      - "5002:5002"
+
+  ngrok:
+    image: ngrok/ngrok:latest
+    container_name: ngrok
+    depends_on:
+      - bill-review
+    volumes:
+      - ./ngrok.yml:/etc/ngrok.yml
+    command: start --config /etc/ngrok.yml --all

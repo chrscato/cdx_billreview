@@ -1,0 +1,6 @@
+authtoken: cr_2tMT7cxxHUtpVl6pmdDxx7Y8vdy
+tunnels:
+  web:
+    proto: http
+    addr: bill-review:5002
+    hostname: cdx-billreview.ngrok.io
