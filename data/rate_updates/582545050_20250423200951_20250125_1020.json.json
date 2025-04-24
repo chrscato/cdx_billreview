@@ -1,0 +1,23 @@
+{
+  "timestamp": "2025-04-23 20:09:51",
+  "user": "admin_user@clarity-dx.com",
+  "filename": "20250125_1020.json",
+  "tin": "582545050",
+  "rate_type": "create_ota",
+  "source": "manual_correction",
+  "order_id": "ADA89A3C-9F4D-490A-9B63-48A3CA29E542",
+  "rates": [
+    {
+      "cpt_code": 72141,
+      "rate": 450,
+      "modifier": null
+    }
+  ],
+  "ota_data": {
+    "provider_name": "Open MRI of Tifton, LLC",
+    "provider_npi": "1679542526",
+    "provider_type": "",
+    "order_id": "ADA89A3C-9F4D-490A-9B63-48A3CA29E542",
+    "notes": ""
+  }
+}

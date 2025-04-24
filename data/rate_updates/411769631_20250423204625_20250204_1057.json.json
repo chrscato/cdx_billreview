@@ -1,0 +1,23 @@
+{
+  "timestamp": "2025-04-23 20:46:25",
+  "user": "admin_user@clarity-dx.com",
+  "filename": "20250204_1057.json",
+  "tin": "411769631",
+  "rate_type": "create_ota",
+  "source": "manual_correction",
+  "order_id": "E868B445-AA89-44D9-8D2B-7AD5D77DFE49",
+  "rates": [
+    {
+      "cpt_code": 73721,
+      "rate": 303,
+      "modifier": null
+    }
+  ],
+  "ota_data": {
+    "provider_name": "Midwest Radiology Outpatient Imaging",
+    "provider_npi": "1720059264",
+    "provider_type": "",
+    "order_id": "E868B445-AA89-44D9-8D2B-7AD5D77DFE49",
+    "notes": ""
+  }
+}

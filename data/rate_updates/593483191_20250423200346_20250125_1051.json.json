@@ -1,0 +1,23 @@
+{
+  "timestamp": "2025-04-23 20:03:46",
+  "user": "admin_user@clarity-dx.com",
+  "filename": "20250125_1051.json",
+  "tin": "593483191",
+  "rate_type": "create_ota",
+  "source": "manual_correction",
+  "order_id": "F5B20975-A3B7-49EB-8FD4-FAFEF45B379C",
+  "rates": [
+    {
+      "cpt_code": 72148,
+      "rate": 300,
+      "modifier": null
+    }
+  ],
+  "ota_data": {
+    "provider_name": "MRI Associates of Saint Pete",
+    "provider_npi": "1972518405",
+    "provider_type": "",
+    "order_id": "F5B20975-A3B7-49EB-8FD4-FAFEF45B379C",
+    "notes": ""
+  }
+}

@@ -23,84 +23,6 @@ BASE_DIR = Path(__file__).resolve().parents[2]  # Assumes views/processing.py is
 # Database path - filemaker.db is in the root directory, not in data/
 FILEMAKER_DB = BASE_DIR / "filemaker.db"
 
-@contextmanager
-def get_db_connection():
-    """Context manager for database connections with explicit logging."""
-    logger.info(f"Opening database connection to {FILEMAKER_DB}")
-    try:
-        conn = sqlite3.connect(FILEMAKER_DB)
-        logger.info("Database connection established successfully")
-        yield conn
-    except sqlite3.Error as e:
-        logger.error(f"SQLite error during connection: {str(e)}", exc_info=True)
-        raise
-    except Exception as e:
-        logger.error(f"Unexpected error in database connection: {str(e)}", exc_info=True)
-        raise
-    finally:
-        if 'conn' in locals():
-            logger.info("Closing database connection")
-            conn.close()
-
-def get_cpt_codes_by_category() -> Dict[str, List[str]]:
-    """
-    Query the dim_proc table to get all CPT codes associated with each category.
-    
-    Returns:
-        Dict[str, List[str]]: A dictionary mapping category names to lists of CPT codes.
-        Example:
-        {
-            'mri_wo': ['70551', '70540', ...],
-            'mri_w': ['70552', '70542', ...],
-            'mri_wwo': ['70553', '70543', ...],
-            'ct_wo': ['70450', '71250', ...],
-            'ct_w': ['70460', '71260', ...],
-            'ct_wwo': ['70470', '71270', ...],
-            'xray': ['71045', '71046', ...],
-            'ultrasound': ['76536', '76604', ...]
-        }
-    """
-    category_mapping = {
-        'mri_wo': 'MRI w/o',
-        'mri_w': 'MRI w/',
-        'mri_wwo': 'MRI w/&w/o',
-        'ct_wo': 'CT w/o',
-        'ct_w': 'CT w/',
-        'ct_wwo': 'CT w/&w/o',
-        'xray': 'XRAY',
-        'ultrasound': 'ULTRASOUND'
-    }
-    
-    result = {category: [] for category in category_mapping.keys()}
-    
-    try:
-        with get_db_connection() as conn:
-            cursor = conn.cursor()
-            
-            # Query for each category
-            for category_key, category_name in category_mapping.items():
-                cursor.execute("""
-                    SELECT DISTINCT proc_cd 
-                    FROM dim_proc 
-                    WHERE category = ? 
-                    ORDER BY proc_cd
-                """, (category_name,))
-                
-                cpt_codes = [row[0] for row in cursor.fetchall()]
-                result[category_key] = cpt_codes
-                
-                # Log the count of CPT codes found for each category
-                logger.info(f"Found {len(cpt_codes)} CPT codes for category {category_name}")
-        
-        return result
-        
-    except sqlite3.Error as e:
-        logger.error(f"Database error in get_cpt_codes_by_category: {str(e)}")
-        return result
-    except Exception as e:
-        logger.error(f"Unexpected error in get_cpt_codes_by_category: {str(e)}")
-        return result
-
 # Set up logging
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -122,6 +44,29 @@ except Exception as e:
     s3_client = None
 
 S3_BUCKET = os.getenv('S3_BUCKET')
+
+def get_s3_json(key):
+    """Get JSON data from S3."""
+    try:
+        response = s3_client.get_object(Bucket=S3_BUCKET, Key=key)
+        return json.loads(response['Body'].read().decode('utf-8'))
+    except Exception as e:
+        logger.error(f"Error getting JSON from S3: {str(e)}")
+        raise
+
+def upload_json_to_s3(json_data, key):
+    """Upload JSON data to S3."""
+    try:
+        s3_client.put_object(
+            Bucket=S3_BUCKET,
+            Key=key,
+            Body=json.dumps(json_data, indent=2).encode('utf-8'),
+            ContentType='application/json'
+        )
+        return True
+    except Exception as e:
+        logger.error(f"Error uploading JSON to S3: {str(e)}")
+        return False 
 
 def get_fail_files_count():
     """Count the number of JSON files in the fails directory."""
@@ -165,24 +110,13 @@ def list_fail_files():
     
     try:
         with open(json_path, "r") as f:
-            # Handle potential JSON decode errors during loading
-            try:
-                all_files = json.load(f)
-                if not isinstance(all_files, list):
-                    logger.error(f"Expected a list in {json_path}, got {type(all_files)}.")
-                    all_files = [] # Default to empty list if not a list
-            except json.JSONDecodeError as e:
-                logger.error(f"Error decoding JSON from {json_path}: {e}")
-                all_files = [] # Default to empty list on decode error
-    except FileNotFoundError:
-        logger.error(f"Failed summary JSON not found at: {json_path}")
-        all_files = [] # Default to empty list if file not found
-    except Exception as e:
-        logger.error(f"Unexpected error reading {json_path}: {e}")
-        all_files = [] # Default to empty list on other errors
-
+            all_files = json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError) as e:
+        logger.error(f"Error loading summary data: {str(e)}")
+        all_files = []
+    
     # Get filter parameters from request or session
-    filter_params = get_filter_params_from_request(request) 
+    filter_params = get_filter_params_from_request(request)
     
     # Apply filters
     files = all_files
@@ -190,36 +124,34 @@ def list_fail_files():
     # Filter by filenames if specified
     filenames_param = filter_params.get('filenames')
     if filenames_param:
-        # Ensure filenames_param is treated as a string before splitting
         selected = set(f.strip() for f in str(filenames_param).split(",") if f.strip())
-        # Filter safely using .get()
-        files = [f for f in files if isinstance(f, dict) and f.get("filename") in selected]
+        files = [f for f in files if f.get("filename") in selected]
     
     # Filter by type if specified
     type_param = filter_params.get('type')
     if type_param and type_param != "All Types":
-        files = [f for f in files if isinstance(f, dict) and type_param in f.get("failure_types", [])]
+        files = [f for f in files if type_param in f.get("failure_types", [])]
     
     # Filter by provider if specified
     provider_param = filter_params.get('provider')
     if provider_param and provider_param != "All Providers":
-        files = [f for f in files if isinstance(f, dict) and f.get("provider") == provider_param]
+        files = [f for f in files if f.get("provider") == provider_param]
     
     # Filter by age if specified
     age_param = filter_params.get('age')
     if age_param and age_param != "All Dates":
         if age_param == "0–30 days":
-            files = [f for f in files if isinstance(f, dict) and f.get("age_days", 0) <= 30]
+            files = [f for f in files if f.get("age_days", 0) <= 30]
         elif age_param == "31–60 days":
-            files = [f for f in files if isinstance(f, dict) and 30 < f.get("age_days", 0) <= 60]
+            files = [f for f in files if 30 < f.get("age_days", 0) <= 60]
         elif age_param == "60+ days":
-            files = [f for f in files if isinstance(f, dict) and f.get("age_days", 0) > 60]
+            files = [f for f in files if f.get("age_days", 0) > 60]
     
     # Filter by search term if specified
     search_param = filter_params.get('q')
     if search_param:
         search_term = search_param.lower()
-        files = [f for f in files if isinstance(f, dict) and search_term in f.get("filename", "").lower()]
+        files = [f for f in files if search_term in f.get("filename", "").lower()]
     
     # Check if request wants JSON format
     if request.args.get('format') == 'json':
@@ -236,311 +168,6 @@ def list_fail_files():
         fails_count=len(files),
         filter_params=filter_params
     )
-
-@processing_bp.route('/fails/<filename>', methods=['GET', 'POST'])
-def view_fail_file(filename):
-    """View a specific file that failed processing validation."""
-    # Construct the full S3 key
-    key = f'data/hcfa_json/valid/mapped/staging/fails/{filename}'
-    
-    # Get filter parameters from referrer if they exist
-    filter_params = {}
-    referrer = request.referrer or ""
-    if "filenames=" in referrer:
-        # Extract the filenames parameter from the referrer URL
-        parsed_url = urllib.parse.urlparse(referrer)
-        query_params = urllib.parse.parse_qs(parsed_url.query)
-        if 'filenames' in query_params:
-            filter_params['filenames'] = query_params['filenames'][0]
-    
-    # Or directly from the request if provided
-    for param in ['filenames']:
-        if param in request.args:
-            filter_params[param] = request.args.get(param)
-    
-    try:
-        # Handle POST request for saving changes
-        if request.method == 'POST':
-            # Get the JSON data from the request
-            form_data = request.form.to_dict()
-            json_data = get_s3_json(key)
-            
-            # Update the JSON data with form values
-            if 'category_rates' in form_data:
-                category_rates = json.loads(form_data['category_rates'])
-                if 'rate_assignment' not in json_data:
-                    json_data['rate_assignment'] = {}
-                json_data['rate_assignment']['category_rates'] = category_rates
-            
-            # Save the updated JSON back to S3
-            upload_json_to_s3(json_data, key)
-            
-            flash('Changes saved successfully.', 'success')
-            return redirect(url_for('processing.view_fail_file', filename=filename, **filter_params))
-        
-        # Handle GET request (view file)
-        json_data = get_s3_json(key)
-        fails_count = get_fail_files_count()
-        
-        # Get list of all failed files
-        prefix = 'data/hcfa_json/valid/mapped/staging/fails/'
-        all_files = [os.path.basename(f) for f in list_objects(prefix) if f.endswith('.json')]
-        
-        # Find current file index
-        try:
-            current_index = all_files.index(filename) + 1  # 1-based index for display
-        except ValueError:
-            current_index = 1
-        
-        # Get next and previous filenames
-        next_file = all_files[current_index] if current_index < len(all_files) else None
-        prev_file = all_files[current_index - 2] if current_index > 1 else None
-        
-        # Normalize the JSON data structure if needed fields are missing
-        if 'filemaker' not in json_data:
-            json_data['filemaker'] = {'order': {}, 'line_items': [], 'provider': {}}
-        elif 'order' not in json_data['filemaker']:
-            json_data['filemaker']['order'] = {}
-        elif 'line_items' not in json_data['filemaker']:
-            json_data['filemaker']['line_items'] = []
-        elif 'provider' not in json_data['filemaker']:
-            json_data['filemaker']['provider'] = {}
-            
-        # Ensure validation_info is present
-        if 'validation_info' not in json_data:
-            json_data['validation_info'] = {'status': 'UNKNOWN', 'failure_reasons': []}
-        
-        # If we have filter params, pass them to next/prev navigation as well
-        filter_query = ""
-        if filter_params:
-            filter_query = "?" + "&".join([f"{k}={urllib.parse.quote(v)}" for k, v in filter_params.items() if v])
-        
-        return render_template('processing/edit_fail.html', 
-                              filename=filename,
-                              json_data=json_data,
-                              fails_count=fails_count,
-                              next_file=next_file,
-                              prev_file=prev_file,
-                              current_index=current_index,
-                              total_files=len(all_files),
-                              filter_params=filter_params,
-                              filter_query=filter_query)
-    except Exception as e:
-        logger.error(f"Error viewing failed file {filename}: {str(e)}")
-        return render_template('preprocessing/error.html', error=str(e))
-
-@processing_bp.route('/fails/<filename>/submit', methods=['POST'])
-def submit_fail_file(filename):
-    """Submit updates to a failed file."""
-    form_data = request.form.to_dict(flat=False)
-    action = form_data.get('action', ['save'])[0]
-    
-    # Get the filter parameters from referrer or form data
-    filter_params = {}
-    referrer = request.referrer or ""
-    
-    # Extract filter parameters either from the form or from the referrer URL
-    if form_data.get('filter_params'):
-        # If filter parameters were passed in the form
-        filter_params = json.loads(form_data.get('filter_params', ['{}'])[0])
-    elif "filenames=" in referrer:
-        # Extract the filenames parameter from the referrer URL
-        parsed_url = urllib.parse.urlparse(referrer)
-        query_params = urllib.parse.parse_qs(parsed_url.query)
-        if 'filenames' in query_params:
-            filter_params['filenames'] = query_params['filenames'][0]
-    
-    # Get the current JSON data
-    key = f'data/hcfa_json/valid/mapped/staging/fails/{filename}'
-    try:
-        json_data = get_s3_json(key)
-        
-        # Process service lines
-        service_line_pattern = re.compile(r'service_lines\[(\d+)\]\[(.*?)\]')
-        service_lines = {}
-        
-        for form_key, value in form_data.items():
-            if form_key.startswith('service_lines['):
-                match = service_line_pattern.match(form_key)
-                if match:
-                    index = int(match.group(1))
-                    field = match.group(2)
-                    
-                    # Initialize this service line if it doesn't exist
-                    if index not in service_lines:
-                        service_lines[index] = json_data['service_lines'][index].copy() if index < len(json_data['service_lines']) else {}
-                    
-                    # Handle modifiers specially - convert comma-separated string to array
-                    if field == 'modifiers':
-                        modifiers = value[0].split(',') if value[0] else []
-                        # Remove empty strings that might come from trailing commas
-                        modifiers = [m.strip() for m in modifiers if m.strip()]
-                        service_lines[index][field] = modifiers
-                    else:
-                        service_lines[index][field] = value[0]
-        
-        # Update service lines in JSON data
-        json_data['service_lines'] = [
-            service_lines[i] for i in sorted(service_lines.keys())
-        ]
-        
-        # Handle different actions
-        if action == 'back_to_staging':
-            # Clear validation failures and set status to PENDING
-            if 'validation_info' not in json_data:
-                json_data['validation_info'] = {}
-            json_data['validation_info']['status'] = 'PENDING'
-            json_data['validation_info']['failure_reasons'] = []
-            
-            # Move back to regular staging folder
-            dest_key = f'data/hcfa_json/valid/mapped/staging/{filename}'
-            upload_json_to_s3(json_data, dest_key)
-            
-            # Delete from fails folder
-            s3_client.delete_object(Bucket=S3_BUCKET, Key=key)
-            
-            # Remove from failed summary
-            try:
-                if remove_from_summary(filename):
-                    logger.info(f"Removed {filename} from failed summary")
-                else:
-                    logger.warning(f"Failed to remove {filename} from summary - entry may not exist")
-            except Exception as e:
-                logger.error(f"Error removing {filename} from summary: {str(e)}")
-            
-            flash('File has been moved back to staging for reprocessing.', 'success')
-        else:
-            # Regular save - keep in fails folder
-            upload_json_to_s3(json_data, key)
-            
-            # Check validation status and update summary accordingly
-            try:
-                # Get current failure reasons
-                failure_reasons = json_data.get('validation_info', {}).get('failure_reasons', [])
-                
-                if not failure_reasons:
-                    # All issues fixed - remove from summary file
-                    if remove_from_summary(filename):
-                        logger.info(f"All failures resolved, removed {filename} from summary")
-                    else:
-                        logger.warning(f"Failed to remove {filename} from summary - entry may not exist")
-                else:
-                    # Extract simplified failure types for the summary
-                    failure_types = []
-                    for reason in failure_reasons:
-                        # Extract just the failure type (before the colon if present)
-                        failure_type = reason.split(':', 1)[0].strip() if ':' in reason else reason.strip()
-                        failure_types.append(failure_type)
-                    
-                    # Get provider information
-                    provider_name = json_data.get('filemaker', {}).get('provider', {}).get('Billing Name', 
-                               json_data.get('billing_info', {}).get('billing_provider_name', 'Unknown Provider'))
-                    
-                    # Get DOS (date of service)
-                    dos = None
-                    # Try to get DOS from filemaker data first
-                    if 'filemaker' in json_data and 'line_items' in json_data['filemaker'] and json_data['filemaker']['line_items']:
-                        dos = json_data['filemaker']['line_items'][0].get('DOS')
-                    
-                    # If not found, try service_lines
-                    if not dos and 'service_lines' in json_data and json_data['service_lines']:
-                        date_str = json_data['service_lines'][0].get('date_of_service', '')
-                        if date_str:
-                            # Handle format like "MM/DD/YY - MM/DD/YY" by taking the first date
-                            if ' - ' in date_str:
-                                date_str = date_str.split(' - ')[0]
-                            
-                            # Try to parse the date
-                            try:
-                                # Try different formats
-                                from datetime import datetime
-                                formats = ['%m/%d/%y', '%m/%d/%Y', '%Y-%m-%d']
-                                for fmt in formats:
-                                    try:
-                                        date_obj = datetime.strptime(date_str.strip(), fmt)
-                                        dos = date_obj.strftime('%Y-%m-%d')
-                                        break
-                                    except ValueError:
-                                        continue
-                            except Exception as e:
-                                logger.warning(f"Could not parse date {date_str}: {str(e)}")
-                    
-                    # Calculate age in days if DOS was found
-                    age_days = 0
-                    if dos:
-                        try:
-                            from datetime import datetime, date
-                            date_obj = datetime.strptime(dos, '%Y-%m-%d').date()
-                            age_days = (date.today() - date_obj).days
-                        except Exception as e:
-                            logger.warning(f"Could not calculate age for DOS {dos}: {str(e)}")
-                    
-                    # Create update data
-                    update_data = {
-                        'failure_types': failure_types,
-                    }
-                    
-                    # Only add these fields if we have data
-                    if provider_name and provider_name != 'Unknown Provider':
-                        update_data['provider'] = provider_name
-                    if dos:
-                        update_data['dos'] = dos
-                    if age_days > 0:
-                        update_data['age_days'] = age_days
-                    
-                    # Check if entry exists
-                    existing_entry = get_summary_entry(filename)
-                    if existing_entry:
-                        # Update existing entry
-                        if update_summary(filename, update_data):
-                            logger.info(f"Updated summary entry for {filename} with new failure types")
-                        else:
-                            logger.warning(f"Failed to update summary entry for {filename}")
-                    else:
-                        # Entry doesn't exist, try to create a new one with minimum required fields
-                        from utils.summary_manager import add_to_summary
-                        if 'provider' not in update_data:
-                            update_data['provider'] = 'Unknown Provider'
-                        if 'dos' not in update_data:
-                            update_data['dos'] = date.today().strftime('%Y-%m-%d')
-                        if 'age_days' not in update_data:
-                            update_data['age_days'] = 0
-                        
-                        if add_to_summary(
-                            filename=filename,
-                            failure_types=update_data['failure_types'],
-                            provider=update_data['provider'],
-                            dos=update_data['dos'],
-                            age_days=update_data['age_days']
-                        ):
-                            logger.info(f"Added new entry for {filename} to summary")
-                        else:
-                            logger.warning(f"Failed to add new entry for {filename} to summary")
-            except Exception as e:
-                logger.error(f"Error updating summary for {filename}: {str(e)}", exc_info=True)
-            
-            flash('Changes saved successfully.', 'success')
-        
-        # Redirect back to the fails files list with preserved filter parameters
-        if filter_params:
-            # Construct the URL with query parameters
-            redirect_url = url_for('processing.list_fail_files')
-            query_params = []
-            for key, value in filter_params.items():
-                if value:
-                    query_params.append(f"{key}={urllib.parse.quote(value)}")
-            
-            if query_params:
-                redirect_url = f"{redirect_url}?{'&'.join(query_params)}"
-            
-            return redirect(redirect_url)
-        else:
-            return redirect(url_for('processing.list_fail_files'))
-        
-    except Exception as e:
-        logger.error(f"Error processing failed file {filename}: {str(e)}", exc_info=True)
-        return render_template('preprocessing/error.html', 
-                              error=f"Failed to {action} file: {str(e)}")
 
 @processing_bp.route('/fails/<filename>/pdf')
 def get_fail_pdf_url(filename):
@@ -565,7 +192,6 @@ def get_fail_pdf_url(filename):
         logger.error(f"Error generating PDF URL: {str(e)}")
         return jsonify({'error': str(e)}), 404
 
-# Add these helper functions for preserving navigation
 def get_filter_params_from_request(request):
     """Extract filter parameters from request."""
     filter_params = {}
@@ -588,7 +214,6 @@ def get_filter_params_from_request(request):
         try:
             parsed_url = urllib.parse.urlparse(referrer)
             query_params = urllib.parse.parse_qs(parsed_url.query)
-            # Include all common filter parameters
             for param in ['type', 'provider', 'age', 'q', 'filenames']:
                 if param in query_params:
                     filter_params[param] = query_params[param][0]
@@ -616,54 +241,171 @@ def build_redirect_url(url, filter_params):
     
     return url
 
-@processing_bp.route('/fails/<filename>/override', methods=['POST'])
-def override_fail_file(filename):
-    """Handle the override and pay functionality for failed files."""
+@processing_bp.route('/fails/<filename>/move-to-readyforprocess', methods=['POST'])
+def move_to_readyforprocess(filename):
+    """Move a file from fails folder to readyforprocess folder."""
     try:
         # Extract filter parameters
         filter_params = get_filter_params_from_request(request)
         
-        # Get form data
-        override_rates = {}
-        for key, value in request.form.items():
-            if key.startswith('override_rate['):
-                index = int(key.replace('override_rate[', '').replace(']', ''))
-                override_rates[index] = float(value)
+        # Get current JSON data
+        source_key = f'data/hcfa_json/valid/mapped/staging/fails/{filename}'
+        json_data = get_s3_json(source_key)
         
-        override_reason = request.form.get('override_reason', 'No reason provided')
+        # Add metadata about the move
+        if 'processing_info' not in json_data:
+            json_data['processing_info'] = {}
+        
+        json_data['processing_info'].update({
+            'moved_to_readyforprocess': True,
+            'moved_timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            'moved_by': 'admin_user@clarity-dx.com',  # TODO: Replace with actual user
+            'prior_status': json_data.get('validation_info', {}).get('status', 'UNKNOWN')
+        })
+        
+        # Update validation status
+        if 'validation_info' not in json_data:
+            json_data['validation_info'] = {}
+        json_data['validation_info']['status'] = 'READY_FOR_PROCESS'
+        
+        # Move to readyforprocess folder
+        dest_key = f'data/hcfa_json/readyforprocess/{filename}'
+        upload_json_to_s3(json_data, dest_key)
+        
+        # Delete from fails folder
+        s3_client.delete_object(Bucket=S3_BUCKET, Key=source_key)
+        
+        # Remove from failed summary
+        try:
+            if remove_from_summary(filename):
+                logger.info(f"Removed {filename} from failed summary")
+            else:
+                logger.warning(f"Failed to remove {filename} from summary - entry may not exist")
+        except Exception as e:
+            logger.error(f"Error removing {filename} from summary: {str(e)}")
+        
+        # Create success message
+        success_message = f"File {filename} has been moved to ready for process queue."
+        
+        if 'X-Requested-With' in request.headers and request.headers['X-Requested-With'] == 'XMLHttpRequest':
+            # For AJAX requests
+            return jsonify({
+                'status': 'success',
+                'message': success_message,
+                'redirect': build_redirect_url(url_for('processing.list_fail_files'), filter_params)
+            })
+        else:
+            # For regular form submissions
+            flash(success_message, 'success')
+            return redirect(build_redirect_url(url_for('processing.list_fail_files'), filter_params))
+            
+    except Exception as e:
+        logger.error(f"Error moving file {filename} to readyforprocess: {str(e)}")
+        error_message = f"Failed to move file: {str(e)}"
+        if 'X-Requested-With' in request.headers and request.headers['X-Requested-With'] == 'XMLHttpRequest':
+            return jsonify({
+                'status': 'error',
+                'message': error_message
+            }), 500
+        else:
+            flash(error_message, 'danger')
+            return redirect(url_for('processing.view_fail_file', filename=filename))
+
+@processing_bp.route('/fails/<filename>/send-to-garbage', methods=['POST'])
+def send_to_garbage(filename):
+    """Move a failed file to the garbage folder."""
+    try:
+        # Extract filter parameters
+        filter_params = get_filter_params_from_request(request)
+        
+        # Get reason from form
+        reason = request.form.get('reason', 'No reason provided')
+        
+        # Get current JSON data
+        source_key = f'data/hcfa_json/valid/mapped/staging/fails/{filename}'
+        json_data = get_s3_json(source_key)
+        
+        # Add reason to JSON
+        json_data['garbage'] = {
+            'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            'reason': reason,
+            'user': 'admin_user@clarity-dx.com'  # TODO: Replace with actual user
+        }
+        
+        # Save to garbage folder
+        dest_key = f'data/hcfa_json/valid/mapped/staging/garbage/{filename}'
+        upload_json_to_s3(json_data, dest_key)
+        
+        # Delete from fails folder
+        s3_client.delete_object(Bucket=S3_BUCKET, Key=source_key)
+        
+        # Remove from failed summary
+        try:
+            if remove_from_summary(filename):
+                logger.info(f"Removed {filename} from failed summary")
+            else:
+                logger.warning(f"Failed to remove {filename} from summary - entry may not exist")
+        except Exception as e:
+            logger.error(f"Error removing {filename} from summary: {str(e)}")
+        
+        # Create success message
+        success_message = f"File {filename} has been moved to the garbage folder."
+        
+        if 'X-Requested-With' in request.headers and request.headers['X-Requested-With'] == 'XMLHttpRequest':
+            # For AJAX requests
+            return jsonify({
+                'status': 'success',
+                'message': success_message,
+                'redirect': build_redirect_url(url_for('processing.list_fail_files'), filter_params)
+            })
+        else:
+            # For regular form submissions
+            flash(success_message, 'success')
+            return redirect(build_redirect_url(url_for('processing.list_fail_files'), filter_params))
+            
+    except Exception as e:
+        logger.error(f"Error moving file {filename} to garbage: {str(e)}")
+        error_message = f"Failed to move file to garbage: {str(e)}"
+        if 'X-Requested-With' in request.headers and request.headers['X-Requested-With'] == 'XMLHttpRequest':
+            return jsonify({
+                'status': 'error',
+                'message': error_message
+            }), 500
+        else:
+            flash(error_message, 'danger')
+            return redirect(url_for('processing.view_fail_file', filename=filename)) 
+
+@processing_bp.route('/fails/<filename>/deny', methods=['POST'])
+def deny_fail_file(filename):
+    """Handle denial of failed files."""
+    try:
+        # Extract filter parameters
+        filter_params = get_filter_params_from_request(request)
+        
+        # Get denial reason from form
+        denial_reason = request.form.get('reason', 'No reason provided')
         
         # Get current JSON data
         key = f'data/hcfa_json/valid/mapped/staging/fails/{filename}'
         json_data = get_s3_json(key)
         
-        # Create override object
-        if 'override' not in json_data:
-            json_data['override'] = {}
+        # Add denial info to JSON
+        if 'denial' not in json_data:
+            json_data['denial'] = {}
         
-        # Set override rates for each service line
-        json_data['override']['rates'] = []
-        for i, line in enumerate(json_data.get('service_lines', [])):
-            if i in override_rates:
-                override_rate = override_rates[i]
-                json_data['override']['rates'].append({
-                    'cpt_code': line.get('cpt_code', ''),
-                    'billed_amount': line.get('charge_amount', '$0.00'),
-                    'override_rate': f"${override_rate:.2f}",
-                    'units': line.get('units', 1)
-                })
-        
-        # Set override details
-        json_data['override']['reason'] = override_reason
-        json_data['override']['timestamp'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        json_data['override']['user'] = 'admin_user@clarity-dx.com'  # TODO: Replace with actual user
+        json_data['denial'].update({
+            'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            'reason': denial_reason,
+            'user': request.form.get('user', 'admin_user@clarity-dx.com'),  # TODO: Replace with actual user
+        })
         
         # Update validation status
         if 'validation_info' not in json_data:
             json_data['validation_info'] = {}
-        json_data['validation_info']['status'] = 'OVERRIDE'
+        json_data['validation_info']['status'] = 'DENIED'
         
-        # Save to success folder
-        dest_key = f'data/hcfa_json/valid/mapped/staging/success/{filename}'
+        # Move to denied folder
+        dest_key = f'data/hcfa_json/valid/mapped/staging/denied/{filename}'
         upload_json_to_s3(json_data, dest_key)
         
         # Delete from fails folder
@@ -678,27 +420,32 @@ def override_fail_file(filename):
         except Exception as e:
             logger.error(f"Error removing {filename} from summary: {str(e)}")
         
-        # Build response with filter parameters preserved
-        redirect_url = url_for('processing.list_fail_files')
+        # Create success message
+        success_message = f"File {filename} has been denied."
+        
         if 'X-Requested-With' in request.headers and request.headers['X-Requested-With'] == 'XMLHttpRequest':
             # For AJAX requests
-            response_data = {
-                'success': True,
-                'message': 'Override approved successfully',
-                'redirect': build_redirect_url(redirect_url, filter_params)
-            }
-            return jsonify(response_data)
+            return jsonify({
+                'status': 'success',
+                'message': success_message,
+                'redirect': build_redirect_url(url_for('processing.list_fail_files'), filter_params)
+            })
         else:
             # For regular form submissions
-            flash('Override approved successfully.', 'success')
-            return redirect(build_redirect_url(redirect_url, filter_params))
-    
+            flash(success_message, 'success')
+            return redirect(build_redirect_url(url_for('processing.list_fail_files'), filter_params))
+            
     except Exception as e:
-        logger.error(f"Error processing override for {filename}: {str(e)}", exc_info=True)
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 500
+        logger.error(f"Error denying file {filename}: {str(e)}")
+        error_message = f"Failed to deny file: {str(e)}"
+        if 'X-Requested-With' in request.headers and request.headers['X-Requested-With'] == 'XMLHttpRequest':
+            return jsonify({
+                'status': 'error',
+                'message': error_message
+            }), 500
+        else:
+            flash(error_message, 'danger')
+            return redirect(url_for('processing.view_fail_file', filename=filename))
 
 @processing_bp.route('/fails/<filename>/escalate', methods=['POST'])
 def escalate_fail_file(filename):
@@ -773,274 +520,6 @@ def escalate_fail_file(filename):
             flash(error_message, 'danger')
             return redirect(url_for('processing.view_fail_file', filename=filename))
 
-@processing_bp.route('/fails/<filename>/deny', methods=['POST'])
-def deny_fail_file(filename):
-    """Handle denial of failed files."""
-    try:
-        # Extract filter parameters
-        filter_params = get_filter_params_from_request(request)
-        
-        # Get denial reason from form
-        denial_reason = request.form.get('denial_reason', 'No reason provided')
-        
-        # Get current JSON data
-        key = f'data/hcfa_json/valid/mapped/staging/fails/{filename}'
-        json_data = get_s3_json(key)
-        
-        # Add denial info to JSON
-        if 'denial' not in json_data:
-            json_data['denial'] = {}
-        
-        json_data['denial'].update({
-            'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-            'reason': denial_reason,
-            'user': request.form.get('user', 'admin_user@clarity-dx.com'),  # TODO: Replace with actual user
-        })
-        
-        # Update validation status
-        if 'validation_info' not in json_data:
-            json_data['validation_info'] = {}
-        json_data['validation_info']['status'] = 'DENIED'
-        
-        # Move to denied folder
-        dest_key = f'data/hcfa_json/valid/mapped/staging/denied/{filename}'
-        upload_json_to_s3(json_data, dest_key)
-        
-        # Delete from fails folder
-        s3_client.delete_object(Bucket=S3_BUCKET, Key=key)
-        
-        # Remove from failed summary
-        try:
-            if remove_from_summary(filename):
-                logger.info(f"Removed {filename} from failed summary")
-            else:
-                logger.warning(f"Failed to remove {filename} from summary - entry may not exist")
-        except Exception as e:
-            logger.error(f"Error removing {filename} from summary: {str(e)}")
-        
-        # Create success message
-        success_message = f"File {filename} has been denied."
-        
-        if 'X-Requested-With' in request.headers and request.headers['X-Requested-With'] == 'XMLHttpRequest':
-            # For AJAX requests
-            return jsonify({
-                'status': 'success',
-                'message': success_message,
-                'redirect': build_redirect_url(url_for('processing.list_fail_files'), filter_params)
-            })
-        else:
-            # For regular form submissions
-            flash(success_message, 'success')
-            return redirect(build_redirect_url(url_for('processing.list_fail_files'), filter_params))
-            
-    except Exception as e:
-        logger.error(f"Error denying file {filename}: {str(e)}")
-        error_message = f"Failed to deny file: {str(e)}"
-        if 'X-Requested-With' in request.headers and request.headers['X-Requested-With'] == 'XMLHttpRequest':
-            return jsonify({
-                'status': 'error',
-                'message': error_message
-            }), 500
-        else:
-            flash(error_message, 'danger')
-            return redirect(url_for('processing.view_fail_file', filename=filename))
-
-@processing_bp.route('/fails/<filename>/move-to-readyforprocess', methods=['POST'])
-def move_to_readyforprocess(filename):
-    """Move a file from fails folder to readyforprocess folder."""
-    try:
-        # Extract filter parameters
-        filter_params = get_filter_params_from_request(request)
-        
-        # Get current JSON data
-        source_key = f'data/hcfa_json/valid/mapped/staging/fails/{filename}'
-        try:
-            json_data = get_s3_json(source_key)
-        except Exception as e:
-            logger.error(f"Error retrieving file {filename} from S3: {str(e)}")
-            return jsonify({
-                'status': 'error',
-                'message': f"Could not retrieve file: {str(e)}"
-            }), 404
-
-        # Add metadata about the move
-        if 'processing_info' not in json_data:
-            json_data['processing_info'] = {}
-        
-        json_data['processing_info'].update({
-            'moved_to_readyforprocess': True,
-            'moved_timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-            'moved_by': 'admin_user@clarity-dx.com',  # TODO: Replace with actual user
-            'prior_status': json_data.get('validation_info', {}).get('status', 'UNKNOWN')
-        })
-        
-        # Update validation status
-        if 'validation_info' not in json_data:
-            json_data['validation_info'] = {}
-        json_data['validation_info']['status'] = 'READY_FOR_PROCESS'
-        
-        # Move to readyforprocess folder
-        dest_key = f'data/hcfa_json/readyforprocess/{filename}'
-        upload_json_to_s3(json_data, dest_key)
-        
-        # Delete from fails folder
-        s3_client.delete_object(Bucket=S3_BUCKET, Key=source_key)
-        
-        # Remove from failed summary
-        try:
-            if remove_from_summary(filename):
-                logger.info(f"Removed {filename} from failed summary")
-            else:
-                logger.warning(f"Failed to remove {filename} from summary - entry may not exist")
-        except Exception as e:
-            logger.error(f"Error removing {filename} from summary: {str(e)}")
-        
-        # Create success message
-        success_message = f"File {filename} has been moved to ready for process queue."
-        
-        if 'X-Requested-With' in request.headers and request.headers['X-Requested-With'] == 'XMLHttpRequest':
-            # For AJAX requests
-            return jsonify({
-                'status': 'success',
-                'message': success_message,
-                'redirect': build_redirect_url(url_for('processing.list_fail_files'), filter_params)
-            })
-        else:
-            # For regular form submissions
-            flash(success_message, 'success')
-            return redirect(build_redirect_url(url_for('processing.list_fail_files'), filter_params))
-            
-    except Exception as e:
-        logger.error(f"Error moving file {filename} to readyforprocess: {str(e)}")
-        error_message = f"Failed to move file: {str(e)}"
-        if 'X-Requested-With' in request.headers and request.headers['X-Requested-With'] == 'XMLHttpRequest':
-            return jsonify({
-                'status': 'error',
-                'message': error_message
-            }), 500
-        else:
-            flash(error_message, 'danger')
-            return redirect(url_for('processing.view_fail_file', filename=filename))
-
-def clean_tin(tin: str) -> str:
-    """Clean and standardize TIN format by removing non-numeric characters."""
-    if not tin:
-        return ""
-    cleaned = re.sub(r'[^0-9]', '', tin)
-    logger.info(f"Cleaned TIN: original='{tin}', cleaned='{cleaned}'")
-    return cleaned
-
-def validate_db_connection():
-    """Validate database connection and schema."""
-    try:
-        with get_db_connection() as conn:
-            cursor = conn.cursor()
-            
-            # Check if ppo table exists
-            cursor.execute("""
-                SELECT name FROM sqlite_master 
-                WHERE type='table' AND name='ppo'
-            """)
-            if not cursor.fetchone():
-                logger.error("PPO table does not exist in database")
-                return False
-            
-            # Get table schema
-            cursor.execute("PRAGMA table_info(ppo)")
-            columns = {col[1]: col[2] for col in cursor.fetchall()}
-            logger.debug(f"PPO table schema: {columns}")
-            
-            # Verify required columns
-            required_columns = {
-                'TIN': 'TEXT',
-                'proc_cd': 'TEXT',
-                'rate': 'REAL',
-                'proc_category': 'TEXT'
-            }
-            
-            for col, type_ in required_columns.items():
-                if col not in columns:
-                    logger.error(f"Required column {col} missing from ppo table")
-                    return False
-                if not columns[col].upper().startswith(type_):
-                    logger.error(f"Column {col} has incorrect type: {columns[col]} (expected {type_})")
-                    return False
-            
-            # Test insert
-            try:
-                cursor.execute("BEGIN TRANSACTION")
-                cursor.execute("""
-                    INSERT OR REPLACE INTO ppo (TIN, proc_cd, rate, proc_category)
-                    VALUES ('TEST123', 'TEST456', 100.0, 'TEST_CAT')
-                """)
-                cursor.execute("SELECT * FROM ppo WHERE TIN = 'TEST123'")
-                result = cursor.fetchone()
-                logger.debug(f"Test insert result: {result}")
-                cursor.execute("ROLLBACK")
-                
-                return True
-            except sqlite3.Error as e:
-                logger.error(f"Database test insert failed: {str(e)}")
-                return False
-                
-    except sqlite3.Error as e:
-        logger.error(f"Database validation failed: {str(e)}")
-        return False
-    except Exception as e:
-        logger.error(f"Unexpected error during database validation: {str(e)}")
-        return False
-
-@contextmanager
-def get_db_connection():
-    """Context manager for database connections with enhanced logging."""
-    logger.debug(f"Opening database connection to {FILEMAKER_DB}")
-    if not os.path.exists(FILEMAKER_DB):
-        logger.error(f"Database file does not exist at {FILEMAKER_DB}")
-        raise FileNotFoundError(f"Database file not found: {FILEMAKER_DB}")
-        
-    conn = None
-    try:
-        conn = sqlite3.connect(FILEMAKER_DB)
-        logger.debug("Database connection established")
-        yield conn
-    except sqlite3.Error as e:
-        logger.error(f"Database connection error: {str(e)}")
-        raise
-    finally:
-        if conn:
-            conn.close()
-            logger.debug("Database connection closed")
-
-def insert_rate_to_db(conn, tin: str, proc_cd: str, rate: float, category: str) -> bool:
-    """Helper function to insert a rate into the database with proper error handling."""
-    try:
-        cursor = conn.cursor()
-        logger.debug(f"Inserting rate: TIN={tin}, proc_cd={proc_cd}, rate={rate}, category={category}")
-        
-        cursor.execute("""
-            INSERT OR REPLACE INTO ppo 
-            (TIN, proc_cd, rate, proc_category) 
-            VALUES (?, ?, ?, ?)
-        """, (tin, proc_cd, rate, category))
-        
-        # Verify the insert
-        cursor.execute("SELECT * FROM ppo WHERE TIN = ? AND proc_cd = ?", (tin, proc_cd))
-        result = cursor.fetchone()
-        if result:
-            logger.debug(f"Successfully inserted/updated rate: {result}")
-            return True
-        else:
-            logger.error("Rate insertion failed - no record found after insert")
-            return False
-            
-    except sqlite3.Error as e:
-        logger.error(f"Database error during rate insertion: {str(e)}")
-        raise
-
-# Validate database on module load
-if not validate_db_connection():
-    logger.error("Database validation failed - rate assignment functionality may not work correctly")
-
 @processing_bp.route('/fails/<filename>/assign-rates', methods=['POST'])
 def assign_rates(filename):
     """Handle rate assignments for CPT codes with missing rates"""
@@ -1077,7 +556,7 @@ def assign_rates(filename):
                 for key, value in request.form.items():
                     if key.startswith('rate-input-'):
                         cpt_code = key.replace('rate-input-', '')
-                        modifier = request.form.get(f'modifier-{cpt_code}', '')
+                        modifier = request.form.get(f'modifier-input-{cpt_code}', '')
                         
                         try:
                             rates.append({
@@ -1095,18 +574,10 @@ def assign_rates(filename):
         
         # Get current JSON data
         source_key = f'data/hcfa_json/valid/mapped/staging/fails/{filename}'
-        try:
-            json_data = get_s3_json(source_key)
-        except Exception as e:
-            logger.error(f"Error retrieving file {filename} from S3: {str(e)}")
-            return jsonify({
-                'status': 'error',
-                'message': f"Could not retrieve file: {str(e)}"
-            }), 404
+        json_data = get_s3_json(source_key)
         
         # Extract TIN from JSON and clean it
         tin = json_data.get('filemaker', {}).get('provider', {}).get('TIN', '')
-        logger.info(f"Cleaned TIN: original='{tin}', cleaned='{clean_tin(tin)}'")
         clean_tin_value = clean_tin(tin)
         if not clean_tin_value:
             return jsonify({
@@ -1345,6 +816,9 @@ def assign_rates(filename):
         
         json_data['validation_info']['failure_reasons'] = updated_reasons
         
+        # Save back to S3
+        upload_json_to_s3(json_data, source_key)
+        
         # Determine next steps based on remaining failure reasons
         if not updated_reasons:
             # All validations pass - move to success folder
@@ -1369,7 +843,6 @@ def assign_rates(filename):
             success_message = "Rates assigned and file processed successfully!"
         else:
             # Other failures remain - keep in fails folder
-            upload_json_to_s3(json_data, source_key)
             success_message = "Rates assigned successfully, but other validation issues remain."
         
         # Return success response
@@ -1386,27 +859,314 @@ def assign_rates(filename):
             'status': 'error',
             'message': f"Failed to assign rates: {str(e)}"
         }), 500
-    
-    
-def get_s3_json(key):
-    """Get JSON data from S3."""
-    try:
-        response = s3_client.get_object(Bucket=S3_BUCKET, Key=key)
-        return json.loads(response['Body'].read().decode('utf-8'))
-    except Exception as e:
-        logger.error(f"Error getting JSON from S3: {str(e)}")
-        raise
 
-def upload_json_to_s3(json_data, key):
-    """Upload JSON data to S3."""
+@processing_bp.route('/fails/filters', methods=['POST'])
+def update_filters():
+    """Handle filter updates via AJAX."""
     try:
-        s3_client.put_object(
-            Bucket=S3_BUCKET,
-            Key=key,
-            Body=json.dumps(json_data, indent=2).encode('utf-8'),
-            ContentType='application/json'
-        )
-        return True
+        # Get filter data from request
+        filter_data = request.get_json()
+        if not filter_data:
+            return jsonify({'error': 'No filter data provided'}), 400
+            
+        # Store filters in session
+        session['filter_params'] = filter_data
+        
+        # Return success
+        return jsonify({
+            'status': 'success',
+            'message': 'Filters updated successfully'
+        })
     except Exception as e:
-        logger.error(f"Error uploading JSON to S3: {str(e)}")
-        raise
+        logger.error(f"Error updating filters: {str(e)}")
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
+@processing_bp.route('/fails/<filename>')
+def view_fail_file(filename):
+    """View details of a specific failed file."""
+    try:
+        # Get filter parameters
+        filter_params = get_filter_params_from_request(request)
+        
+        # Get the JSON data for this file
+        key = f'data/hcfa_json/valid/mapped/staging/fails/{filename}'
+        json_data = get_s3_json(key)
+        
+        # Get list of all failed files for navigation
+        json_path = BASE_DIR / "data" / "dashboard" / "failed_summary.json"
+        try:
+            with open(json_path, "r") as f:
+                all_files = json.load(f)
+        except (FileNotFoundError, json.JSONDecodeError):
+            all_files = []
+        
+        # Apply filters to get the current subset of files
+        files = all_files
+        
+        # Filter by filenames if specified
+        filenames_param = filter_params.get('filenames')
+        if filenames_param:
+            selected = set(f.strip() for f in str(filenames_param).split(",") if f.strip())
+            files = [f for f in files if f.get("filename") in selected]
+        
+        # Filter by type if specified
+        type_param = filter_params.get('type')
+        if type_param and type_param != "All Types":
+            files = [f for f in files if type_param in f.get("failure_types", [])]
+        
+        # Filter by provider if specified
+        provider_param = filter_params.get('provider')
+        if provider_param and provider_param != "All Providers":
+            files = [f for f in files if f.get("provider") == provider_param]
+        
+        # Filter by age if specified
+        age_param = filter_params.get('age')
+        if age_param and age_param != "All Dates":
+            if age_param == "0–30 days":
+                files = [f for f in files if f.get("age_days", 0) <= 30]
+            elif age_param == "31–60 days":
+                files = [f for f in files if 30 < f.get("age_days", 0) <= 60]
+            elif age_param == "60+ days":
+                files = [f for f in files if f.get("age_days", 0) > 60]
+        
+        # Filter by search term if specified
+        search_param = filter_params.get('q')
+        if search_param:
+            search_term = search_param.lower()
+            files = [f for f in files if search_term in f.get("filename", "").lower()]
+        
+        # Get filenames list for navigation
+        filenames = [f.get("filename") for f in files if f.get("filename")]
+        
+        # Find current position and adjacent files
+        try:
+            current_index = filenames.index(filename) + 1
+            prev_file = filenames[current_index - 2] if current_index > 1 else None
+            next_file = filenames[current_index] if current_index < len(filenames) else None
+        except (ValueError, IndexError):
+            current_index = 0
+            prev_file = None
+            next_file = None
+        
+        # Build filter query string for navigation
+        filter_query = ""
+        if filter_params:
+            query_parts = []
+            for key, value in filter_params.items():
+                if value:
+                    query_parts.append(f"{key}={urllib.parse.quote(str(value))}")
+            if query_parts:
+                filter_query = "?" + "&".join(query_parts)
+        
+        # Return JSON if requested
+        if request.args.get('format') == 'json':
+            return jsonify({
+                'success': True,
+                'data': json_data,
+                'navigation': {
+                    'current_index': current_index,
+                    'total_files': len(filenames),
+                    'prev_file': prev_file,
+                    'next_file': next_file
+                }
+            })
+        
+        # Otherwise render template
+        return render_template(
+            'processing/edit_fail.html',
+            filename=filename,
+            json_data=json_data,
+            current_index=current_index,
+            total_files=len(filenames),
+            fails_count=len(filenames),
+            prev_file=prev_file,
+            next_file=next_file,
+            filter_query=filter_query,
+            filter_params=filter_params
+        )
+        
+    except Exception as e:
+        logger.error(f"Error viewing file {filename}: {str(e)}")
+        if request.args.get('format') == 'json':
+            return jsonify({
+                'status': 'error',
+                'message': str(e)
+            }), 500
+        else:
+            flash(f"Error viewing file: {str(e)}", 'danger')
+            return redirect(url_for('processing.list_fail_files')) 
+
+def get_cpt_codes_by_category():
+    """Get mapping of CPT codes to their categories."""
+    return {
+        'mri_wo': ['70551', '70552', '70553', '72141', '72146', '72148', '72195', '73221', '73721', '70540'],
+        'mri_w': ['70542', '70543', '72142', '72147', '72149', '72196', '73222', '73722', '70541'],
+        'mri_wwo': ['70553', '72156', '72157', '72158', '72197', '73223', '73723'],
+        'ct_wo': ['70450', '70486', '71250', '72125', '72128', '72131', '72192', '73200', '73700'],
+        'ct_w': ['70460', '70487', '71260', '72126', '72129', '72132', '72193', '73201', '73701'],
+        'ct_wwo': ['70470', '70488', '71270', '72127', '72130', '72133', '72194', '73202', '73702'],
+        'xray': ['71045', '71046', '71047', '71048', '72020', '72040', '72050', '72052', '72070', '72072', '72074', '72080', '72100', '72110', '72114', '72120'],
+        'ultrasound': ['76536', '76604', '76641', '76642', '76700', '76705', '76770', '76775', '76800', '76801', '76805', '76811', '76815', '76817']
+    }
+
+def clean_tin(tin):
+    """Clean TIN by removing non-numeric characters."""
+    if not tin:
+        return None
+    return re.sub(r'[^0-9]', '', tin)
+
+@contextmanager
+def get_db_connection():
+    """Get a database connection."""
+    conn = None
+    try:
+        conn = sqlite3.connect(FILEMAKER_DB)
+        yield conn
+    finally:
+        if conn:
+            conn.close()
+
+@processing_bp.route('/fails/<filename>/submit', methods=['POST'])
+def submit_fail_file(filename):
+    """Handle form submission for a failed file."""
+    try:
+        # Extract filter parameters
+        filter_params = get_filter_params_from_request(request)
+        
+        # Get current JSON data
+        source_key = f'data/hcfa_json/valid/mapped/staging/fails/{filename}'
+        json_data = get_s3_json(source_key)
+        
+        # Update service lines from form data
+        service_lines = []
+        for i in range(len(json_data['service_lines'])):
+            line = {
+                'cpt_code': request.form.get(f'service_lines[{i}][cpt_code]'),
+                'charge_amount': request.form.get(f'service_lines[{i}][charge_amount]'),
+                'date_of_service': request.form.get(f'service_lines[{i}][date_of_service]'),
+                'units': request.form.get(f'service_lines[{i}][units]'),
+                'place_of_service': request.form.get(f'service_lines[{i}][place_of_service]'),
+                'diagnosis_pointer': request.form.get(f'service_lines[{i}][diagnosis_pointer]'),
+                'modifiers': request.form.get(f'service_lines[{i}][modifiers]', '').split(',') if request.form.get(f'service_lines[{i}][modifiers]') else []
+            }
+            service_lines.append(line)
+        
+        json_data['service_lines'] = service_lines
+        
+        # Add edit metadata
+        if 'edit_history' not in json_data:
+            json_data['edit_history'] = []
+        
+        json_data['edit_history'].append({
+            'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            'user': 'admin_user@clarity-dx.com',  # TODO: Replace with actual user
+            'action': 'edit',
+            'changes': {
+                'service_lines': True
+            }
+        })
+        
+        # Save back to S3
+        upload_json_to_s3(json_data, source_key)
+        
+        # Create success message
+        success_message = "Changes saved successfully."
+        
+        # Handle different actions
+        action = request.form.get('action', 'save')
+        
+        if action == 'save':
+            flash(success_message, 'success')
+            return redirect(url_for('processing.view_fail_file', filename=filename))
+        elif action == 'move_to_staging':
+            return redirect(url_for('processing.move_to_staging', filename=filename))
+        else:
+            flash(success_message, 'success')
+            return redirect(url_for('processing.list_fail_files'))
+            
+    except Exception as e:
+        logger.error(f"Error submitting changes for {filename}: {str(e)}")
+        flash(f"Error saving changes: {str(e)}", 'danger')
+        return redirect(url_for('processing.view_fail_file', filename=filename))
+
+@processing_bp.route('/fails/<filename>/move-to-staging', methods=['POST'])
+def move_to_staging(filename):
+    """Move a file from fails folder to staging folder."""
+    try:
+        # Extract filter parameters
+        filter_params = get_filter_params_from_request(request)
+        
+        # Get current JSON data
+        source_key = f'data/hcfa_json/valid/mapped/staging/fails/{filename}'
+        json_data = get_s3_json(source_key)
+        
+        # Add metadata about the move
+        if 'processing_info' not in json_data:
+            json_data['processing_info'] = {}
+        
+        json_data['processing_info'].update({
+            'moved_to_staging': True,
+            'moved_timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            'moved_by': 'admin_user@clarity-dx.com',  # TODO: Replace with actual user
+            'prior_status': json_data.get('validation_info', {}).get('status', 'UNKNOWN')
+        })
+        
+        # Update validation status
+        if 'validation_info' not in json_data:
+            json_data['validation_info'] = {}
+        json_data['validation_info']['status'] = 'STAGING'
+        
+        # Move to staging folder
+        dest_key = f'data/hcfa_json/valid/mapped/staging/{filename}'
+        upload_json_to_s3(json_data, dest_key)
+        
+        # Delete from fails folder
+        s3_client.delete_object(Bucket=S3_BUCKET, Key=source_key)
+        
+        # Remove from failed summary
+        try:
+            if remove_from_summary(filename):
+                logger.info(f"Removed {filename} from failed summary")
+            else:
+                logger.warning(f"Failed to remove {filename} from summary - entry may not exist")
+        except Exception as e:
+            logger.error(f"Error removing {filename} from summary: {str(e)}")
+        
+        # Create success message
+        success_message = f"File {filename} has been moved to staging."
+        
+        if 'X-Requested-With' in request.headers and request.headers['X-Requested-With'] == 'XMLHttpRequest':
+            # For AJAX requests
+            return jsonify({
+                'status': 'success',
+                'message': success_message,
+                'redirect': build_redirect_url(url_for('processing.list_fail_files'), filter_params)
+            })
+        else:
+            # For regular form submissions
+            flash(success_message, 'success')
+            return redirect(build_redirect_url(url_for('processing.list_fail_files'), filter_params))
+            
+    except Exception as e:
+        logger.error(f"Error moving file {filename} to staging: {str(e)}")
+        error_message = f"Failed to move file: {str(e)}"
+        if 'X-Requested-With' in request.headers and request.headers['X-Requested-With'] == 'XMLHttpRequest':
+            return jsonify({
+                'status': 'error',
+                'message': error_message
+            }), 500
+        else:
+            flash(error_message, 'danger')
+            return redirect(url_for('processing.view_fail_file', filename=filename))
+
+def confirmMoveToStaging():
+    """Confirm moving a file to staging."""
+    return """
+        if (confirm('Are you sure you want to move this file to staging?')) {
+            document.getElementById('form-action').value = 'move_to_staging';
+            document.getElementById('edit-form').submit();
+        }
+    """ 

@@ -39,6 +39,9 @@
             <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#denyModal">
                 <i class="fas fa-ban me-1"></i>Deny Bill
             </button>
+            <button type="button" class="btn btn-warning" data-toggle="modal" data-target="#garbageModal">
+                <i class="fas fa-trash me-1"></i>Send to Garbage
+            </button>
         </div>
     </div>
 
@@ -768,6 +771,58 @@
             </div>
         </div>
     </div>
+
+    <!-- Garbage Modal -->
+    <div class="modal fade" id="garbageModal" tabindex="-1" aria-labelledby="garbageModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-warning text-white">
+                    <h5 class="modal-title" id="garbageModalLabel">Send to Garbage</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="garbage-form" method="POST" action="{{ url_for('processing.send_to_garbage', filename=filename) }}">
+                    <div class="modal-body">
+                        <!-- Add hidden field for filter parameters -->
+                        {% if filter_params %}
+                        <input type="hidden" name="filter_params" value="{{ filter_params|tojson }}">
+                        {% endif %}
+                        
+                        <div class="alert alert-warning">
+                            <i class="fas fa-info-circle me-1"></i>
+                            <strong>What happens when sending to garbage:</strong>
+                            <ul class="mb-0 mt-1">
+                                <li>The file will be moved to the garbage folder in S3</li>
+                                <li>It will be removed from the failed bills dashboard</li>
+                                <li>This action can be reversed by an administrator if needed</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="garbage-reason" class="form-label">Reason for Sending to Garbage</label>
+                            <textarea class="form-control" id="garbage-reason" name="reason" rows="3" required
+                                      placeholder="Provide a reason for moving this file to garbage..."></textarea>
+                            <div class="form-text">Please explain why this file should be moved to the garbage folder.</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">File Details</label>
+                            <ul class="list-group">
+                                <li class="list-group-item"><strong>Filename:</strong> {{ filename }}</li>
+                                <li class="list-group-item"><strong>Provider:</strong> {{ json_data.filemaker.provider['Billing Name']|default(json_data.billing_info.billing_provider_name, true)|default('Unknown Provider', true) }}</li>
+                                <li class="list-group-item"><strong>Total Charge:</strong> {{ json_data.billing_info.total_charge|default('N/A', true) }}</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-warning">
+                            <i class="fas fa-trash me-1"></i>Send to Garbage
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 </div>
 
 {% endblock %}
@@ -806,9 +861,7 @@
         });
         
         // Handle rate assignment button clicks
-        $('#assignRatesBtn, #createOTABtn').on('click', handleRateSubmission);
-        
-        function handleRateSubmission(e) {
+        $('#assignRatesBtn, #createOTABtn').on('click', function(e) {
             e.preventDefault();
             
             // Get form data
@@ -931,7 +984,7 @@
                     
                     // Redirect to the list view after a short delay
                     setTimeout(function() {
-                    window.location.href = '/processing/fails';
+                        window.location.href = data.redirect || '/processing/fails';
                     }, 1500);
                 } else {
                     throw new Error(data.message || 'Error assigning rates');
@@ -943,17 +996,15 @@
                 button.prop('disabled', false);
                 button.html(originalText);
             });
-        }
+        });
 
         // Function to show alerts
         function showAlert(type, message) {
             const alertDiv = $('<div>')
-                .addClass(`alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible`)
+                .addClass(`alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show`)
                 .html(`
-                ${message}
-                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 `);
             
             // Insert alert at the top of the page
@@ -979,7 +1030,18 @@
                 // Force back to individual rates for OTA
                 $('a[href="#individual-rates"]').tab('show');
             }
+            
+            // Update button text based on active tab
+            const button = isInNetwork ? $('#assignRatesBtn') : $('#createOTABtn');
+            if (isInNetwork) {
+                button.text(isIndividualRates ? 'Assign Individual Rates' : 'Assign Category Rates');
+            } else {
+                button.text('Create OTA with Individual Rates');
+            }
         });
+        
+        // Initialize the first tab
+        $('a[data-toggle="tab"]:first').tab('show');
     });
 </script>
 

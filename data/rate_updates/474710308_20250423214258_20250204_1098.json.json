@@ -1,0 +1,16 @@
+{
+  "timestamp": "2025-04-23 21:42:58",
+  "user": "admin_user@clarity-dx.com",
+  "filename": "20250204_1098.json",
+  "tin": "474710308",
+  "rate_type": "individual",
+  "source": "manual_correction",
+  "order_id": "F2E28EF0-08A2-4691-B812-90CF2D8AE466",
+  "rates": [
+    {
+      "cpt_code": 72141,
+      "rate": 375,
+      "modifier": null
+    }
+  ]
+}

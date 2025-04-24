@@ -1,0 +1,23 @@
+{
+  "timestamp": "2025-04-23 21:01:46",
+  "user": "admin_user@clarity-dx.com",
+  "filename": "20250204_1067.json",
+  "tin": "342029779",
+  "rate_type": "create_ota",
+  "source": "manual_correction",
+  "order_id": "8228830C-1052-418D-9B8E-B75F965D2DD5",
+  "rates": [
+    {
+      "cpt_code": 72141,
+      "rate": 400,
+      "modifier": null
+    }
+  ],
+  "ota_data": {
+    "provider_name": "CHESTERFIELD IMAGING LLC",
+    "provider_npi": "1538116108",
+    "provider_type": "",
+    "order_id": "8228830C-1052-418D-9B8E-B75F965D2DD5",
+    "notes": ""
+  }
+}

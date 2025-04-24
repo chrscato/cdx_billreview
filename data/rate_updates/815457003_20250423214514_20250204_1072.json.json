@@ -1,0 +1,23 @@
+{
+  "timestamp": "2025-04-23 21:45:14",
+  "user": "admin_user@clarity-dx.com",
+  "filename": "20250204_1072.json",
+  "tin": "815457003",
+  "rate_type": "create_ota",
+  "source": "manual_correction",
+  "order_id": "0874582B-353B-44D4-A36B-CA249C8F7BAE",
+  "rates": [
+    {
+      "cpt_code": 73721,
+      "rate": 300,
+      "modifier": null
+    }
+  ],
+  "ota_data": {
+    "provider_name": "Center For Diagnostic Imaging TN",
+    "provider_npi": "1659811941",
+    "provider_type": "",
+    "order_id": "0874582B-353B-44D4-A36B-CA249C8F7BAE",
+    "notes": ""
+  }
+}

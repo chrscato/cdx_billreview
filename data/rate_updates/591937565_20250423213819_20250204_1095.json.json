@@ -1,0 +1,28 @@
+{
+  "timestamp": "2025-04-23 21:38:19",
+  "user": "admin_user@clarity-dx.com",
+  "filename": "20250204_1095.json",
+  "tin": "591937565",
+  "rate_type": "create_ota",
+  "source": "manual_correction",
+  "order_id": "FDA99D64-2971-4DF5-985F-82311A54A57F",
+  "rates": [
+    {
+      "cpt_code": 72100,
+      "rate": 25,
+      "modifier": null
+    },
+    {
+      "cpt_code": 72070,
+      "rate": 25,
+      "modifier": null
+    }
+  ],
+  "ota_data": {
+    "provider_name": null,
+    "provider_npi": "1508803966",
+    "provider_type": "",
+    "order_id": "FDA99D64-2971-4DF5-985F-82311A54A57F",
+    "notes": ""
+  }
+}

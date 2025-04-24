@@ -1,0 +1,23 @@
+{
+  "timestamp": "2025-04-23 20:26:30",
+  "user": "admin_user@clarity-dx.com",
+  "filename": "20250129_1139.json",
+  "tin": "542041643",
+  "rate_type": "create_ota",
+  "source": "manual_correction",
+  "order_id": "1BE6AA8E-793C-4D57-ADE3-D880CFC8C192",
+  "rates": [
+    {
+      "cpt_code": 73721,
+      "rate": 400,
+      "modifier": null
+    }
+  ],
+  "ota_data": {
+    "provider_name": "WINCHESTER OPEN MRI",
+    "provider_npi": "1275527939",
+    "provider_type": "",
+    "order_id": "1BE6AA8E-793C-4D57-ADE3-D880CFC8C192",
+    "notes": ""
+  }
+}

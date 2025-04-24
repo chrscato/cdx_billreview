@@ -1,0 +1,28 @@
+{
+  "timestamp": "2025-04-23 20:12:26",
+  "user": "admin_user@clarity-dx.com",
+  "filename": "20250204_1063.json",
+  "tin": "820514422",
+  "rate_type": "create_ota",
+  "source": "manual_correction",
+  "order_id": "9E242520-878D-4936-8F0D-AE061E1C32EC",
+  "rates": [
+    {
+      "cpt_code": 72141,
+      "rate": 400,
+      "modifier": null
+    },
+    {
+      "cpt_code": 72146,
+      "rate": 400,
+      "modifier": null
+    }
+  ],
+  "ota_data": {
+    "provider_name": "INTERMOUNTAIN MEDICAL IMAGING LLC",
+    "provider_npi": "1679520415",
+    "provider_type": "",
+    "order_id": "9E242520-878D-4936-8F0D-AE061E1C32EC",
+    "notes": ""
+  }
+}

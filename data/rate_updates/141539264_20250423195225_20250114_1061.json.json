@@ -1,0 +1,23 @@
+{
+  "timestamp": "2025-04-23 19:52:25",
+  "user": "admin_user@clarity-dx.com",
+  "filename": "20250114_1061.json",
+  "tin": "141539264",
+  "rate_type": "create_ota",
+  "source": "manual_correction",
+  "order_id": "8D1F2212-5155-45CE-92D7-9FFE38598B75",
+  "rates": [
+    {
+      "cpt_code": 73221,
+      "rate": 400,
+      "modifier": null
+    }
+  ],
+  "ota_data": {
+    "provider_name": "ADIRONDACK RADIOLOGY ASSOC",
+    "provider_npi": "1366437014",
+    "provider_type": "",
+    "order_id": "8D1F2212-5155-45CE-92D7-9FFE38598B75",
+    "notes": ""
+  }
+}

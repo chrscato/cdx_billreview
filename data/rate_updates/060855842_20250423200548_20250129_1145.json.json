@@ -1,0 +1,23 @@
+{
+  "timestamp": "2025-04-23 20:05:48",
+  "user": "admin_user@clarity-dx.com",
+  "filename": "20250129_1145.json",
+  "tin": "060855842",
+  "rate_type": "create_ota",
+  "source": "manual_correction",
+  "order_id": "0118AE26-842C-4C04-BDF8-73FC67C60A5F",
+  "rates": [
+    {
+      "cpt_code": 73721,
+      "rate": 375,
+      "modifier": null
+    }
+  ],
+  "ota_data": {
+    "provider_name": "Ct Orthopaedics",
+    "provider_npi": "1235181389",
+    "provider_type": "",
+    "order_id": "0118AE26-842C-4C04-BDF8-73FC67C60A5F",
+    "notes": ""
+  }
+}

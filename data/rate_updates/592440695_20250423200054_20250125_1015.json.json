@@ -1,0 +1,23 @@
+{
+  "timestamp": "2025-04-23 20:00:54",
+  "user": "admin_user@clarity-dx.com",
+  "filename": "20250125_1015.json",
+  "tin": "592440695",
+  "rate_type": "create_ota",
+  "source": "manual_correction",
+  "order_id": "9248399E-E7C6-4841-BED6-54BE1D416E3A",
+  "rates": [
+    {
+      "cpt_code": 73721,
+      "rate": 300,
+      "modifier": null
+    }
+  ],
+  "ota_data": {
+    "provider_name": "Hollywood Diagnostics Center",
+    "provider_npi": "1750377552",
+    "provider_type": "",
+    "order_id": "9248399E-E7C6-4841-BED6-54BE1D416E3A",
+    "notes": ""
+  }
+}

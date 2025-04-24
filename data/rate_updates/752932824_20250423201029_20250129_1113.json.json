@@ -1,0 +1,23 @@
+{
+  "timestamp": "2025-04-23 20:10:29",
+  "user": "admin_user@clarity-dx.com",
+  "filename": "20250129_1113.json",
+  "tin": "752932824",
+  "rate_type": "create_ota",
+  "source": "manual_correction",
+  "order_id": "96FC5B8B-F8B8-4C90-8256-0769FF710F26",
+  "rates": [
+    {
+      "cpt_code": 73721,
+      "rate": 275,
+      "modifier": null
+    }
+  ],
+  "ota_data": {
+    "provider_name": "GOOD SAMARITAN MED CTR",
+    "provider_npi": "1770515991",
+    "provider_type": "",
+    "order_id": "96FC5B8B-F8B8-4C90-8256-0769FF710F26",
+    "notes": ""
+  }
+}

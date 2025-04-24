@@ -1,0 +1,23 @@
+{
+  "timestamp": "2025-04-23 20:41:59",
+  "user": "admin_user@clarity-dx.com",
+  "filename": "20250204_1036.json",
+  "tin": "311716973",
+  "rate_type": "create_ota",
+  "source": "manual_correction",
+  "order_id": "C25048F6-F1D0-4503-91A7-53F4B0F05DB3",
+  "rates": [
+    {
+      "cpt_code": 72148,
+      "rate": 400,
+      "modifier": null
+    }
+  ],
+  "ota_data": {
+    "provider_name": "ST FRANCIS MEDICAL CENTER",
+    "provider_npi": "1447212592",
+    "provider_type": "",
+    "order_id": "C25048F6-F1D0-4503-91A7-53F4B0F05DB3",
+    "notes": ""
+  }
+}
