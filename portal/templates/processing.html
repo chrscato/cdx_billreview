@@ -1,20 +1,23 @@
-{% extends "base.html" %}
+{% extends "main-layout.html" %}
 
 {% block title %}Processing{% endblock %}
 
-{% block content %}
+{% block main %}
 <div class="container mt-4">
     <h1>Processing</h1>
     <p class="lead">Manage and process your HCFA files</p>
 
     <div class="row mt-4">
         <div class="col-md-6 mb-4">
-            <div class="card h-100">
-                <div class="card-body">
-                    <h5 class="card-title">Mapped Files
+            <div class="panel panel-hcfa">
+                <div class="panel-heading">
+                    <h5 class="panel-title">
+                        Mapped Files
                         <span class="badge {% if mapped_count > 0 %}bg-success{% else %}bg-secondary{% endif %} ms-2">{{ mapped_count }}</span>
                     </h5>
-                    <p class="card-text">Files ready for staging and processing.</p>
+                </div>
+                <div class="panel-body">
+                    <p>Files ready for staging and processing.</p>
                     <form action="{{ url_for('preprocessing.stage_mapped_files') }}" method="POST">
                         <button type="submit" class="btn btn-primary" {% if mapped_count == 0 %}disabled{% endif %}>
                             <i class="fas fa-play me-2"></i>Process All Mapped Files
@@ -25,12 +28,15 @@
         </div>
 
         <div class="col-md-6 mb-4">
-            <div class="card h-100">
-                <div class="card-body">
-                    <h5 class="card-title">Failed Files
+            <div class="panel panel-filemaker">
+                <div class="panel-heading">
+                    <h5 class="panel-title">
+                        Failed Files
                         <span class="badge {% if fails_count > 0 %}bg-danger{% else %}bg-secondary{% endif %} ms-2">{{ fails_count }}</span>
                     </h5>
-                    <p class="card-text">Files that failed validation during processing.</p>
+                </div>
+                <div class="panel-body">
+                    <p>Files that failed validation during processing.</p>
                     <div class="btn-group" role="group">
                         <a href="{{ url_for('processing.list_fail_files') }}" class="btn btn-danger">
                             <i class="fas fa-list me-2"></i>View Failed Files
@@ -44,14 +50,14 @@
         </div>
     </div>
     
-    <!-- Brief explanation of processing workflow -->
+    <!-- Processing workflow panel -->
     <div class="row mt-4">
         <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">Processing Workflow</h5>
+            <div class="panel">
+                <div class="panel-heading">
+                    <h5 class="panel-title">Processing Workflow</h5>
                 </div>
-                <div class="card-body">
+                <div class="panel-body">
                     <ol class="mb-0">
                         <li><strong>Stage mapped files</strong> - Click the "Process All Mapped Files" button to start processing</li>
                         <li><strong>Review failures</strong> - If any files fail validation, review and fix them in the Failed Files section</li>

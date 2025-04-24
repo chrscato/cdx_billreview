@@ -1,18 +1,20 @@
-{% extends "base.html" %}
+{% extends "main-layout.html" %}
 
 {% block title %}Preprocessing{% endblock %}
 
-{% block content %}
+{% block main %}
 <div class="container mt-5">
     <h2 class="mb-4">Preprocessing</h2>
     
     <div class="row">
-        <!-- Dropoff Card -->
+        <!-- HCFA Dropoff Panel -->
         <div class="col-md-6 mb-4">
-            <div class="card h-100">
-                <div class="card-body">
-                    <h5 class="card-title">HCFA Dropoff</h5>
-                    <p class="card-text">Upload HCFA batch PDFs and start preprocessing pipeline.</p>
+            <div class="panel panel-hcfa">
+                <div class="panel-heading">
+                    <h5 class="panel-title">HCFA Dropoff</h5>
+                </div>
+                <div class="panel-body">
+                    <p>Upload HCFA batch PDFs and start preprocessing pipeline.</p>
                     <a href="{{ url_for('preprocessing.dropoff') }}" class="btn btn-primary">
                         <i class="fas fa-upload me-2"></i>Go to Dropoff
                     </a>
@@ -20,16 +22,19 @@
             </div>
         </div>
         
-        <!-- OCR Corrections Card -->
+        <!-- OCR Corrections Panel -->
         <div class="col-md-6 mb-4">
-            <div class="card h-100">
-                <div class="card-body">
-                    <h5 class="card-title">OCR Corrections 
+            <div class="panel panel-filemaker">
+                <div class="panel-heading">
+                    <h5 class="panel-title">
+                        OCR Corrections
                         {% if invalid_count > 0 %}
                         <span class="badge bg-danger ms-2">{{ invalid_count }}</span>
                         {% endif %}
                     </h5>
-                    <p class="card-text">Review and correct OCR errors in processed documents.</p>
+                </div>
+                <div class="panel-body">
+                    <p>Review and correct OCR errors in processed documents.</p>
                     <a href="{{ url_for('preprocessing.list_invalid_files') }}" class="btn btn-warning">
                         <i class="fas fa-exclamation-triangle me-2"></i>Manage OCR Corrections
                     </a>
@@ -37,16 +42,19 @@
             </div>
         </div>
 
-        <!-- Unmapped Files Card -->
+        <!-- Unmapped Files Panel -->
         <div class="col-md-6 mb-4">
-            <div class="card h-100">
-                <div class="card-body">
-                    <h5 class="card-title">Unmapped Files
+            <div class="panel panel-filemaker">
+                <div class="panel-heading">
+                    <h5 class="panel-title">
+                        Unmapped Files
                         {% if unmapped_count > 0 %}
                         <span class="badge bg-warning ms-2">{{ unmapped_count }}</span>
                         {% endif %}
                     </h5>
-                    <p class="card-text">Review and map unmapped documents to valid format.</p>
+                </div>
+                <div class="panel-body">
+                    <p>Review and map unmapped documents to valid format.</p>
                     <a href="{{ url_for('preprocessing.list_unmapped_files') }}" class="btn btn-info">
                         <i class="fas fa-map me-2"></i>Manage Unmapped Files
                     </a>
