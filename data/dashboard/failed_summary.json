@@ -1315,15 +1315,6 @@
     "age_days": 48
   },
   {
-    "filename": "20250325_124127036.json",
-    "failure_types": [
-      "TOO_MANY_UNITS"
-    ],
-    "provider": "Riverside Imaging Specialists",
-    "dos": "2025-02-10",
-    "age_days": 71
-  },
-  {
     "filename": "20250325_124127040.json",
     "failure_types": [
       "RATE_MISSING"

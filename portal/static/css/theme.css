@@ -1,0 +1,536 @@
+/* Modern Design System for Bill Review Portal */
+:root {
+    /* Light theme colors */
+    --primary-color: #3498db;
+    --success-color: #2ecc71;
+    --danger-color: #e74c3c;
+    --background-color: #ffffff;
+    --panel-bg-color: #f8f9fa;
+    --text-color: #343a40;
+    --border-color: #dee2e6;
+    --hover-bg-color: #f1f1f1;
+    
+    /* Form-specific colors */
+    --input-bg: #ffffff;
+    --input-border: #ced4da;
+    --input-focus-border: #80bdff;
+    --input-focus-shadow: rgba(0, 123, 255, 0.25);
+    --input-disabled-bg: #e9ecef;
+    --input-disabled-text: #6c757d;
+    
+    /* Typography */
+    --font-family-base: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --font-size-base: 14px;
+    --line-height-base: 1.5;
+    
+    /* Spacing */
+    --spacing-xs: 4px;
+    --spacing-sm: 8px;
+    --spacing-md: 16px;
+    --spacing-lg: 24px;
+    --spacing-xl: 32px;
+    
+    /* Shadows */
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+    
+    /* Transitions */
+    --transition-base: all 0.2s ease-in-out;
+}
+
+/* Dark mode variables */
+.dark-mode {
+    --primary-color: #4dabf7;
+    --success-color: #40c980;
+    --danger-color: #e74c3c;
+    --background-color: #121212;
+    --panel-bg-color: #1e1e1e;
+    --text-color: #e9ecef;
+    --border-color: #2d2d2d;
+    --hover-bg-color: #2a2a2a;
+    
+    /* Form-specific dark mode colors */
+    --input-bg: #1e1e1e;
+    --input-border: #2d2d2d;
+    --input-focus-border: #4dabf7;
+    --input-focus-shadow: rgba(77, 171, 247, 0.25);
+    --input-disabled-bg: #2a2a2a;
+    --input-disabled-text: #adb5bd;
+}
+
+/* Base styles */
+body {
+    font-family: var(--font-family-base);
+    font-size: var(--font-size-base);
+    line-height: var(--line-height-base);
+    color: var(--text-color);
+    background-color: var(--background-color);
+    transition: var(--transition-base);
+}
+
+/* Navbar enhancements */
+.navbar-default {
+    background-color: var(--panel-bg-color);
+    border-color: var(--border-color);
+    box-shadow: var(--shadow-sm);
+}
+
+.navbar-default .navbar-brand,
+.navbar-default .navbar-nav > li > a {
+    color: var(--text-color);
+    transition: var(--transition-base);
+}
+
+.navbar-default .navbar-brand:hover,
+.navbar-default .navbar-nav > li > a:hover {
+    color: var(--primary-color);
+}
+
+/* Panel enhancements */
+.panel {
+    background-color: var(--panel-bg-color);
+    border-color: var(--border-color);
+    box-shadow: var(--shadow-sm);
+    transition: var(--transition-base);
+}
+
+.panel-heading {
+    background-color: var(--panel-bg-color);
+    border-bottom-color: var(--border-color);
+}
+
+/* Form Control Enhancements - SAFE VISUAL ONLY */
+.form-control {
+    /* Base styles */
+    background-color: var(--input-bg);
+    border: 1px solid var(--input-border);
+    border-radius: 4px;
+    color: var(--text-color);
+    padding: var(--spacing-sm) var(--spacing-md);
+    font-size: var(--font-size-base);
+    line-height: var(--line-height-base);
+    transition: border-color var(--transition-base), box-shadow var(--transition-base);
+    
+    /* Focus state - preserves Bootstrap's focus handling */
+    &:focus {
+        border-color: var(--input-focus-border);
+        box-shadow: 0 0 0 0.2rem var(--input-focus-shadow);
+        outline: 0;
+    }
+    
+    /* Disabled state - preserves Bootstrap's disabled handling */
+    &:disabled {
+        background-color: var(--input-disabled-bg);
+        color: var(--input-disabled-text);
+        cursor: not-allowed;
+    }
+    
+    /* Placeholder text */
+    &::placeholder {
+        color: var(--input-disabled-text);
+        opacity: 1;
+    }
+}
+
+/* Form Group Enhancements - SAFE SPACING ONLY */
+.form-group {
+    margin-bottom: var(--spacing-md);
+    
+    /* Label styling */
+    label {
+        display: inline-block;
+        margin-bottom: var(--spacing-xs);
+        font-weight: 500;
+        color: var(--text-color);
+    }
+    
+    /* Help text */
+    .help-block {
+        margin-top: var(--spacing-xs);
+        color: var(--text-color);
+        font-size: 0.875em;
+    }
+}
+
+/* Button Enhancements - SAFE VISUAL ONLY */
+.btn {
+    /* Base styles */
+    display: inline-block;
+    font-weight: 500;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: middle;
+    user-select: none;
+    border: 1px solid transparent;
+    padding: var(--spacing-sm) var(--spacing-md);
+    font-size: var(--font-size-base);
+    line-height: var(--line-height-base);
+    border-radius: 4px;
+    transition: color var(--transition-base), 
+                background-color var(--transition-base), 
+                border-color var(--transition-base), 
+                box-shadow var(--transition-base);
+    
+    /* Hover state - preserves Bootstrap's hover handling */
+    &:hover {
+        text-decoration: none;
+    }
+    
+    /* Focus state - preserves Bootstrap's focus handling */
+    &:focus {
+        outline: 0;
+        box-shadow: 0 0 0 0.2rem var(--input-focus-shadow);
+    }
+    
+    /* Active state - preserves Bootstrap's active handling */
+    &:active {
+        box-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.125);
+    }
+    
+    /* Disabled state - preserves Bootstrap's disabled handling */
+    &:disabled {
+        opacity: 0.65;
+        cursor: not-allowed;
+    }
+}
+
+/* Button Variants - SAFE VISUAL ONLY */
+.btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    color: #fff;
+    
+    &:hover {
+        background-color: darken(var(--primary-color), 10%);
+        border-color: darken(var(--primary-color), 10%);
+    }
+}
+
+.btn-success {
+    background-color: var(--success-color);
+    border-color: var(--success-color);
+    color: #fff;
+    
+    &:hover {
+        background-color: darken(var(--success-color), 10%);
+        border-color: darken(var(--success-color), 10%);
+    }
+}
+
+.btn-danger {
+    background-color: var(--danger-color);
+    border-color: var(--danger-color);
+    color: #fff;
+    
+    &:hover {
+        background-color: darken(var(--danger-color), 10%);
+        border-color: darken(var(--danger-color), 10%);
+    }
+}
+
+/* Panel Body Enhancements - SAFE VISUAL ONLY */
+.panel-body {
+    padding: var(--spacing-md);
+    background-color: var(--panel-bg-color);
+    
+    /* Nested form groups */
+    .form-group:last-child {
+        margin-bottom: 0;
+    }
+}
+
+/* Form Validation States - SAFE VISUAL ONLY */
+.has-success {
+    .form-control {
+        border-color: var(--success-color);
+        
+        &:focus {
+            border-color: var(--success-color);
+            box-shadow: 0 0 0 0.2rem rgba(46, 204, 113, 0.25);
+        }
+    }
+    
+    .help-block {
+        color: var(--success-color);
+    }
+}
+
+.has-error {
+    .form-control {
+        border-color: var(--danger-color);
+        
+        &:focus {
+            border-color: var(--danger-color);
+            box-shadow: 0 0 0 0.2rem rgba(231, 76, 60, 0.25);
+        }
+    }
+    
+    .help-block {
+        color: var(--danger-color);
+    }
+}
+
+/* Form Control Sizing - SAFE VISUAL ONLY */
+.input-sm {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    font-size: 0.875em;
+    line-height: 1.5;
+}
+
+.input-lg {
+    padding: var(--spacing-md) var(--spacing-lg);
+    font-size: 1.25em;
+    line-height: 1.5;
+}
+
+/* Form Control Groups - SAFE VISUAL ONLY */
+.input-group {
+    .form-control {
+        position: relative;
+        z-index: 2;
+        float: left;
+        width: 100%;
+        margin-bottom: 0;
+    }
+    
+    .input-group-addon {
+        padding: var(--spacing-sm) var(--spacing-md);
+        font-size: var(--font-size-base);
+        font-weight: 400;
+        line-height: 1;
+        color: var(--text-color);
+        text-align: center;
+        background-color: var(--panel-bg-color);
+        border: 1px solid var(--input-border);
+        border-radius: 4px;
+    }
+}
+
+/* Table enhancements */
+.table {
+    color: var(--text-color);
+}
+
+.table > thead > tr > th {
+    background-color: var(--panel-bg-color);
+    border-bottom-color: var(--border-color);
+}
+
+.table > tbody > tr:hover {
+    background-color: var(--hover-bg-color);
+}
+
+/* Modal enhancements */
+.modal-content {
+    background-color: var(--panel-bg-color);
+    border-color: var(--border-color);
+    box-shadow: var(--shadow-lg);
+}
+
+.modal-header {
+    border-bottom-color: var(--border-color);
+}
+
+.modal-footer {
+    border-top-color: var(--border-color);
+}
+
+/* Alert enhancements */
+.alert {
+    border: none;
+    box-shadow: var(--shadow-sm);
+}
+
+.alert-success {
+    background-color: rgba(46, 204, 113, 0.1);
+    color: var(--success-color);
+}
+
+.alert-danger {
+    background-color: rgba(231, 76, 60, 0.1);
+    color: var(--danger-color);
+}
+
+/* List group enhancements */
+.list-group-item {
+    background-color: var(--panel-bg-color);
+    border-color: var(--border-color);
+    color: var(--text-color);
+}
+
+.list-group-item:hover {
+    background-color: var(--hover-bg-color);
+}
+
+/* Dropdown enhancements */
+.dropdown-menu {
+    background-color: var(--panel-bg-color);
+    border-color: var(--border-color);
+    box-shadow: var(--shadow-md);
+}
+
+.dropdown-menu > li > a {
+    color: var(--text-color);
+}
+
+.dropdown-menu > li > a:hover {
+    background-color: var(--hover-bg-color);
+    color: var(--primary-color);
+}
+
+/* Pagination enhancements */
+.pagination > li > a,
+.pagination > li > span {
+    color: var(--text-color);
+    background-color: var(--panel-bg-color);
+    border-color: var(--border-color);
+}
+
+.pagination > li > a:hover,
+.pagination > li > span:hover {
+    background-color: var(--hover-bg-color);
+    color: var(--primary-color);
+}
+
+.pagination > .active > a,
+.pagination > .active > span {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+/* Badge enhancements */
+.badge {
+    font-weight: 500;
+    padding: 3px 6px;
+}
+
+/* Progress bar enhancements */
+.progress {
+    background-color: var(--panel-bg-color);
+    box-shadow: var(--shadow-sm);
+}
+
+.progress-bar {
+    background-color: var(--primary-color);
+}
+
+/* Well enhancements */
+.well {
+    background-color: var(--panel-bg-color);
+    border-color: var(--border-color);
+    box-shadow: var(--shadow-sm);
+}
+
+/* Breadcrumb enhancements */
+.breadcrumb {
+    background-color: var(--panel-bg-color);
+    border-color: var(--border-color);
+}
+
+/* Label enhancements */
+.label {
+    font-weight: 500;
+    padding: 3px 6px;
+}
+
+/* Thumbnail enhancements */
+.thumbnail {
+    background-color: var(--panel-bg-color);
+    border-color: var(--border-color);
+    box-shadow: var(--shadow-sm);
+}
+
+/* Comparison Panel Enhancements */
+.comparison-container {
+    display: flex;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+}
+
+.comparison-panel {
+    flex: 1;
+    background-color: var(--panel-bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+}
+
+.comparison-panel-header {
+    padding: var(--spacing-md);
+    background-color: var(--panel-bg-color);
+    border-bottom: 1px solid var(--border-color);
+    font-weight: 600;
+}
+
+.comparison-panel-body {
+    padding: var(--spacing-md);
+}
+
+.comparison-field {
+    margin-bottom: var(--spacing-md);
+    padding: var(--spacing-sm);
+    border-radius: 4px;
+    background-color: var(--background-color);
+}
+
+.comparison-field-label {
+    font-weight: 500;
+    margin-bottom: var(--spacing-xs);
+    color: var(--text-color);
+}
+
+.comparison-field-value {
+    padding: var(--spacing-sm);
+    background-color: var(--panel-bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+}
+
+.comparison-field-diff {
+    background-color: rgba(231, 76, 60, 0.1);
+    border-left: 3px solid var(--danger-color);
+}
+
+.comparison-field-match {
+    background-color: rgba(46, 204, 113, 0.1);
+    border-left: 3px solid var(--success-color);
+}
+
+.comparison-field-neutral {
+    background-color: var(--panel-bg-color);
+    border-left: 3px solid var(--border-color);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    :root {
+        --spacing-md: 12px;
+        --spacing-lg: 20px;
+    }
+    
+    .panel {
+        margin-bottom: var(--spacing-md);
+    }
+    
+    .comparison-container {
+        flex-direction: column;
+    }
+    
+    .comparison-panel {
+        margin-bottom: var(--spacing-md);
+    }
+    
+    .form-group {
+        margin-bottom: var(--spacing-sm);
+    }
+    
+    .form-control {
+        padding: var(--spacing-xs) var(--spacing-sm);
+    }
+    
+    .btn {
+        padding: var(--spacing-xs) var(--spacing-sm);
+    }
+} 

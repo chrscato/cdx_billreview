@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}">
     <style>
         /* Additional custom styles */
         .navbar-default {
@@ -78,6 +79,20 @@
             filter: alpha(opacity=20);
             opacity: .2;
         }
+        /* Theme toggle styles */
+        .navbar-toggle-theme {
+            padding: 15px;
+            display: block;
+            color: inherit;
+        }
+        .navbar-toggle-theme:hover,
+        .navbar-toggle-theme:focus {
+            text-decoration: none;
+            color: inherit;
+        }
+        .navbar-toggle-theme i {
+            font-size: 18px;
+        }
     </style>
 {% endblock %}
 
@@ -109,6 +124,12 @@
                     </li>
                 </ul>
                 <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="#" id="theme-toggle" class="navbar-toggle-theme">
+                            <i class="fa fa-sun" id="theme-icon"></i>
+                            <span class="sr-only">Toggle theme</span>
+                        </a>
+                    </li>
                     {% if current_user.is_authenticated %}
                     <li class="dropdown">
                         <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
@@ -161,4 +182,5 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
     <script src="{{ url_for('static', filename='js/common.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
 {% endblock %} 

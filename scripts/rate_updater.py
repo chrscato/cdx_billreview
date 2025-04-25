@@ -111,19 +111,52 @@ def insert_into_ppo(conn, data):
     # Initialize success flag
     success = False
     
-    # Check for category_rates and handle different formats
-    category_rates = data.get('category_rates')
+    # Handle individual rates
+    if data.get('rate_type') == 'individual' and 'rates' in data and isinstance(data['rates'], list):
+        logger.info(f"Processing individual rates for TIN: {data['tin']}")
+        for rate_item in data['rates']:
+            if not isinstance(rate_item, dict):
+                logger.error(f"Rate item is not a dictionary: {rate_item}")
+                continue
+                
+            if 'cpt_code' not in rate_item or 'rate' not in rate_item:
+                logger.error(f"Missing required fields in rate item: {rate_item}")
+                continue
+            
+            try:
+                cursor.execute(
+                    """
+                    INSERT INTO ppo (id, RenderingState, TIN, provider_name, proc_cd, modifier, 
+                                 proc_desc, proc_category, rate)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        unique_id,
+                        '',  # RenderingState - not provided in JSON
+                        data['tin'],
+                        data.get('ota_data', {}).get('provider_name', '') if isinstance(data.get('ota_data'), dict) else '',
+                        rate_item['cpt_code'],
+                        rate_item.get('modifier', ''),
+                        '',  # proc_desc - not provided for individual rates
+                        '',  # proc_category - not provided for individual rates
+                        str(rate_item['rate'])
+                    )
+                )
+                logger.info(f"Inserted individual rate into ppo: TIN: {data['tin']}, CPT: {rate_item['cpt_code']}")
+                success = True
+            except sqlite3.Error as e:
+                logger.error(f"Error inserting individual rate into ppo: {e}")
+                continue
     
-    # Log the category_rates for debugging
-    logger.info(f"Found category_rates: {category_rates}")
-    
-    # Handle different formats of category_rates
-    if category_rates:
+    # Handle category rates
+    elif data.get('rate_type') == 'category' and 'category_rates' in data:
+        category_rates = data['category_rates']
+        logger.info(f"Processing category rates for TIN: {data['tin']}")
+        
         # If category_rates is a dictionary (format: {"category_name": rate_value})
         if isinstance(category_rates, dict):
             logger.info(f"Processing dictionary-style category_rates")
             
-            # Process each category in the dictionary
             for category, rate in category_rates.items():
                 if not category or rate is None:
                     logger.warning(f"Skipping category rate with missing data: {category}={rate}")
@@ -131,7 +164,6 @@ def insert_into_ppo(conn, data):
                 
                 logger.info(f"Processing category {category} with rate {rate}")
                 
-                # Get all procedure codes for this category
                 try:
                     proc_codes = get_procedure_codes_for_category(conn, category)
                     
@@ -141,7 +173,6 @@ def insert_into_ppo(conn, data):
                     
                     logger.info(f"Found {len(proc_codes)} procedure codes for category {category}")
                     
-                    # Insert each procedure code with the category rate
                     for proc_code, modifier, proc_desc, proc_category in proc_codes:
                         try:
                             cursor.execute(
@@ -166,19 +197,15 @@ def insert_into_ppo(conn, data):
                             success = True
                         except sqlite3.Error as e:
                             logger.error(f"Error inserting category proc code into ppo: {e}")
-                            # Continue with other codes rather than raising
                             continue
                 except Exception as e:
                     logger.error(f"Error processing category {category}: {e}")
-                    # Continue with other categories rather than raising
                     continue
         
         # If category_rates is a list (format: [{"category": "name", "rate": value}])
         elif isinstance(category_rates, list) and category_rates:
             logger.info(f"Processing list-style category_rates")
-            # Process each category rate in the list
             for category_rate in category_rates:
-                # Verify category_rate is a dictionary
                 if not isinstance(category_rate, dict):
                     logger.error(f"Category rate is not a dictionary: {category_rate}")
                     continue
@@ -190,7 +217,6 @@ def insert_into_ppo(conn, data):
                     logger.warning(f"Skipping category rate with missing data: {category_rate}")
                     continue
                     
-                # Get all procedure codes for this category
                 try:
                     proc_codes = get_procedure_codes_for_category(conn, category)
                     
@@ -198,7 +224,6 @@ def insert_into_ppo(conn, data):
                         logger.warning(f"No procedure codes found for category: {category}")
                         continue
                         
-                    # Insert each procedure code with the category rate
                     for proc_code, modifier, proc_desc, proc_category in proc_codes:
                         try:
                             cursor.execute(
@@ -223,55 +248,15 @@ def insert_into_ppo(conn, data):
                             success = True
                         except sqlite3.Error as e:
                             logger.error(f"Error inserting category proc code into ppo: {e}")
-                            # Continue with other codes rather than raising
                             continue
                 except Exception as e:
                     logger.error(f"Error processing category {category}: {e}")
-                    # Continue with other categories rather than raising
                     continue
         else:
             logger.warning(f"Unexpected category_rates format: {type(category_rates)}")
-    # Regular CPT-specific rates
-    elif 'rates' in data and isinstance(data['rates'], list) and data['rates']:
-        for rate_item in data['rates']:
-            # Verify rate_item is a dictionary and has required fields
-            if not isinstance(rate_item, dict):
-                logger.error(f"Rate item is not a dictionary: {rate_item}")
-                continue
-                
-            # Check for required fields
-            if 'cpt_code' not in rate_item or 'rate' not in rate_item:
-                logger.error(f"Missing required fields in rate item: {rate_item}")
-                continue
-            
-            try:
-                cursor.execute(
-                    """
-                    INSERT INTO ppo (id, RenderingState, TIN, provider_name, proc_cd, modifier, 
-                                   proc_desc, proc_category, rate)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                    """,
-                    (
-                        unique_id,
-                        '',  # RenderingState - not provided in JSON
-                        data['tin'],
-                        data.get('ota_data', {}).get('provider_name', '') if isinstance(data.get('ota_data'), dict) else '',
-                        rate_item['cpt_code'],
-                        rate_item.get('modifier', ''),
-                        '',  # proc_desc - not provided in JSON
-                        '',  # proc_category - not provided in JSON
-                        str(rate_item['rate'])
-                    )
-                )
-                logger.info(f"Inserted into ppo: TIN: {data['tin']}, CPT: {rate_item['cpt_code']}")
-                success = True
-            except sqlite3.Error as e:
-                logger.error(f"Error inserting into ppo: {e}")
-                # Continue with other rates rather than raising
-                continue
+    
     else:
-        logger.warning(f"No rates or category_rates found in PPO data: {data}")
-        return False
+        logger.warning(f"Unsupported rate type or missing rate data: {data.get('rate_type')}")
     
     return success
 
@@ -329,6 +314,8 @@ def process_json_file(file_path, conn):
         if rate_type == 'create_ota':
             return insert_into_current_otas(conn, data)
         elif rate_type == 'category':
+            return insert_into_ppo(conn, data)
+        elif rate_type == 'individual':
             return insert_into_ppo(conn, data)
         else:
             logger.warning(f"Unknown rate_type '{rate_type}' in file {file_path}")
