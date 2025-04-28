@@ -475,7 +475,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const confirmEscalationBtn = document.getElementById('confirmEscalation');
     
     if (escalationForm && confirmEscalationBtn) {
-        confirmEscalationBtn.addEventListener('click', function() {
+        confirmEscalationBtn.addEventListener('click', async function() {
             // Add was-validated class to show validation feedback
             escalationForm.classList.add('was-validated');
             
@@ -483,30 +483,63 @@ document.addEventListener('DOMContentLoaded', function() {
             if (escalationForm.checkValidity()) {
                 // Get form data
                 const reason = document.getElementById('escalationReason').value;
-                const notes = document.getElementById('escalationNotes').value;
+                const notes = document.getElementById('escalationNotes').value.trim();
                 
-                // Here you would typically send the data to the server
-                console.log('Escalating with reason:', reason, 'and notes:', notes);
-                
-                // Show success message
-                const modalElement = document.getElementById('escalationModal');
-                const modal = bootstrap.Modal.getInstance(modalElement);
-                
-                // Close the modal
-                modal.hide();
-                
-                // Show success alert
-                const alertHtml = `
-                    <div class="alert alert-success alert-dismissible fade show" role="alert">
-                        <strong>Success!</strong> This file has been escalated for review.
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                `;
-                document.querySelector('.container-fluid').insertAdjacentHTML('afterbegin', alertHtml);
-                
-                // Reset form
-                escalationForm.classList.remove('was-validated');
-                escalationForm.reset();
+                // Send the data to the server
+                try {
+                    const response = await fetch(`/preprocessing/unmapped/{{ filename }}/escalate`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            reason: reason,
+                            notes: notes
+                        })
+                    });
+
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        // Show success message
+                        const modalElement = document.getElementById('escalationModal');
+                        const modal = bootstrap.Modal.getInstance(modalElement);
+                        
+                        // Close the modal
+                        modal.hide();
+                        
+                        // Show success alert
+                        const alertHtml = `
+                            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                <strong>Success!</strong> This file has been escalated for review.
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        `;
+                        document.querySelector('.container-fluid').insertAdjacentHTML('afterbegin', alertHtml);
+                        
+                        // Reset form
+                        escalationForm.classList.remove('was-validated');
+                        escalationForm.reset();
+                    } else {
+                        // Show error message
+                        const alertHtml = `
+                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                <strong>Error!</strong> Failed to escalate file: ${data.error || 'Unknown error'}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        `;
+                        document.querySelector('.container-fluid').insertAdjacentHTML('afterbegin', alertHtml);
+                    }
+                } catch (error) {
+                    // Show error message
+                    const alertHtml = `
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <strong>Error!</strong> Failed to escalate file: ${error.message}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    `;
+                    document.querySelector('.container-fluid').insertAdjacentHTML('afterbegin', alertHtml);
+                }
             }
         });
     }
@@ -1191,157 +1224,5 @@ function hideToast(toast) {
         }, 500);
     }
 }
-
-/**
- * Handle the escalation form submission
- * @param {Event} event - The submission event
- */
-function handleEscalationSubmit(event) {
-    // Prevent default form submission
-    event.preventDefault();
-    
-    // Get form elements
-    const form = document.getElementById('escalationForm');
-    const reasonSelect = document.getElementById('escalationReason');
-    const notesTextarea = document.getElementById('escalationNotes');
-    const confirmButton = document.getElementById('confirmEscalation');
-    const originalButtonText = confirmButton.innerHTML;
-    
-    // Add was-validated class to show validation feedback
-    form.classList.add('was-validated');
-    
-    // Check if form is valid
-    if (!form.checkValidity()) {
-        // If not valid, focus on the reason select if it's the invalid element
-        if (!reasonSelect.validity.valid) {
-            reasonSelect.focus();
-        }
-        return;
-    }
-    
-    // Get form data
-    const reason = reasonSelect.value;
-    const notes = notesTextarea.value.trim();
-    
-    // Show loading state
-    confirmButton.disabled = true;
-    confirmButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
-    
-    // Send the escalation request
-    fetch(`/preprocessing/unmapped/{{ filename }}/escalate`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            reason: reason,
-            notes: notes
-        })
-    })
-    .then(response => {
-        // Check for HTTP errors
-        if (!response.ok) {
-            throw new Error(`Server returned ${response.status}: ${response.statusText}`);
-        }
-        return response.json();
-    })
-    .then(data => {
-        // Handle successful response
-        console.log('Escalation successful:', data);
-        
-        // Close the modal
-        const modalElement = document.getElementById('escalationModal');
-        const modal = bootstrap.Modal.getInstance(modalElement);
-        modal.hide();
-        
-        // Reset form
-        form.classList.remove('was-validated');
-        form.reset();
-        
-        // Navigate to next file with success message
-        navigateToNextFile('File has been successfully escalated for review', 'success');
-    })
-    .catch(error => {
-        // Handle error
-        console.error('Escalation error:', error);
-        
-        // Show error message inside the modal
-        const errorMessageElement = document.createElement('div');
-        errorMessageElement.className = 'alert alert-danger mt-3';
-        errorMessageElement.id = 'escalationErrorMessage';
-        errorMessageElement.innerHTML = `
-            <strong>Error:</strong> Failed to escalate this file. 
-            <p class="mb-0 small">${error.message || 'Please try again or contact support.'}</p>
-        `;
-        
-        // Remove any existing error message
-        const existingError = document.getElementById('escalationErrorMessage');
-        if (existingError) {
-            existingError.remove();
-        }
-        
-        // Add the error message to the form
-        form.appendChild(errorMessageElement);
-        
-        // Reset button state
-        confirmButton.disabled = false;
-        confirmButton.innerHTML = originalButtonText;
-    });
-}
-
-// Set up event listeners when the DOM is fully loaded
-document.addEventListener('DOMContentLoaded', function() {
-    // Get relevant DOM elements for escalation
-    const escalationForm = document.getElementById('escalationForm');
-    const confirmEscalationBtn = document.getElementById('confirmEscalation');
-    const escalationModal = document.getElementById('escalationModal');
-    const reasonSelect = document.getElementById('escalationReason');
-    
-    // Add submit event listener to the form
-    if (escalationForm) {
-        escalationForm.addEventListener('submit', handleEscalationSubmit);
-        
-        // Also trigger submit when the confirm button is clicked
-        if (confirmEscalationBtn) {
-            confirmEscalationBtn.addEventListener('click', function() {
-                // Create and dispatch a submit event
-                const submitEvent = new Event('submit', { cancelable: true });
-                escalationForm.dispatchEvent(submitEvent);
-            });
-        }
-    }
-    
-    // Reset form when modal is hidden
-    if (escalationModal) {
-        escalationModal.addEventListener('hidden.bs.modal', function() {
-            // Reset form validation state
-            if (escalationForm) {
-                escalationForm.classList.remove('was-validated');
-                escalationForm.reset();
-                
-                // Remove any error messages
-                const errorMessage = document.getElementById('escalationErrorMessage');
-                if (errorMessage) {
-                    errorMessage.remove();
-                }
-            }
-        });
-    }
-    
-    // Add change event listener to reason dropdown for real-time validation
-    if (reasonSelect) {
-        reasonSelect.addEventListener('change', function() {
-            if (this.value) {
-                this.classList.remove('is-invalid');
-                this.classList.add('is-valid');
-            } else {
-                this.classList.remove('is-valid');
-                this.classList.add('is-invalid');
-            }
-        });
-    }
-    
-    // ... existing event listeners from before ...
-});
 </script>
 {% endblock %} 
