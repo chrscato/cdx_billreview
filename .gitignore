@@ -35,13 +35,11 @@ ENV/
 *.db
 db_backups/
 datadump/
+/data/        # only ignore root-level data folder
+!/process/data/  # but allow process/data/ to be tracked
 googlecloud.json
 *.log
 
 # OS specific
 .DS_Store
-Thumbs.db 
-
-
-data/
-
+Thumbs.db
