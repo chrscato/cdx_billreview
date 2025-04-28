@@ -858,12 +858,42 @@ def escalate_unmapped_file(filename):
             logger.error(f"Error deleting original file: {str(e)}")
             # Continue even if delete fails - the important part is that we've created the escalation copy
         
+        # Remove from summary file
+        try:
+            if remove_from_summary(filename):
+                logger.info(f"Removed {filename} from summary file")
+            else:
+                logger.warning(f"Failed to remove {filename} from summary - entry may not exist")
+        except Exception as e:
+            logger.error(f"Error removing {filename} from summary: {str(e)}")
+        
+        # Get next file information
+        next_file = None
+        try:
+            # List all unmapped files
+            unmapped_files = list_objects('data/hcfa_json/valid/unmapped/')
+            unmapped_files = [f for f in unmapped_files if f.endswith('.json')]
+            
+            # Find the current file's index
+            current_index = -1
+            for i, f in enumerate(unmapped_files):
+                if f.endswith(filename):
+                    current_index = i
+                    break
+            
+            # Get the next file if available
+            if current_index >= 0 and current_index + 1 < len(unmapped_files):
+                next_file = os.path.basename(unmapped_files[current_index + 1])
+        except Exception as e:
+            logger.error(f"Error getting next file information: {str(e)}")
+        
         return jsonify({
             'success': True,
             'message': f'Successfully escalated file {filename}',
             'data': {
                 'reason': reason,
-                'timestamp': json_data['escalation']['timestamp']
+                'timestamp': json_data['escalation']['timestamp'],
+                'next_file': next_file
             }
         })
         

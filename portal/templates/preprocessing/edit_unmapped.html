@@ -577,6 +577,18 @@ document.addEventListener('DOMContentLoaded', function() {
                             </div>
                         `;
                         document.querySelector('.container-fluid').insertAdjacentHTML('afterbegin', alertHtml);
+                        
+                        // Navigate to next file if available
+                        if (data.data.next_file) {
+                            setTimeout(() => {
+                                window.location.href = `/preprocessing/unmapped/${data.data.next_file}`;
+                            }, 1500);
+                        } else {
+                            // No next file, go back to list
+                            setTimeout(() => {
+                                window.location.href = '/preprocessing/unmapped';
+                            }, 1500);
+                        }
                     } else {
                         // Show error message
                         const alertHtml = `
