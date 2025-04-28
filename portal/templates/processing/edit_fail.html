@@ -714,9 +714,9 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
                     {% if json_data.filemaker.provider['Provider Network'] == 'In Network' %}
-                    <button type="button" class="btn btn-success" id="assignRatesBtn">Assign Rate & Save</button>
+                    <button type="button" class="btn btn-success" id="assignRatesBtn" onclick="handleRateAssignment()">Assign Rate & Save</button>
                     {% else %}
-                    <button type="button" class="btn btn-warning" id="createOTABtn">Create OTA with Individual Rates</button>
+                    <button type="button" class="btn btn-warning" id="createOTABtn" onclick="handleRateAssignment()">Create OTA with Individual Rates</button>
                     {% endif %}
                 </div>
             </div>
@@ -871,7 +871,6 @@
         const denyForm = document.getElementById('deny-form');
         const readyForProcessForm = document.getElementById('ready-for-process-form');
         const reasonTextarea = document.getElementById('escalate-reason');
-        const rateAssignmentForm = document.getElementById('rateAssignmentForm');
         
         // Handle PDF viewer
         $('#view-pdf').on('click', function(e) {
@@ -890,144 +889,6 @@
             .fail(function(jqXHR, textStatus, errorThrown) {
                 console.error("Error getting PDF URL:", errorThrown);
                 showAlert('error', 'Error getting PDF URL');
-            });
-        });
-        
-        // Handle rate assignment button clicks
-        $('#assignRatesBtn, #createOTABtn').on('click', function(e) {
-            e.preventDefault();
-            
-            // Get form data
-            const form = document.getElementById('rateAssignmentForm');
-            if (!form) return;
-            
-            // Get provider network status
-            const providerNetwork = $('#provider-network').val();
-            const isInNetwork = providerNetwork === 'In Network';
-            
-            // Get active tab
-            const activeTab = $('.tab-pane.active');
-            const isIndividualRates = activeTab.attr('id') === 'individual-rates';
-            
-            // Validate form data
-            if (isIndividualRates || !isInNetwork) {
-                let hasRates = false;
-                $('[data-cpt-code]').each(function() {
-                    const cptCode = $(this).data('cpt-code');
-                    const rateInput = $(`#rate-input-${cptCode}`);
-                    if (rateInput.length && rateInput.val()) {
-                        hasRates = true;
-                    }
-                });
-                
-                if (!hasRates) {
-                    alert('Please enter at least one rate before submitting.');
-                    return;
-                }
-            }
-            
-            // Prepare request data
-            let requestData = {
-                rate_type: isInNetwork ? (isIndividualRates ? 'individual' : 'category') : 'create_ota'
-            };
-            
-            // Collect data based on active tab
-            if (isIndividualRates || !isInNetwork) {
-                const rates = [];
-                $('[data-cpt-code]').each(function() {
-                    const cptCode = $(this).data('cpt-code');
-                    const rateInput = $(`#rate-input-${cptCode}`);
-                    const modifierInput = $(`#modifier-input-${cptCode}`);
-                    
-                    if (rateInput.length && rateInput.val()) {
-                        rates.push({
-                            cpt_code: cptCode,
-                            rate: parseFloat(rateInput.val()),
-                            modifier: modifierInput.val() || null
-                        });
-                    }
-                });
-                requestData.rates = rates;
-            } else {
-                const categoryRates = {};
-                $('[name^="category_enabled["]').each(function() {
-                    if ($(this).is(':checked')) {
-                        const categoryName = $(this).attr('name').match(/\[(.*?)\]/)[1];
-                        const rateInput = $(`[name="category_rate[${categoryName}]"]`);
-                        
-                        if (rateInput.length && rateInput.val()) {
-                            categoryRates[categoryName] = parseFloat(rateInput.val());
-                        }
-                    }
-                });
-                requestData.category_rates = categoryRates;
-            }
-            
-            // Add notes if provided
-            const notesTextarea = $('#rate-notes');
-            if (notesTextarea.length && notesTextarea.val().trim()) {
-                requestData.notes = notesTextarea.val().trim();
-            }
-            
-            // Add TIN to request data
-            const cleanTin = $('#clean-tin').val();
-            requestData.tin = cleanTin;
-            
-            console.log("Sending rate data:", requestData);
-            
-            // Show loading state
-            const button = $(this);
-            const originalText = button.html();
-            button.prop('disabled', true);
-            button.html('<span class="spinner-border spinner-border-sm"></span> Processing...');
-            
-            // Get the filename
-            const filename = $('#filename').val();
-            
-            // Send AJAX request
-            const url = `/processing/fails/${filename}/assign-rates`;
-            console.log("Sending request to:", url);
-            
-            $.ajax({
-                url: url,
-                method: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify(requestData),
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            })
-            .done(function(data) {
-                console.log("Response data:", data);
-                if (data.status === 'success') {
-                    // Show success message
-                    showAlert('success', data.message || 'Rates assigned successfully');
-                    
-                    // Clear form inputs
-                    $('[data-cpt-code] input[type="number"]').val('');
-                    $('[data-cpt-code] select').val('');
-                    $('[name^="category_rate["]').val('');
-                    $('[name^="category_enabled["]').prop('checked', false);
-                    $('#rate-notes').val('');
-                    
-                    // Hide modal and reset button
-                    $('#rateAssignmentModal').modal('hide');
-                    button.prop('disabled', false);
-                    button.html(originalText);
-                    
-                    // Redirect to the list view after a short delay
-                    setTimeout(function() {
-                        window.location.href = data.redirect || '/processing/fails';
-                    }, 1500);
-                } else {
-                    throw new Error(data.message || 'Error assigning rates');
-                }
-            })
-            .fail(function(jqXHR, textStatus, errorThrown) {
-                console.error("Error submitting rate data:", errorThrown);
-                showAlert('error', errorThrown || 'Error assigning rates');
-                button.prop('disabled', false);
-                button.html(originalText);
             });
         });
 
@@ -1075,58 +936,171 @@
         
         // Initialize the first tab
         $('a[data-toggle="tab"]:first').tab('show');
+    });
 
-        // Function to show save changes modal
-        window.showSaveChangesModal = function() {
-            $('#saveChangesModal').modal('show');
-        };
-        
-        // Function to submit save changes
-        window.submitSaveChanges = function() {
+    // Global function to handle rate assignment
+    async function handleRateAssignment() {
+        try {
             // Get form data
-            const formData = new FormData(document.querySelector('form'));
+            const form = document.getElementById('rateAssignmentForm');
+            if (!form) {
+                console.error('Rate assignment form not found');
+                return;
+            }
+            
+            // Get provider network status
+            const providerNetwork = $('#provider-network').val();
+            const isInNetwork = providerNetwork === 'In Network';
+            
+            // Get active tab
+            const activeTab = $('.tab-pane.active');
+            const isIndividualRates = activeTab.attr('id') === 'individual-rates';
+            
+            // Get TIN and validate
+            const cleanTin = $('#clean-tin').val();
+            if (!cleanTin) {
+                showAlert('error', 'No valid TIN found. Please check the provider information.');
+                return;
+            }
+            
+            // Prepare request data
+            let requestData = {
+                rate_type: isInNetwork ? (isIndividualRates ? 'individual' : 'category') : 'create_ota',
+                tin: cleanTin
+            };
+            
+            // Collect data based on active tab
+            if (isIndividualRates || !isInNetwork) {
+                const rates = [];
+                $('[data-cpt-code]').each(function() {
+                    const cptCode = $(this).data('cpt-code');
+                    const rateInput = $(`#rate-input-${cptCode}`);
+                    const modifierInput = $(`#modifier-input-${cptCode}`);
+                    
+                    if (rateInput.length && rateInput.val()) {
+                        const rateValue = parseFloat(rateInput.val());
+                        if (isNaN(rateValue) || rateValue <= 0) {
+                            showAlert('error', `Invalid rate value for CPT ${cptCode}`);
+                            return false; // Break the each loop
+                        }
+                        
+                        rates.push({
+                            cpt_code: cptCode,
+                            rate: rateValue,
+                            modifier: modifierInput.val() || null
+                        });
+                    }
+                });
+                
+                if (rates.length === 0) {
+                    showAlert('error', 'Please enter at least one valid rate before submitting.');
+                    return;
+                }
+                
+                requestData.rates = rates;
+            } else {
+                const categoryRates = {};
+                let hasValidRates = false;
+                
+                $('[name^="category_enabled["]').each(function() {
+                    if ($(this).is(':checked')) {
+                        const categoryName = $(this).attr('name').match(/\[(.*?)\]/)[1];
+                        const rateInput = $(`[name="category_rate[${categoryName}]"]`);
+                        
+                        if (rateInput.length && rateInput.val()) {
+                            const rateValue = parseFloat(rateInput.val());
+                            if (isNaN(rateValue) || rateValue <= 0) {
+                                showAlert('error', `Invalid rate value for category ${categoryName}`);
+                                return false; // Break the each loop
+                            }
+                            
+                            categoryRates[categoryName] = rateValue;
+                            hasValidRates = true;
+                        }
+                    }
+                });
+                
+                if (!hasValidRates) {
+                    showAlert('error', 'Please enable at least one category and provide a valid rate.');
+                    return;
+                }
+                
+                requestData.category_rates = categoryRates;
+            }
+            
+            // Add notes if provided
+            const notesTextarea = $('#rate-notes');
+            if (notesTextarea.length && notesTextarea.val().trim()) {
+                requestData.notes = notesTextarea.val().trim();
+            }
+            
+            console.log('Sending rate data:', requestData);
             
             // Show loading state
-            const button = $('#saveChangesModal .btn-primary');
+            const button = isInNetwork ? $('#assignRatesBtn') : $('#createOTABtn');
             const originalText = button.html();
             button.prop('disabled', true);
-            button.html('<span class="spinner-border spinner-border-sm"></span> Saving...');
+            button.html('<span class="spinner-border spinner-border-sm"></span> Processing...');
+            
+            // Get the filename
+            const filename = $('#filename').val();
             
             // Send AJAX request
-            $.ajax({
-                url: "{{ url_for('processing.submit_fail_file', filename=filename) }}",
-                method: 'POST',
-                data: formData,
-                processData: false,
-                contentType: false,
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
+            const url = `/processing/fails/${filename}/assign-rates`;
+            console.log('Sending request to:', url);
+            
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify(requestData)
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || `Server error: ${response.status}`);
                 }
-            })
-            .done(function(data) {
+                
+                const data = await response.json();
+                console.log('Response data:', data);
+                
                 if (data.status === 'success') {
                     // Show success message
-                    showAlert('success', 'Changes saved successfully');
+                    showAlert('success', data.message || 'Rates assigned successfully');
                     
-                    // Close modal
-                    $('#saveChangesModal').modal('hide');
+                    // Clear form inputs
+                    $('[data-cpt-code] input[type="number"]').val('');
+                    $('[data-cpt-code] select').val('');
+                    $('[name^="category_rate["]').val('');
+                    $('[name^="category_enabled["]').prop('checked', false);
+                    $('#rate-notes').val('');
                     
-                    // Refresh page after a short delay
+                    // Hide modal and reset button
+                    $('#rateAssignmentModal').modal('hide');
+                    button.prop('disabled', false);
+                    button.html(originalText);
+                    
+                    // Redirect to the list view after a short delay
                     setTimeout(function() {
-                        window.location.reload();
+                        window.location.href = data.redirect || '/processing/fails';
                     }, 1500);
                 } else {
-                    throw new Error(data.message || 'Error saving changes');
+                    throw new Error(data.message || 'Error assigning rates');
                 }
-            })
-            .fail(function(jqXHR, textStatus, errorThrown) {
-                console.error("Error saving changes:", errorThrown);
-                showAlert('error', errorThrown || 'Error saving changes');
+            } catch (error) {
+                console.error('Error submitting rate data:', error);
+                showAlert('error', error.message || 'Error assigning rates');
                 button.prop('disabled', false);
                 button.html(originalText);
-            });
-        };
-    });
+            }
+        } catch (error) {
+            console.error('Error in handleRateAssignment:', error);
+            showAlert('error', error.message || 'Error processing rate assignment');
+        }
+    }
 </script>
 
 <!-- Escalation Modal -->

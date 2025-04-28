@@ -25,9 +25,9 @@ def get_proc_desc(cursor, proc_cd):
 
 def process_json_file(s3_client, bucket_name, file_key, conn):
     try:
-        # Skip if file is already in staging
-        if 'staging' in file_key:
-            print(f"Skipping {file_key} - already in staging")
+        # Skip if file is not directly under mapped/
+        if not file_key.startswith('mapped/') or '/' in file_key.replace('mapped/', ''):
+            print(f"Skipping {file_key} - not directly under mapped directory")
             return
             
         # Download JSON file from S3
@@ -103,9 +103,9 @@ def process_json_file(s3_client, bucket_name, file_key, conn):
         # Add filemaker section to JSON
         json_data['filemaker'] = filemaker_data
         
-        # Save updated JSON to S3 - always use first-level staging
+        # Save updated JSON to S3 - always use mapped/staging
         filename = os.path.basename(file_key)
-        output_key = f"{os.path.dirname(file_key)}/staging/{filename}"
+        output_key = f"mapped/staging/{filename}"
         s3_client.put_object(
             Bucket=bucket_name,
             Key=output_key,
@@ -115,7 +115,7 @@ def process_json_file(s3_client, bucket_name, file_key, conn):
         # Delete the original file
         s3_client.delete_object(Bucket=bucket_name, Key=file_key)
         
-        print(f"Processed {file_key} and moved to staging")
+        print(f"Processed {file_key} and moved to mapped/staging")
         
     except Exception as e:
         print(f"Error processing {file_key}: {str(e)}")
