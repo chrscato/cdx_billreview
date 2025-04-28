@@ -4,13 +4,13 @@
 echo "Pushing changes to GitHub..."
 git add .
 git commit -m "Deploy: $(date)"
-git push origin main
+git push origin master
 
 # SSH into server, pull, and rsync
 echo "Deploying to server..."
 ssh root@159.223.104.254 << 'EOF'
   cd /opt/bill_review
-  git pull origin main
+  git pull origin master
   rsync -av \
     --exclude '.env' \
     --exclude '*.db' \
