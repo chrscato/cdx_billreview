@@ -499,11 +499,22 @@ document.addEventListener('DOMContentLoaded', function() {
         escalateButton.addEventListener('click', function(e) {
             console.log('Escalate button clicked');
             e.preventDefault();
-            $('#escalationModal').modal('show');
+            // Remove any existing backdrop
+            $('.modal-backdrop').remove();
+            // Show the modal
+            $('#escalationModal').modal({
+                backdrop: 'static',
+                keyboard: false
+            });
         });
     } else {
         console.log('Escalate button not found');
     }
+    
+    // Handle modal hidden event to clean up backdrop
+    $('#escalationModal').on('hidden.bs.modal', function () {
+        $('.modal-backdrop').remove();
+    });
     
     // Escalation form handling
     const escalationForm = document.getElementById('escalationForm');
@@ -538,6 +549,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (data.success) {
                         // Show success message
                         $('#escalationModal').modal('hide');
+                        $('.modal-backdrop').remove();
                         
                         // Show success alert
                         const alertHtml = `
