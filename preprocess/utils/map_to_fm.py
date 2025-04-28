@@ -186,7 +186,7 @@ def process_mapping_s3():
                     print(f"📅 JSON DOS List: {dos_list}")
                     print(f"🤝 Name Score: {composite_score}")
 
-                if composite_score >= 90 and db_dos_list:
+                if composite_score >= 90 and len(db_dos_list) > 0:
                     for json_dos in dos_list:
                         for db_dos in db_dos_list:
                             if date_diff_days(json_dos, db_dos) <= 14:
