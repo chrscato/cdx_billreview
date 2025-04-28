@@ -3,6 +3,21 @@
 {% block title %}Edit Unmapped File - Bill Review Portal{% endblock %}
 
 {% block content %}
+<style>
+    /* Ensure escalate button is clickable */
+    .btn-danger[data-bs-target="#escalationModal"] {
+        position: relative;
+        z-index: 1;
+        cursor: pointer;
+    }
+    
+    /* Ensure button is not covered by other elements */
+    .d-flex.gap-2 {
+        position: relative;
+        z-index: 1;
+    }
+</style>
+
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <div class="d-flex align-items-center">
@@ -464,10 +479,30 @@ function calculateSimilarity(s1, s2) {
 const searchCache = new Map();
 
 document.addEventListener('DOMContentLoaded', function() {
+    // Debug Bootstrap initialization
+    console.log('Bootstrap available:', typeof bootstrap !== 'undefined');
+    if (typeof bootstrap !== 'undefined') {
+        console.log('Modal available:', typeof bootstrap.Modal !== 'undefined');
+    }
+
     // Initialize tooltips
     if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
         const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
         [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
+    }
+
+    // Add debug click handler to escalate button
+    const escalateButton = document.querySelector('button[data-bs-target="#escalationModal"]');
+    if (escalateButton) {
+        console.log('Escalate button found');
+        escalateButton.addEventListener('click', function(e) {
+            console.log('Escalate button clicked');
+            e.preventDefault();
+            const modal = new bootstrap.Modal(document.getElementById('escalationModal'));
+            modal.show();
+        });
+    } else {
+        console.log('Escalate button not found');
     }
     
     // Escalation form handling
