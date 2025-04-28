@@ -491,7 +491,15 @@ document.addEventListener('DOMContentLoaded', function() {
     if (typeof $ !== 'undefined') {
         $('[data-toggle="tooltip"]').tooltip();
     }
-
+    
+    // Initialize the modal
+    const escalationModal = $('#escalationModal');
+    escalationModal.modal({
+        show: false,
+        backdrop: 'static',
+        keyboard: false
+    });
+    
     // Add click handler to escalate button
     const escalateButton = document.querySelector('button[data-target="#escalationModal"]');
     if (escalateButton) {
@@ -499,21 +507,27 @@ document.addEventListener('DOMContentLoaded', function() {
         escalateButton.addEventListener('click', function(e) {
             console.log('Escalate button clicked');
             e.preventDefault();
+            e.stopPropagation();
+            
             // Remove any existing backdrop
             $('.modal-backdrop').remove();
+            
             // Show the modal
-            $('#escalationModal').modal({
-                backdrop: 'static',
-                keyboard: false
-            });
+            escalationModal.modal('show');
         });
     } else {
         console.log('Escalate button not found');
     }
     
     // Handle modal hidden event to clean up backdrop
-    $('#escalationModal').on('hidden.bs.modal', function () {
+    escalationModal.on('hidden.bs.modal', function () {
         $('.modal-backdrop').remove();
+        // Reset form
+        const form = document.getElementById('escalationForm');
+        if (form) {
+            form.classList.remove('was-validated');
+            form.reset();
+        }
     });
     
     // Escalation form handling
@@ -521,7 +535,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const confirmEscalationBtn = document.getElementById('confirmEscalation');
     
     if (escalationForm && confirmEscalationBtn) {
-        confirmEscalationBtn.addEventListener('click', async function() {
+        confirmEscalationBtn.addEventListener('click', async function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
             // Add was-validated class to show validation feedback
             escalationForm.classList.add('was-validated');
             
@@ -548,8 +565,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     
                     if (data.success) {
                         // Show success message
-                        $('#escalationModal').modal('hide');
-                        $('.modal-backdrop').remove();
+                        escalationModal.modal('hide');
                         
                         // Show success alert
                         const alertHtml = `
@@ -561,10 +577,6 @@ document.addEventListener('DOMContentLoaded', function() {
                             </div>
                         `;
                         document.querySelector('.container-fluid').insertAdjacentHTML('afterbegin', alertHtml);
-                        
-                        // Reset form
-                        escalationForm.classList.remove('was-validated');
-                        escalationForm.reset();
                     } else {
                         // Show error message
                         const alertHtml = `
