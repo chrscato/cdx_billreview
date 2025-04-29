@@ -139,26 +139,6 @@
     }
   },
   {
-    "filename": "20250319_105819062.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "Aurora Health Care Radiology",
-    "dos": "2024-05-23",
-    "age_days": 340,
-    "provider_validation": {
-      "is_valid": false,
-      "missing_fields": [],
-      "null_fields": [
-        "Billing Address 1",
-        "Billing Address City",
-        "Billing Address Postal Code",
-        "Billing Address State",
-        "Billing Name"
-      ]
-    }
-  },
-  {
     "filename": "20241217_1143.json",
     "failure_types": [
       "RATE_MISSING"

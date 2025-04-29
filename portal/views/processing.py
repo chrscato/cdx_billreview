@@ -1254,10 +1254,17 @@ def update_filemaker_data(filename):
                 'error': f'Failed to save JSON data: {str(e)}'
             }), 500
 
-        return jsonify({
-            'success': True,
-            'message': 'FileMaker data updated successfully'
-        })
+        # Remove from failed summary
+        try:
+            if remove_from_summary(filename):
+                logger.info(f"Removed {filename} from failed summary")
+            else:
+                logger.warning(f"Failed to remove {filename} from summary - entry may not exist")
+        except Exception as e:
+            logger.error(f"Error removing {filename} from summary: {str(e)}")
+
+        flash('FileMaker data updated and removed from queue successfully.', 'success')
+        return redirect(url_for('processing.list_fail_files', filemaker='needs_correction'))
 
     except Exception as e:
         logger.error(f"Error updating FileMaker data: {str(e)}")

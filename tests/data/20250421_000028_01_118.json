@@ -1,0 +1,161 @@
+{
+  "patient_info": {
+    "patient_name": "BROWN GUILLERMO",
+    "patient_dob": "07/29/1963",
+    "patient_zip": "32854"
+  },
+  "service_lines": [
+    {
+      "date_of_service": "04/08/25 - 04/08/25",
+      "place_of_service": "11",
+      "cpt_code": "73721",
+      "modifiers": [
+        "LT"
+      ],
+      "diagnosis_pointer": "1",
+      "charge_amount": "$2439.00",
+      "units": 1,
+      "proc_desc": "MRI JNT OF LWR EXTRE W/O DYE",
+      "category": "MRI w/o"
+    }
+  ],
+  "billing_info": {
+    "billing_provider_name": "PROXBIOLOGY RAYUS",
+    "billing_provider_address": "PO BOX 198207, Atlanta GA 30384-8207",
+    "billing_provider_tin": "411410766",
+    "billing_provider_npi": "1871560201",
+    "total_charge": "$2439.00",
+    "patient_account_no": "003603904545"
+  },
+  "mapping_info": {
+    "order_id": "ORD-2025424558-BROWNGUILL",
+    "filemaker_number": "2025424558",
+    "mapping_date": "2025-04-22 11:00:27",
+    "mapped_by": "unknown_user"
+  },
+  "filemaker": {
+    "order": {
+      "Order_ID": "ORD-2025424558-BROWNGUILL",
+      "FileMaker_Record_Number": "2025424558",
+      "Patient_Address": "2733 Mint Dr",
+      "Patient_City": "Orlando",
+      "Patient_State": "FL",
+      "Patient_Zip": "32837",
+      "Patient_Injury_Date": null,
+      "Patient_Injury_Description": null,
+      "Patient_DOB": "7/29/1963",
+      "Patient_Last_Name": "Brown",
+      "Patient_First_Name": "Guillermo",
+      "PatientName": "Guillermo Brown",
+      "PatientPhone": "14077603688",
+      "Referring_Physician": "Richard C. Smith",
+      "Referring_Physician_NPI": "10033213749",
+      "Assigning_Company": "ESIS",
+      "Assigning_Adjuster": "Giselle Chardon",
+      "Claim_Number": "9F081662501950",
+      "Order_Type": "Imaging",
+      "Jurisdiction_State": "FL",
+      "created_at": "2025-04-08 16:12:08.673205",
+      "updated_at": "2025-04-08 16:12:08.673206",
+      "is_active": 1.0,
+      "bundle_type": null,
+      "provider_id": "313D4151-8AC2-4B03-BB39-90E68D3FA8F7",
+      "provider_name": "Rayus - Winter Park"
+    },
+    "line_items": [
+      {
+        "id": "79086",
+        "Order_ID": "ORD-2025424558-BROWNGUILL",
+        "DOS": "2025-04-08",
+        "CPT": "73221",
+        "Modifier": "None",
+        "Units": "None",
+        "Description": "None",
+        "Charge": "nan",
+        "line_number": "1",
+        "created_at": "2025-04-08 16:12:08.673112",
+        "updated_at": "2025-04-08 16:12:08.673113",
+        "is_active": "1.0",
+        "BR_paid": "None",
+        "BR_rate": "nan",
+        "EOBR_doc_no": "None",
+        "HCFA_doc_no": "None",
+        "BR_date_processed": "None",
+        "proc_desc": "MRI JOINT UPR EXTREM W/O DYE",
+        "category": "MRI w/o"
+      },
+      {
+        "id": "79087",
+        "Order_ID": "ORD-2025424558-BROWNGUILL",
+        "DOS": "2025-04-08",
+        "CPT": "73721",
+        "Modifier": "None",
+        "Units": "None",
+        "Description": "None",
+        "Charge": "nan",
+        "line_number": "5",
+        "created_at": "2025-04-08 16:12:08.673139",
+        "updated_at": "2025-04-08 16:12:08.673216",
+        "is_active": "1.0",
+        "BR_paid": "None",
+        "BR_rate": "nan",
+        "EOBR_doc_no": "None",
+        "HCFA_doc_no": "None",
+        "BR_date_processed": "None",
+        "proc_desc": "MRI JNT OF LWR EXTRE W/O DYE",
+        "category": "MRI w/o"
+      }
+    ],
+    "provider": {
+      "Address 1 Full": "964 S Orlando Ave  \nWinter Park, FL 32789",
+      "Address Line 1": "964 S Orlando Ave",
+      "Address Line 2": null,
+      "Billing Address 1": "PO BOX 198207",
+      "Billing Address 2": null,
+      "Billing Address City": "ATLANTA",
+      "Billing Address Postal Code": "30384-8207",
+      "Billing Address State": "GA",
+      "Billing Name": "RAYUS RADIOLOGY",
+      "City": "Winter Park",
+      "Contract Date": null,
+      "Contract Date Renewal": null,
+      "Country": null,
+      "DBA Name Billing Name": "Rayus - Winter Park",
+      "Email": null,
+      "Fax Number": "(407)629-6096",
+      "lat": "28.5886231",
+      "Latitude": "28.5886231",
+      "Location": null,
+      "lon": "-81.3648724",
+      "Longitude": "-81.3648724",
+      "Need OTA": "Yes",
+      "NPI": "1871560201",
+      "Phone": "(407)741-5400",
+      "Postal Code": "32789",
+      "PrimaryKey": "313D4151-8AC2-4B03-BB39-90E68D3FA8F7",
+      "Provider Network": "In Network",
+      "Provider Status": "Contract Complete",
+      "Provider Type": "Imaging",
+      "Record Status": null,
+      "ServicesProvided": "-  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - All",
+      "State": "FL",
+      "Status": "Active",
+      "TIN": "41-1410766",
+      "Website": null
+    }
+  },
+  "validation_info": {
+    "status": "PASS",
+    "failure_reasons": [],
+    "matched_lines": [
+      {
+        "billed_cpt": "73721",
+        "ordered_cpt": "73721",
+        "match_type": "EXACT",
+        "details": null
+      }
+    ],
+    "unmatched_cpts": [],
+    "skipped_cpts": []
+  }
+}
