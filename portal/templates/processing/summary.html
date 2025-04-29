@@ -9,18 +9,26 @@
 
     <!-- Filter Dropdowns -->
     <div class="row mb-3">
-        <div class="col-md-4">
+        <div class="col-md-3">
             <label for="filter-failure-type">Failure Type:</label>
             <select id="filter-failure-type" class="form-select">
                 <option value="All" selected>All Failure Types</option>
                 <!-- Options will be populated by JavaScript -->
             </select>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
             <label for="filter-provider">Provider:</label>
             <select id="filter-provider" class="form-select">
                 <option value="All" selected>All Providers</option>
                 <!-- Options will be populated by JavaScript -->
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label for="filter-filemaker">FileMaker Status:</label>
+            <select id="filter-filemaker" class="form-select">
+                <option value="All" selected>All Statuses</option>
+                <option value="needs_correction">Needs FileMaker Correction</option>
+                <option value="valid">FileMaker Data Valid</option>
             </select>
         </div>
         <!-- Add more filter columns if needed -->
@@ -272,14 +280,17 @@
   function applyFilters() {
     const typeSelect = document.getElementById("filter-failure-type");
     const providerSelect = document.getElementById("filter-provider");
+    const filemakerSelect = document.getElementById("filter-filemaker");
     
     const type = typeSelect ? typeSelect.value : "All";
     const provider = providerSelect ? providerSelect.value : "All";
+    const filemaker = filemakerSelect ? filemakerSelect.value : "All";
     
-    console.log(`Applying filters - Type: ${type}, Provider: ${provider}`);
+    console.log(`Applying filters - Type: ${type}, Provider: ${provider}, FileMaker: ${filemaker}`);
 
     filteredSummary = (window.SUMMARY_DATA || []).filter(item => {
         if (!item) return false; // Skip null/invalid items
+        
         // Check failure types (assuming it's an array in the JSON)
         const failureTypes = item.failure_types || [];
         const matchesType = (type === "All") || failureTypes.includes(type);
@@ -288,7 +299,13 @@
         const itemProvider = item.provider || '';
         const matchesProvider = (provider === "All") || (itemProvider === provider);
         
-        return matchesType && matchesProvider;
+        // Check FileMaker validation status
+        const needsFilemakerCorrection = item.provider_validation && item.provider_validation.is_valid === false;
+        const matchesFilemaker = (filemaker === "All") || 
+            (filemaker === "needs_correction" && needsFilemakerCorrection) ||
+            (filemaker === "valid" && !needsFilemakerCorrection);
+        
+        return matchesType && matchesProvider && matchesFilemaker;
     });
 
     console.log("Filtered Data:", filteredSummary);
@@ -344,6 +361,7 @@
     // Add event listeners using safe checks
     const failureTypeSelect = document.getElementById("filter-failure-type");
     const providerSelect = document.getElementById("filter-provider");
+    const filemakerSelect = document.getElementById("filter-filemaker");
     const viewFailsButton = document.getElementById("viewFailsBtn");
 
     if (failureTypeSelect) {
@@ -356,6 +374,12 @@
         providerSelect.addEventListener("change", applyFilters);
     } else {
         console.error('Provider dropdown not found!');
+    }
+
+    if (filemakerSelect) {
+        filemakerSelect.addEventListener("change", applyFilters);
+    } else {
+        console.error('FileMaker status dropdown not found!');
     }
     
     if (viewFailsButton) {

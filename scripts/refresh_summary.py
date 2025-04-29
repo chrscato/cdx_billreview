@@ -140,6 +140,55 @@ def calculate_age_days(dos_str: str) -> int:
         return 0
 
 
+def validate_provider_info(data: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Validate that required provider info fields are present and not null.
+    
+    Args:
+        data (Dict[str, Any]): The JSON data from the file
+        
+    Returns:
+        Dict[str, Any]: Dictionary containing validation results
+    """
+    required_fields = [
+        "Billing Address 1",
+        "Billing Address City",
+        "Billing Address Postal Code",
+        "Billing Address State",
+        "Billing Name"
+    ]
+    
+    validation_result = {
+        "is_valid": True,
+        "missing_fields": [],
+        "null_fields": []
+    }
+    
+    try:
+        # Look for provider info under filemaker.provider
+        provider_info = data.get("filemaker", {}).get("provider", {})
+        
+        # Check for missing fields
+        for field in required_fields:
+            if field not in provider_info:
+                validation_result["missing_fields"].append(field)
+                validation_result["is_valid"] = False
+        
+        # Check for null values in existing fields
+        for field in required_fields:
+            if field in provider_info and provider_info[field] is None:
+                validation_result["null_fields"].append(field)
+                validation_result["is_valid"] = False
+                
+        return validation_result
+        
+    except Exception as e:
+        logger.warning(f"Error validating provider info: {str(e)}")
+        validation_result["is_valid"] = False
+        validation_result["error"] = str(e)
+        return validation_result
+
+
 def process_file(file_key: str, verbose: bool = False) -> Optional[Dict[str, Any]]:
     """
     Process a single file to extract summary information.
@@ -163,16 +212,26 @@ def process_file(file_key: str, verbose: bool = False) -> Optional[Dict[str, Any
         dos = extract_dos(json_data)
         age_days = calculate_age_days(dos)
         
+        # Validate provider info
+        provider_validation = validate_provider_info(json_data)
+        
         entry = {
             "filename": filename,
             "failure_types": failure_types,
             "provider": provider,
             "dos": dos,
-            "age_days": age_days
+            "age_days": age_days,
+            "provider_validation": provider_validation
         }
         
         if verbose:
             logger.info(f"Processed {filename}: {len(failure_types)} failure types")
+            if not provider_validation["is_valid"]:
+                logger.warning(f"Provider info validation failed for {filename}:")
+                if provider_validation["missing_fields"]:
+                    logger.warning(f"Missing fields: {', '.join(provider_validation['missing_fields'])}")
+                if provider_validation["null_fields"]:
+                    logger.warning(f"Null fields: {', '.join(provider_validation['null_fields'])}")
         
         return entry
     
@@ -183,7 +242,11 @@ def process_file(file_key: str, verbose: bool = False) -> Optional[Dict[str, Any
             "failure_types": ["READ_ERROR"],
             "provider": "Unknown Provider",
             "dos": date.today().strftime('%Y-%m-%d'),
-            "age_days": 0
+            "age_days": 0,
+            "provider_validation": {
+                "is_valid": False,
+                "error": str(e)
+            }
         }
 
 

@@ -37,6 +37,12 @@ db_backups/
 datadump/
 /data/        # only ignore root-level data folder
 !/process/data/  # but allow process/data/ to be tracked
+!/postprocess/data/  # but allow postprocess/data/ to be tracked
+!/postprocess
+!/postprocess/utils
+!/postprocess/config
+!/postprocess/processors
+!/postprocess/data
 googlecloud.json
 *.log
 

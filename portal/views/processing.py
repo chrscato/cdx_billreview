@@ -137,6 +137,14 @@ def list_fail_files():
     if provider_param and provider_param != "All Providers":
         files = [f for f in files if f.get("provider") == provider_param]
     
+    # Filter by FileMaker status if specified
+    filemaker_param = filter_params.get('filemaker')
+    if filemaker_param and filemaker_param != "All":
+        if filemaker_param == "needs_correction":
+            files = [f for f in files if f.get("provider_validation", {}).get("is_valid") is False]
+        elif filemaker_param == "valid":
+            files = [f for f in files if f.get("provider_validation", {}).get("is_valid") is True]
+    
     # Filter by age if specified
     age_param = filter_params.get('age')
     if age_param and age_param != "All Dates":
@@ -1170,3 +1178,90 @@ def confirmMoveToStaging():
             document.getElementById('edit-form').submit();
         }
     """ 
+
+@processing_bp.route('/processing/fails/<filename>/update-filemaker', methods=['POST'])
+def update_filemaker_data(filename):
+    try:
+        # Get form data
+        billing_name = request.form.get('billing_name')
+        billing_address_1 = request.form.get('billing_address_1')
+        billing_address_city = request.form.get('billing_address_city')
+        billing_address_state = request.form.get('billing_address_state')
+        billing_address_postal_code = request.form.get('billing_address_postal_code')
+        tin = request.form.get('tin')
+        npi = request.form.get('npi')
+
+        # Get the current JSON data
+        source_key = f'data/hcfa_json/valid/mapped/staging/fails/{filename}'
+        json_data = get_s3_json(source_key)
+        if not json_data:
+            return jsonify({'success': False, 'error': 'Could not find JSON file'}), 404
+
+        # Get the provider's PrimaryKey from the JSON data
+        provider_key = json_data['filemaker']['provider']['PrimaryKey']
+        if not provider_key:
+            return jsonify({'success': False, 'error': 'No provider PrimaryKey found in JSON data'}), 400
+
+        # Update the FileMaker database
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Update the providers table
+            cursor.execute("""
+                UPDATE providers 
+                SET "Billing Name" = ?,
+                    "Billing Address 1" = ?,
+                    "Billing Address City" = ?,
+                    "Billing Address State" = ?,
+                    "Billing Address Postal Code" = ?,
+                    "TIN" = ?,
+                    "NPI" = ?
+                WHERE PrimaryKey = ?
+            """, (
+                billing_name,
+                billing_address_1,
+                billing_address_city,
+                billing_address_state,
+                billing_address_postal_code,
+                tin,
+                npi,
+                provider_key
+            ))
+            
+            conn.commit()
+
+        # Update the JSON data
+        json_data['filemaker']['provider']['Billing Name'] = billing_name
+        json_data['filemaker']['provider']['Billing Address 1'] = billing_address_1
+        json_data['filemaker']['provider']['Billing Address City'] = billing_address_city
+        json_data['filemaker']['provider']['Billing Address State'] = billing_address_state
+        json_data['filemaker']['provider']['Billing Address Postal Code'] = billing_address_postal_code
+        json_data['filemaker']['provider']['TIN'] = tin
+        json_data['filemaker']['provider']['NPI'] = npi
+
+        # Save the updated JSON back to S3
+        try:
+            s3_client.put_object(
+                Bucket=S3_BUCKET,
+                Key=source_key,
+                Body=json.dumps(json_data, indent=2).encode('utf-8'),
+                ContentType='application/json'
+            )
+        except Exception as e:
+            logger.error(f"Error uploading JSON to S3: {str(e)}")
+            return jsonify({
+                'success': False,
+                'error': f'Failed to save JSON data: {str(e)}'
+            }), 500
+
+        return jsonify({
+            'success': True,
+            'message': 'FileMaker data updated successfully'
+        })
+
+    except Exception as e:
+        logger.error(f"Error updating FileMaker data: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500 
