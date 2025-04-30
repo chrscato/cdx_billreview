@@ -57,9 +57,9 @@ def adapt_record_format(record, filename):
     # Setup provider info structured specifically as needed by validators
     provider_info = {
         # These specific fields are required by validators.py
-        "Billing_Name": billing_info.get("billing_provider_name", fm_provider.get("Billing Name", "")),
-        "TIN": billing_info.get("billing_provider_tin", fm_provider.get("TIN", "")),
-        "NPI": billing_info.get("billing_provider_npi", fm_provider.get("NPI", "")),
+        "Billing_Name": fm_provider.get("Billing Name", ""),
+        "TIN": fm_provider.get("TIN", ""),
+        "NPI": fm_provider.get("NPI", ""),
     }
     
     # Create the billing address structure
@@ -91,8 +91,8 @@ def adapt_record_format(record, filename):
                 # Map the patient info fields required by validators
                 "Order_ID": order_id,
                 "FileMaker_Record_Number": record.get("mapping_info", {}).get("filemaker_number", ""),
-                "PatientName": record.get("patient_info", {}).get("patient_name", ""),
-                "Patient_DOB": record.get("patient_info", {}).get("patient_dob", ""),
+                "PatientName": fm_order.get("PatientName", ""),
+                "Patient_DOB": fm_order.get("Patient_DOB", ""),
                 "Patient_Injury_Date": fm_order.get("Patient_Injury_Date", ""),
                 "Claim_Number": fm_order.get("Claim_Number", ""),
                 # Include all the filemaker order data

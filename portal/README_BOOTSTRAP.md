@@ -2,6 +2,44 @@
 
 This project uses Flask-Bootstrap which is built on Bootstrap 3. The following changes were made to ensure compatibility:
 
+## Secure Deployment
+
+The application is designed to run securely with the following components:
+
+### Security Configuration
+
+1. **Firewall (UFW) Setup**
+   - Run `sudo ./configure_firewall.sh` to:
+     - Enable UFW
+     - Allow OpenSSH access
+     - Allow localhost access to port 5002
+     - Block all other incoming connections
+     - Allow all outgoing connections
+
+2. **Application Binding**
+   - Flask runs on `127.0.0.1:5002` (localhost only)
+   - This prevents direct external access to the application
+   - All external access is routed through ngrok with authentication
+
+3. **Secure Startup**
+   - Run `./start_secure.sh` to:
+     - Start Flask application in the background
+     - Start ngrok with basic auth (admin:bill-review-portal2025)
+     - Logs are redirected to `flask.log` and `ngrok.log`
+
+### Security Architecture
+
+```
+External Access ──┐
+                 ├─► ngrok (with basic auth) ──► localhost:5002 ──► Flask App
+UFW Blocked ─────┘
+```
+
+- UFW blocks all direct access to port 5002 from external IPs
+- ngrok creates a secure tunnel with authentication
+- Flask only accepts connections from localhost
+- Basic auth credentials: admin:bill-review-portal2025
+
 ## Packages Used
 
 - `flask-bootstrap==3.3.7.1` - This provides Bootstrap 3 integration with Flask
