@@ -1205,10 +1205,33 @@ def update_filemaker_data(filename):
         if not json_data:
             return jsonify({'success': False, 'error': 'Could not find JSON file'}), 404
 
+        # Debug logging for JSON structure
+        logger.debug(f"JSON data structure: {json.dumps(json_data, indent=2)}")
+
+        # Check if filemaker section exists
+        if 'filemaker' not in json_data:
+            logger.error(f"Missing 'filemaker' section in JSON data for {filename}")
+            return jsonify({
+                'success': False,
+                'error': 'Missing filemaker data in JSON'
+            }), 400
+
+        # Check if provider section exists
+        if 'provider' not in json_data['filemaker']:
+            logger.error(f"Missing 'provider' section in filemaker data for {filename}")
+            return jsonify({
+                'success': False,
+                'error': 'Missing provider data in filemaker section'
+            }), 400
+
         # Get the provider's PrimaryKey from the JSON data
-        provider_key = json_data['filemaker']['provider']['PrimaryKey']
+        provider_key = json_data['filemaker']['provider'].get('PrimaryKey')
         if not provider_key:
-            return jsonify({'success': False, 'error': 'No provider PrimaryKey found in JSON data'}), 400
+            logger.error(f"Missing PrimaryKey in provider data for {filename}")
+            return jsonify({
+                'success': False,
+                'error': 'No provider PrimaryKey found in JSON data'
+            }), 400
 
         # Update the FileMaker database with proper transaction handling
         try:
