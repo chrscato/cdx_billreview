@@ -1191,6 +1191,14 @@ def update_filemaker_data(filename):
         tin = request.form.get('tin')
         npi = request.form.get('npi')
 
+        # Validate required fields
+        if not all([billing_name, billing_address_1, billing_address_city, 
+                   billing_address_state, billing_address_postal_code, tin, npi]):
+            return jsonify({
+                'success': False, 
+                'error': 'All fields are required'
+            }), 400
+
         # Get the current JSON data
         source_key = f'data/hcfa_json/valid/mapped/staging/fails/{filename}'
         json_data = get_s3_json(source_key)
@@ -1202,33 +1210,56 @@ def update_filemaker_data(filename):
         if not provider_key:
             return jsonify({'success': False, 'error': 'No provider PrimaryKey found in JSON data'}), 400
 
-        # Update the FileMaker database
-        with get_db_connection() as conn:
-            cursor = conn.cursor()
-            
-            # Update the providers table
-            cursor.execute("""
-                UPDATE providers 
-                SET "Billing Name" = ?,
-                    "Billing Address 1" = ?,
-                    "Billing Address City" = ?,
-                    "Billing Address State" = ?,
-                    "Billing Address Postal Code" = ?,
-                    "TIN" = ?,
-                    "NPI" = ?
-                WHERE PrimaryKey = ?
-            """, (
-                billing_name,
-                billing_address_1,
-                billing_address_city,
-                billing_address_state,
-                billing_address_postal_code,
-                tin,
-                npi,
-                provider_key
-            ))
-            
-            conn.commit()
+        # Update the FileMaker database with proper transaction handling
+        try:
+            with get_db_connection() as conn:
+                cursor = conn.cursor()
+                
+                # Start transaction
+                cursor.execute("BEGIN TRANSACTION")
+                
+                try:
+                    # Update the providers table
+                    cursor.execute("""
+                        UPDATE providers 
+                        SET "Billing Name" = ?,
+                            "Billing Address 1" = ?,
+                            "Billing Address City" = ?,
+                            "Billing Address State" = ?,
+                            "Billing Address Postal Code" = ?,
+                            "TIN" = ?,
+                            "NPI" = ?
+                        WHERE PrimaryKey = ?
+                    """, (
+                        billing_name,
+                        billing_address_1,
+                        billing_address_city,
+                        billing_address_state,
+                        billing_address_postal_code,
+                        tin,
+                        npi,
+                        provider_key
+                    ))
+                    
+                    # Verify the update was successful
+                    cursor.execute("SELECT COUNT(*) FROM providers WHERE PrimaryKey = ?", (provider_key,))
+                    if cursor.fetchone()[0] == 0:
+                        raise Exception("Provider not found after update")
+                    
+                    # Commit the transaction
+                    conn.commit()
+                    
+                except Exception as e:
+                    # Rollback on error
+                    conn.rollback()
+                    raise
+                
+        except Exception as e:
+            logger.error(f"Database error: {str(e)}")
+            return jsonify({
+                'success': False,
+                'error': f'Database update failed: {str(e)}'
+            }), 500
 
         # Update the JSON data
         json_data['filemaker']['provider']['Billing Name'] = billing_name
