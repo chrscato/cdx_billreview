@@ -50,9 +50,12 @@ def get_s3_json(key):
     try:
         response = s3_client.get_object(Bucket=S3_BUCKET, Key=key)
         return json.loads(response['Body'].read().decode('utf-8'))
+    except s3_client.exceptions.NoSuchKey:
+        logger.error(f"File not found in S3: {key}")
+        return None
     except Exception as e:
         logger.error(f"Error getting JSON from S3: {str(e)}")
-        raise
+        return None
 
 def upload_json_to_s3(json_data, key):
     """Upload JSON data to S3."""
@@ -1202,8 +1205,13 @@ def update_filemaker_data(filename):
         # Get the current JSON data
         source_key = f'data/hcfa_json/valid/mapped/staging/fails/{filename}'
         json_data = get_s3_json(source_key)
-        if not json_data:
-            return jsonify({'success': False, 'error': 'Could not find JSON file'}), 404
+        
+        if json_data is None:
+            logger.error(f"Could not retrieve JSON data for {filename}")
+            return jsonify({
+                'success': False,
+                'error': f'Could not find or read JSON file: {filename}'
+            }), 404
 
         # Debug logging for JSON structure
         logger.debug(f"JSON data structure: {json.dumps(json_data, indent=2)}")
