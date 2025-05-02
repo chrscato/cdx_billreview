@@ -1,53 +1,12 @@
 [
   {
-    "filename": "20250319_114129061.json",
+    "filename": "20250421_000028_01_086.json",
     "failure_types": [
       "RATE_MISSING"
     ],
-    "provider": "Axis 3T MRI",
-    "dos": "2024-04-08",
-    "age_days": 385,
-    "provider_validation": {
-      "is_valid": false,
-      "missing_fields": [],
-      "null_fields": [
-        "Billing Address 1",
-        "Billing Address City",
-        "Billing Address Postal Code",
-        "Billing Address State",
-        "Billing Name"
-      ]
-    }
-  },
-  {
-    "filename": "20250325_124127063.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "Axis 3T MRI",
-    "dos": "2024-04-08",
-    "age_days": 385,
-    "provider_validation": {
-      "is_valid": false,
-      "missing_fields": [],
-      "null_fields": [
-        "Billing Address 1",
-        "Billing Address City",
-        "Billing Address Postal Code",
-        "Billing Address State",
-        "Billing Name"
-      ]
-    }
-  },
-  {
-    "filename": "20250319_105819007.json",
-    "failure_types": [
-      "RATE_MISSING",
-      "RATE_MISSING"
-    ],
-    "provider": "PROHEALTH ADVANCED IMAGING MEDICAL GROUP",
-    "dos": "2024-04-09",
-    "age_days": 384,
+    "provider": "ST MARYS HOSPITAL",
+    "dos": "2023-10-17",
+    "age_days": 562,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
@@ -55,167 +14,13 @@
     }
   },
   {
-    "filename": "20250403_093311023.json",
+    "filename": "20250319_105819062.json",
     "failure_types": [
       "RATE_MISSING"
     ],
-    "provider": "Imaging Center of West Palm Beach",
-    "dos": "2024-04-25",
-    "age_days": 368,
-    "provider_validation": {
-      "is_valid": true,
-      "missing_fields": [],
-      "null_fields": []
-    }
-  },
-  {
-    "filename": "20250403_093314060.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "RICHMOND COMMUNITY HOSPITAL",
-    "dos": "2024-04-25",
-    "age_days": 368,
-    "provider_validation": {
-      "is_valid": true,
-      "missing_fields": [],
-      "null_fields": []
-    }
-  },
-  {
-    "filename": "20241217_1221.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "Imagecare at Denville Diagnostic",
-    "dos": "2024-04-26",
-    "age_days": 367,
-    "provider_validation": {
-      "is_valid": true,
-      "missing_fields": [],
-      "null_fields": []
-    }
-  },
-  {
-    "filename": "20250325_124413002.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "Premier Medical Imaging, LLC",
-    "dos": "2024-05-20",
+    "provider": "Aurora Health Care",
+    "dos": "2024-05-23",
     "age_days": 343,
-    "provider_validation": {
-      "is_valid": true,
-      "missing_fields": [],
-      "null_fields": []
-    }
-  },
-  {
-    "filename": "20250403_093311011.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "Premier Medical Imaging, LLC",
-    "dos": "2024-05-20",
-    "age_days": 343,
-    "provider_validation": {
-      "is_valid": true,
-      "missing_fields": [],
-      "null_fields": []
-    }
-  },
-  {
-    "filename": "20250225_1009.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "Tower Imaging LLC",
-    "dos": "2024-05-21",
-    "age_days": 342,
-    "provider_validation": {
-      "is_valid": true,
-      "missing_fields": [],
-      "null_fields": []
-    }
-  },
-  {
-    "filename": "20241217_1143.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "RADIOLOGY ASSOC. OF RICHMOND",
-    "dos": "2024-06-06",
-    "age_days": 326,
-    "provider_validation": {
-      "is_valid": true,
-      "missing_fields": [],
-      "null_fields": []
-    }
-  },
-  {
-    "filename": "20250212_1022.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "RADIOLOGY ASSOC. OF RICHMOND",
-    "dos": "2024-06-06",
-    "age_days": 326,
-    "provider_validation": {
-      "is_valid": true,
-      "missing_fields": [],
-      "null_fields": []
-    }
-  },
-  {
-    "filename": "20250109_1022.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "Diagnostic Health MRI of GADS",
-    "dos": "2024-06-18",
-    "age_days": 314,
-    "provider_validation": {
-      "is_valid": true,
-      "missing_fields": [],
-      "null_fields": []
-    }
-  },
-  {
-    "filename": "20250109_1021.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "HOLMDEL IMAGING LLC",
-    "dos": "2024-06-21",
-    "age_days": 311,
-    "provider_validation": {
-      "is_valid": true,
-      "missing_fields": [],
-      "null_fields": []
-    }
-  },
-  {
-    "filename": "20250206_1035.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "AMERICAN HEALTH IMAGING OF FLORIDA LLC",
-    "dos": "2024-07-09",
-    "age_days": 293,
-    "provider_validation": {
-      "is_valid": true,
-      "missing_fields": [],
-      "null_fields": []
-    }
-  },
-  {
-    "filename": "20250321_135655021.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "AMERICAN HEALTH IMAGING OF FLORIDA LLC",
-    "dos": "2024-07-11",
-    "age_days": 291,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
@@ -229,119 +34,7 @@
     ],
     "provider": "SimonMed Imaging FL LLC",
     "dos": "2024-07-12",
-    "age_days": 290,
-    "provider_validation": {
-      "is_valid": true,
-      "missing_fields": [],
-      "null_fields": []
-    }
-  },
-  {
-    "filename": "20250125_1017.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "Hollywood Diagnostics Center",
-    "dos": "2024-07-17",
-    "age_days": 285,
-    "provider_validation": {
-      "is_valid": true,
-      "missing_fields": [],
-      "null_fields": []
-    }
-  },
-  {
-    "filename": "20241217_1124.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "ST MARYS HOSPITAL",
-    "dos": "2024-07-19",
-    "age_days": 283,
-    "provider_validation": {
-      "is_valid": true,
-      "missing_fields": [],
-      "null_fields": []
-    }
-  },
-  {
-    "filename": "20250204_1067.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "CHESTERFIELD IMAGING LLC",
-    "dos": "2024-07-24",
-    "age_days": 278,
-    "provider_validation": {
-      "is_valid": true,
-      "missing_fields": [],
-      "null_fields": []
-    }
-  },
-  {
-    "filename": "20250206_1022.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "ONE STEP DIAGNOSTIC IV, L.P.",
-    "dos": "2024-07-29",
-    "age_days": 273,
-    "provider_validation": {
-      "is_valid": true,
-      "missing_fields": [],
-      "null_fields": []
-    }
-  },
-  {
-    "filename": "20250212_1035.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "ONE STEP DIAGNOSTIC IV, L.P.",
-    "dos": "2024-07-29",
-    "age_days": 273,
-    "provider_validation": {
-      "is_valid": true,
-      "missing_fields": [],
-      "null_fields": []
-    }
-  },
-  {
-    "filename": "20250319_105819043.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "ONE STEP DIAGNOSTIC IV, L.P.",
-    "dos": "2024-07-29",
-    "age_days": 273,
-    "provider_validation": {
-      "is_valid": true,
-      "missing_fields": [],
-      "null_fields": []
-    }
-  },
-  {
-    "filename": "20250319_105819064.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "ONE STEP DIAGNOSTIC IV, L.P.",
-    "dos": "2024-07-29",
-    "age_days": 273,
-    "provider_validation": {
-      "is_valid": true,
-      "missing_fields": [],
-      "null_fields": []
-    }
-  },
-  {
-    "filename": "20250319_114129011.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "ONE STEP DIAGNOSTIC IV, L.P.",
-    "dos": "2024-07-29",
-    "age_days": 273,
+    "age_days": 293,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
@@ -355,63 +48,7 @@
     ],
     "provider": "Midwest Radiology Outpatient Imaging - Burnsville",
     "dos": "2024-08-01",
-    "age_days": 270,
-    "provider_validation": {
-      "is_valid": true,
-      "missing_fields": [],
-      "null_fields": []
-    }
-  },
-  {
-    "filename": "20250321_135655001.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "RADIOLOGY ASSOCIATES OF SAN LUIS OBISPO",
-    "dos": "2024-08-02",
-    "age_days": 269,
-    "provider_validation": {
-      "is_valid": true,
-      "missing_fields": [],
-      "null_fields": []
-    }
-  },
-  {
-    "filename": "20241217_1076.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "WINCHESTER OPEN MRI",
-    "dos": "2024-08-12",
-    "age_days": 259,
-    "provider_validation": {
-      "is_valid": true,
-      "missing_fields": [],
-      "null_fields": []
-    }
-  },
-  {
-    "filename": "20241217_1128.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "WINCHESTER OPEN MRI",
-    "dos": "2024-08-12",
-    "age_days": 259,
-    "provider_validation": {
-      "is_valid": true,
-      "missing_fields": [],
-      "null_fields": []
-    }
-  },
-  {
-    "filename": "20241217_1077.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "WINCHESTER OPEN MRI",
-    "dos": "2024-08-14",
-    "age_days": 257,
+    "age_days": 273,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
@@ -425,7 +62,7 @@
     ],
     "provider": "SimonMed Imaging FL LLC",
     "dos": "2024-08-19",
-    "age_days": 252,
+    "age_days": 255,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
@@ -433,97 +70,13 @@
     }
   },
   {
-    "filename": "20250319_105819120.json",
+    "filename": "20250421_000028_01_077.json",
     "failure_types": [
       "RATE_MISSING"
     ],
-    "provider": "Precision Diagnostic Imaging - Dayton",
-    "dos": "2024-08-27",
-    "age_days": 244,
-    "provider_validation": {
-      "is_valid": true,
-      "missing_fields": [],
-      "null_fields": []
-    }
-  },
-  {
-    "filename": "20250408_154635085.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "SCLTDI JV LLC",
-    "dos": "2024-09-19",
-    "age_days": 221,
-    "provider_validation": {
-      "is_valid": true,
-      "missing_fields": [],
-      "null_fields": []
-    }
-  },
-  {
-    "filename": "20250129_1145.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "Ct Orthopaedics",
-    "dos": "2024-09-23",
-    "age_days": 217,
-    "provider_validation": {
-      "is_valid": true,
-      "missing_fields": [],
-      "null_fields": []
-    }
-  },
-  {
-    "filename": "20250213_1026.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "Ct Orthopaedics",
-    "dos": "2024-09-23",
-    "age_days": 217,
-    "provider_validation": {
-      "is_valid": true,
-      "missing_fields": [],
-      "null_fields": []
-    }
-  },
-  {
-    "filename": "20241217_1280.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "Indian River Health Services",
-    "dos": "2024-09-24",
-    "age_days": 216,
-    "provider_validation": {
-      "is_valid": true,
-      "missing_fields": [],
-      "null_fields": []
-    }
-  },
-  {
-    "filename": "20250224_1078.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "Guilford Radiology, LLC",
-    "dos": "2024-09-25",
-    "age_days": 215,
-    "provider_validation": {
-      "is_valid": true,
-      "missing_fields": [],
-      "null_fields": []
-    }
-  },
-  {
-    "filename": "20250403_093311007.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "Medical Imaging-Prairie Ridge Health",
-    "dos": "2024-10-01",
-    "age_days": 209,
+    "provider": "Halo Diagnostic - Palm Springs",
+    "dos": "2024-10-09",
+    "age_days": 204,
     "provider_validation": {
       "is_valid": false,
       "missing_fields": [],
@@ -537,49 +90,6 @@
     }
   },
   {
-    "filename": "20250112_1039.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "CHESTERFIELD IMAGING LLC",
-    "dos": "2024-10-02",
-    "age_days": 208,
-    "provider_validation": {
-      "is_valid": true,
-      "missing_fields": [],
-      "null_fields": []
-    }
-  },
-  {
-    "filename": "20250204_1063.json",
-    "failure_types": [
-      "RATE_MISSING",
-      "RATE_MISSING"
-    ],
-    "provider": "INTERMOUNTAIN MEDICAL IMAGING LLC",
-    "dos": "2024-10-04",
-    "age_days": 206,
-    "provider_validation": {
-      "is_valid": true,
-      "missing_fields": [],
-      "null_fields": []
-    }
-  },
-  {
-    "filename": "20250319_105819130.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "Monument 9A Imaging",
-    "dos": "2024-10-15",
-    "age_days": 195,
-    "provider_validation": {
-      "is_valid": true,
-      "missing_fields": [],
-      "null_fields": []
-    }
-  },
-  {
     "filename": "20241217_1126.json",
     "failure_types": [
       "RATE_MISSING",
@@ -590,63 +100,7 @@
     ],
     "provider": "ORACLE IMAGING INC",
     "dos": "2024-10-21",
-    "age_days": 189,
-    "provider_validation": {
-      "is_valid": true,
-      "missing_fields": [],
-      "null_fields": []
-    }
-  },
-  {
-    "filename": "20241217_1168.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "METROLINA NEURODIAGNOSTIC CENTER",
-    "dos": "2024-10-21",
-    "age_days": 189,
-    "provider_validation": {
-      "is_valid": true,
-      "missing_fields": [],
-      "null_fields": []
-    }
-  },
-  {
-    "filename": "20250125_1002.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "METROLINA NEURODIAGNOSTIC CENTER",
-    "dos": "2024-10-21",
-    "age_days": 189,
-    "provider_validation": {
-      "is_valid": true,
-      "missing_fields": [],
-      "null_fields": []
-    }
-  },
-  {
-    "filename": "20250129_1116.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "METROLINA NEURODIAGNOSTIC CENTER",
-    "dos": "2024-10-21",
-    "age_days": 189,
-    "provider_validation": {
-      "is_valid": true,
-      "missing_fields": [],
-      "null_fields": []
-    }
-  },
-  {
-    "filename": "20250319_114129019.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "INVERNESS MEDICAL IMAGING LLC",
-    "dos": "2024-10-21",
-    "age_days": 189,
+    "age_days": 192,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
@@ -660,106 +114,7 @@
     ],
     "provider": "FIRST HEALTH OF THE CAROLINAS",
     "dos": "2024-11-04",
-    "age_days": 175,
-    "provider_validation": {
-      "is_valid": true,
-      "missing_fields": [],
-      "null_fields": []
-    }
-  },
-  {
-    "filename": "20250129_1136.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "WINCHESTER OPEN MRI",
-    "dos": "2024-11-06",
-    "age_days": 173,
-    "provider_validation": {
-      "is_valid": true,
-      "missing_fields": [],
-      "null_fields": []
-    }
-  },
-  {
-    "filename": "20250325_124127040.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "WINCHESTER OPEN MRI",
-    "dos": "2024-11-06",
-    "age_days": 173,
-    "provider_validation": {
-      "is_valid": true,
-      "missing_fields": [],
-      "null_fields": []
-    }
-  },
-  {
-    "filename": "20250225_1013.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "MERCYONE DUBUQUE MEDICAL",
-    "dos": "2024-11-08",
-    "age_days": 171,
-    "provider_validation": {
-      "is_valid": true,
-      "missing_fields": [],
-      "null_fields": []
-    }
-  },
-  {
-    "filename": "20250225_1076.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "MERCYONE DUBUQUE MEDICAL",
-    "dos": "2024-11-08",
-    "age_days": 171,
-    "provider_validation": {
-      "is_valid": true,
-      "missing_fields": [],
-      "null_fields": []
-    }
-  },
-  {
-    "filename": "20250109_1017.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "ODC Huntsville",
-    "dos": "2024-11-09",
-    "age_days": 170,
-    "provider_validation": {
-      "is_valid": true,
-      "missing_fields": [],
-      "null_fields": []
-    }
-  },
-  {
-    "filename": "20250319_114129116.json",
-    "failure_types": [
-      "RATE_MISSING",
-      "RATE_MISSING"
-    ],
-    "provider": "American Health Imaging of Georgia LLC",
-    "dos": "2024-11-15",
-    "age_days": 164,
-    "provider_validation": {
-      "is_valid": true,
-      "missing_fields": [],
-      "null_fields": []
-    }
-  },
-  {
-    "filename": "20250319_114129154.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "American Health Imaging of Georgia LLC",
-    "dos": "2024-11-15",
-    "age_days": 164,
+    "age_days": 178,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
@@ -774,7 +129,7 @@
     ],
     "provider": "Southside Regional Medical Center",
     "dos": "2024-11-15",
-    "age_days": 164,
+    "age_days": 167,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
@@ -788,19 +143,13 @@
       "RATE_MISSING",
       "RATE_MISSING"
     ],
-    "provider": "Ga Neurological Institute Pc - Imaging Center",
+    "provider": "Georgia Neurological Institute",
     "dos": "2024-11-18",
-    "age_days": 161,
+    "age_days": 164,
     "provider_validation": {
-      "is_valid": false,
+      "is_valid": true,
       "missing_fields": [],
-      "null_fields": [
-        "Billing Address 1",
-        "Billing Address City",
-        "Billing Address Postal Code",
-        "Billing Address State",
-        "Billing Name"
-      ]
+      "null_fields": []
     }
   },
   {
@@ -810,43 +159,9 @@
       "RATE_MISSING",
       "RATE_MISSING"
     ],
-    "provider": "Ga Neurological Institute Pc - Imaging Center",
+    "provider": "Georgia Neurological Institute",
     "dos": "2024-11-18",
-    "age_days": 161,
-    "provider_validation": {
-      "is_valid": false,
-      "missing_fields": [],
-      "null_fields": [
-        "Billing Address 1",
-        "Billing Address City",
-        "Billing Address Postal Code",
-        "Billing Address State",
-        "Billing Name"
-      ]
-    }
-  },
-  {
-    "filename": "20250319_114129085.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "Neuroskeletal Imaging",
-    "dos": "2024-11-18",
-    "age_days": 161,
-    "provider_validation": {
-      "is_valid": true,
-      "missing_fields": [],
-      "null_fields": []
-    }
-  },
-  {
-    "filename": "20250109_1046.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "ST MARYS HOSPITAL",
-    "dos": "2024-11-19",
-    "age_days": 160,
+    "age_days": 164,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
@@ -860,77 +175,7 @@
     ],
     "provider": "SimonMed Imaging FL LLC",
     "dos": "2024-11-19",
-    "age_days": 160,
-    "provider_validation": {
-      "is_valid": true,
-      "missing_fields": [],
-      "null_fields": []
-    }
-  },
-  {
-    "filename": "20250325_124337048.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "ST MARYS HOSPITAL",
-    "dos": "2024-11-19",
-    "age_days": 160,
-    "provider_validation": {
-      "is_valid": true,
-      "missing_fields": [],
-      "null_fields": []
-    }
-  },
-  {
-    "filename": "20241217_1086.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "NEBRASKA HEALTH IMAGING LLC",
-    "dos": "2024-11-24",
-    "age_days": 155,
-    "provider_validation": {
-      "is_valid": true,
-      "missing_fields": [],
-      "null_fields": []
-    }
-  },
-  {
-    "filename": "20250109_1016.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "NEBRASKA HEALTH IMAGING LLC",
-    "dos": "2024-11-24",
-    "age_days": 155,
-    "provider_validation": {
-      "is_valid": true,
-      "missing_fields": [],
-      "null_fields": []
-    }
-  },
-  {
-    "filename": "20250408_154523103.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "ATLANTIC MEDICAL IMAGING",
-    "dos": "2024-11-29",
-    "age_days": 150,
-    "provider_validation": {
-      "is_valid": true,
-      "missing_fields": [],
-      "null_fields": []
-    }
-  },
-  {
-    "filename": "20250112_1018.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "UNITED HEALTH SERVICES",
-    "dos": "2024-12-02",
-    "age_days": 147,
+    "age_days": 163,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
@@ -944,21 +189,7 @@
     ],
     "provider": "UNITED HEALTH SERVICES",
     "dos": "2024-12-02",
-    "age_days": 147,
-    "provider_validation": {
-      "is_valid": true,
-      "missing_fields": [],
-      "null_fields": []
-    }
-  },
-  {
-    "filename": "20250129_1139.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "WINCHESTER OPEN MRI",
-    "dos": "2024-12-03",
-    "age_days": 146,
+    "age_days": 150,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
@@ -972,7 +203,7 @@
     ],
     "provider": "WINCHESTER OPEN MRI",
     "dos": "2024-12-03",
-    "age_days": 146,
+    "age_days": 149,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
@@ -986,49 +217,7 @@
     ],
     "provider": "ADIRONDACK RADIOLOGY ASSOC",
     "dos": "2024-12-04",
-    "age_days": 145,
-    "provider_validation": {
-      "is_valid": true,
-      "missing_fields": [],
-      "null_fields": []
-    }
-  },
-  {
-    "filename": "20250403_093311029.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "Bright Light Medical Imaging - Melrose Park",
-    "dos": "2024-12-13",
-    "age_days": 136,
-    "provider_validation": {
-      "is_valid": true,
-      "missing_fields": [],
-      "null_fields": []
-    }
-  },
-  {
-    "filename": "20250408_154523065.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "TOUCHSTONE IMAGING OF OKLAHOMA",
-    "dos": "2024-12-14",
-    "age_days": 135,
-    "provider_validation": {
-      "is_valid": true,
-      "missing_fields": [],
-      "null_fields": []
-    }
-  },
-  {
-    "filename": "20250129_1113.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "GOOD SAMARITAN MED CTR",
-    "dos": "2024-12-17",
-    "age_days": 132,
+    "age_days": 148,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
@@ -1042,7 +231,7 @@
     ],
     "provider": "ST MARYS HOSPITAL",
     "dos": "2024-12-17",
-    "age_days": 132,
+    "age_days": 135,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
@@ -1057,49 +246,7 @@
     ],
     "provider": "Global Neuro & Spine Institute",
     "dos": "2024-12-17",
-    "age_days": 132,
-    "provider_validation": {
-      "is_valid": true,
-      "missing_fields": [],
-      "null_fields": []
-    }
-  },
-  {
-    "filename": "20250325_124337049.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "ST MARYS HOSPITAL",
-    "dos": "2024-12-17",
-    "age_days": 132,
-    "provider_validation": {
-      "is_valid": true,
-      "missing_fields": [],
-      "null_fields": []
-    }
-  },
-  {
-    "filename": "20250109_1114.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "Blue Ridge Radiology P.C.",
-    "dos": "2024-12-19",
-    "age_days": 130,
-    "provider_validation": {
-      "is_valid": true,
-      "missing_fields": [],
-      "null_fields": []
-    }
-  },
-  {
-    "filename": "20250325_124337044.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "Blue Ridge Radiology P.C.",
-    "dos": "2024-12-19",
-    "age_days": 130,
+    "age_days": 135,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
@@ -1113,7 +260,7 @@
     ],
     "provider": "CENTRAL MS DIAGNOSTICS LLC",
     "dos": "2024-12-23",
-    "age_days": 126,
+    "age_days": 129,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
@@ -1121,27 +268,13 @@
     }
   },
   {
-    "filename": "20250213_1027.json",
+    "filename": "20250421_000028_01_115.json",
     "failure_types": [
-      "RATE_MISSING"
+      "UNMATCHED_CPT"
     ],
-    "provider": "WASHINGTON RADIOLOGY ASSOCIATE",
+    "provider": "RAYUS RADIOLOGY",
     "dos": "2024-12-23",
-    "age_days": 126,
-    "provider_validation": {
-      "is_valid": true,
-      "missing_fields": [],
-      "null_fields": []
-    }
-  },
-  {
-    "filename": "20250408_154635084.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "SCLTDI JV LLC",
-    "dos": "2024-12-23",
-    "age_days": 126,
+    "age_days": 129,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
@@ -1155,35 +288,7 @@
     ],
     "provider": "Open MRI of Tifton, LLC",
     "dos": "2024-12-24",
-    "age_days": 125,
-    "provider_validation": {
-      "is_valid": true,
-      "missing_fields": [],
-      "null_fields": []
-    }
-  },
-  {
-    "filename": "20250325_124413009.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "Expert MRI, PC",
-    "dos": "2024-12-26",
-    "age_days": 123,
-    "provider_validation": {
-      "is_valid": true,
-      "missing_fields": [],
-      "null_fields": []
-    }
-  },
-  {
-    "filename": "20250204_1036.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "ST FRANCIS MEDICAL CENTER",
-    "dos": "2024-12-27",
-    "age_days": 122,
+    "age_days": 128,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
@@ -1197,21 +302,7 @@
     ],
     "provider": "Hollywood Diagnostics Center",
     "dos": "2025-01-02",
-    "age_days": 116,
-    "provider_validation": {
-      "is_valid": true,
-      "missing_fields": [],
-      "null_fields": []
-    }
-  },
-  {
-    "filename": "20250325_124127035.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "AMERICAN HEALTH IMAGING OF FLORIDA LLC",
-    "dos": "2025-01-02",
-    "age_days": 116,
+    "age_days": 119,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
@@ -1225,7 +316,7 @@
     ],
     "provider": "AMERICAN HEALTH IMAGING OF ALABAMA LLC",
     "dos": "2025-01-02",
-    "age_days": 116,
+    "age_days": 119,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
@@ -1239,35 +330,7 @@
     ],
     "provider": "NOVANT HEALTH IMAGING TRIAD",
     "dos": "2025-01-03",
-    "age_days": 115,
-    "provider_validation": {
-      "is_valid": true,
-      "missing_fields": [],
-      "null_fields": []
-    }
-  },
-  {
-    "filename": "20250408_154523073.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "AMERICAN HEALTH IMAGING OF DALLAS LLC",
-    "dos": "2025-01-03",
-    "age_days": 115,
-    "provider_validation": {
-      "is_valid": true,
-      "missing_fields": [],
-      "null_fields": []
-    }
-  },
-  {
-    "filename": "20250129_1091.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "CHESTERFIELD IMAGING LLC",
-    "dos": "2025-01-05",
-    "age_days": 113,
+    "age_days": 118,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
@@ -1281,21 +344,7 @@
     ],
     "provider": "CHESTERFIELD IMAGING LLC",
     "dos": "2025-01-05",
-    "age_days": 113,
-    "provider_validation": {
-      "is_valid": true,
-      "missing_fields": [],
-      "null_fields": []
-    }
-  },
-  {
-    "filename": "20250224_1051.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "BRMG dba Temecula Valley Advanced Imaging",
-    "dos": "2025-01-06",
-    "age_days": 112,
+    "age_days": 116,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
@@ -1309,7 +358,7 @@
     ],
     "provider": "BRMG dba Temecula Valley Advanced Imaging",
     "dos": "2025-01-06",
-    "age_days": 112,
+    "age_days": 115,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
@@ -1324,7 +373,7 @@
     ],
     "provider": "Nassau Open MRI",
     "dos": "2025-01-09",
-    "age_days": 109,
+    "age_days": 112,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
@@ -1338,63 +387,7 @@
     ],
     "provider": "Midwest Radiology Outpatient Imaging",
     "dos": "2025-01-10",
-    "age_days": 108,
-    "provider_validation": {
-      "is_valid": true,
-      "missing_fields": [],
-      "null_fields": []
-    }
-  },
-  {
-    "filename": "20250321_135655052.json",
-    "failure_types": [
-      "TOO_MANY_UNITS"
-    ],
-    "provider": "MRI Associates of Sarasota, LLC",
-    "dos": "2025-01-10",
-    "age_days": 108,
-    "provider_validation": {
-      "is_valid": true,
-      "missing_fields": [],
-      "null_fields": []
-    }
-  },
-  {
-    "filename": "20250321_135655018.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "MEDICAL DIAGNOSTIC SVCS, LTD",
-    "dos": "2025-01-13",
-    "age_days": 105,
-    "provider_validation": {
-      "is_valid": true,
-      "missing_fields": [],
-      "null_fields": []
-    }
-  },
-  {
-    "filename": "20250204_1144.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "Presbyterian Imaging Centers",
-    "dos": "2025-01-14",
-    "age_days": 104,
-    "provider_validation": {
-      "is_valid": true,
-      "missing_fields": [],
-      "null_fields": []
-    }
-  },
-  {
-    "filename": "20250125_1019.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "Open MRI of Tifton, LLC",
-    "dos": "2025-01-15",
-    "age_days": 103,
+    "age_days": 111,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
@@ -1408,21 +401,7 @@
     ],
     "provider": "Open MRI of Tifton, LLC",
     "dos": "2025-01-15",
-    "age_days": 103,
-    "provider_validation": {
-      "is_valid": true,
-      "missing_fields": [],
-      "null_fields": []
-    }
-  },
-  {
-    "filename": "20250204_1100.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "Radiology Associates of Hartford",
-    "dos": "2025-01-17",
-    "age_days": 101,
+    "age_days": 106,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
@@ -1436,7 +415,7 @@
     ],
     "provider": "The Imaging Center at Wolf River",
     "dos": "2025-01-17",
-    "age_days": 101,
+    "age_days": 104,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
@@ -1450,7 +429,7 @@
     ],
     "provider": "MRI ASSOCIATES OF TAMPA INC",
     "dos": "2025-01-17",
-    "age_days": 101,
+    "age_days": 104,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
@@ -1464,7 +443,7 @@
     ],
     "provider": "ANDERSON DIAGNOSTIC IMAGING INC",
     "dos": "2025-01-17",
-    "age_days": 101,
+    "age_days": 104,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
@@ -1478,21 +457,7 @@
     ],
     "provider": "AMERICAN HEALTH IMAGING OF DALLAS LLC",
     "dos": "2025-01-18",
-    "age_days": 100,
-    "provider_validation": {
-      "is_valid": true,
-      "missing_fields": [],
-      "null_fields": []
-    }
-  },
-  {
-    "filename": "20250212_1019.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "BLUE RIDGE HEALTHCARE MEDICAL GROUP INC",
-    "dos": "2025-01-20",
-    "age_days": 98,
+    "age_days": 103,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
@@ -1505,19 +470,13 @@
       "RATE_MISSING",
       "RATE_MISSING"
     ],
-    "provider": "Rave Imaging - Englewood",
+    "provider": "Radiology Associates of Venice",
     "dos": "2025-01-21",
-    "age_days": 97,
+    "age_days": 100,
     "provider_validation": {
-      "is_valid": false,
+      "is_valid": true,
       "missing_fields": [],
-      "null_fields": [
-        "Billing Address 1",
-        "Billing Address City",
-        "Billing Address Postal Code",
-        "Billing Address State",
-        "Billing Name"
-      ]
+      "null_fields": []
     }
   },
   {
@@ -1527,7 +486,21 @@
     ],
     "provider": "Lexington Open MRI Inc.",
     "dos": "2025-01-21",
-    "age_days": 97,
+    "age_days": 100,
+    "provider_validation": {
+      "is_valid": true,
+      "missing_fields": [],
+      "null_fields": []
+    }
+  },
+  {
+    "filename": "20250421_000028_01_092.json",
+    "failure_types": [
+      "RATE_MISSING"
+    ],
+    "provider": "MH Imaging-Kenosha, LLC",
+    "dos": "2025-01-23",
+    "age_days": 98,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
@@ -1541,7 +514,7 @@
     ],
     "provider": "Progressive Radilogy",
     "dos": "2025-01-24",
-    "age_days": 94,
+    "age_days": 97,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
@@ -1555,7 +528,7 @@
     ],
     "provider": "NORTHSIDE RADIOLOGY ASSOCIATES LLC",
     "dos": "2025-01-24",
-    "age_days": 94,
+    "age_days": 97,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
@@ -1569,26 +542,11 @@
     ],
     "provider": "Mecklenburg Diagnostic Imaging",
     "dos": "2025-01-25",
-    "age_days": 93,
+    "age_days": 96,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
       "null_fields": []
-    }
-  },
-  {
-    "filename": "20250325_124337073.json",
-    "failure_types": [
-      "TOO_MANY_UNITS"
-    ],
-    "provider": "Unknown Provider",
-    "dos": "2025-01-25",
-    "age_days": 93,
-    "provider_validation": {
-      "is_valid": false,
-      "missing_fields": [],
-      "null_fields": [],
-      "error": "argument of type 'NoneType' is not iterable"
     }
   },
   {
@@ -1598,7 +556,7 @@
     ],
     "provider": "Center For Diagnostic Imaging TN",
     "dos": "2025-01-27",
-    "age_days": 91,
+    "age_days": 94,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
@@ -1612,7 +570,7 @@
     ],
     "provider": "MRI ASSOCIATES OF LAKELAND LLC",
     "dos": "2025-01-27",
-    "age_days": 91,
+    "age_days": 94,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
@@ -1626,7 +584,7 @@
     ],
     "provider": "MRI ASSOCIATES OF LAKELAND LLC",
     "dos": "2025-01-27",
-    "age_days": 91,
+    "age_days": 94,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
@@ -1640,35 +598,7 @@
     ],
     "provider": "Center For Diagnostic Imaging TN",
     "dos": "2025-01-27",
-    "age_days": 91,
-    "provider_validation": {
-      "is_valid": true,
-      "missing_fields": [],
-      "null_fields": []
-    }
-  },
-  {
-    "filename": "20250206_1025.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "MRI ASSOCIATES OF LAKELAND LLC",
-    "dos": "2025-01-28",
-    "age_days": 90,
-    "provider_validation": {
-      "is_valid": true,
-      "missing_fields": [],
-      "null_fields": []
-    }
-  },
-  {
-    "filename": "20250212_1010.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "TOUCHSTONE IMAGING OF PENSACOLA LLC",
-    "dos": "2025-01-28",
-    "age_days": 90,
+    "age_days": 94,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
@@ -1682,49 +612,7 @@
     ],
     "provider": "ODC OF KNOXVILLE",
     "dos": "2025-01-28",
-    "age_days": 90,
-    "provider_validation": {
-      "is_valid": true,
-      "missing_fields": [],
-      "null_fields": []
-    }
-  },
-  {
-    "filename": "20250212_1013.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "ODC OF KNOXVILLE",
-    "dos": "2025-01-28",
-    "age_days": 90,
-    "provider_validation": {
-      "is_valid": true,
-      "missing_fields": [],
-      "null_fields": []
-    }
-  },
-  {
-    "filename": "20250213_1033.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "ODC OF KNOXVILLE",
-    "dos": "2025-01-28",
-    "age_days": 90,
-    "provider_validation": {
-      "is_valid": true,
-      "missing_fields": [],
-      "null_fields": []
-    }
-  },
-  {
-    "filename": "20250225_1037.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "TOUCHSTONE IMAGING OF PENSACOLA LLC",
-    "dos": "2025-01-28",
-    "age_days": 90,
+    "age_days": 93,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
@@ -1738,7 +626,7 @@
     ],
     "provider": "Basha Diagnostics",
     "dos": "2025-01-28",
-    "age_days": 90,
+    "age_days": 93,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
@@ -1752,7 +640,7 @@
     ],
     "provider": "UNIVERSITY DIAGNOSTIC INSTITUTE",
     "dos": "2025-01-29",
-    "age_days": 89,
+    "age_days": 92,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
@@ -1766,7 +654,7 @@
     ],
     "provider": "Mecklenburg Diagnostic Imaging",
     "dos": "2025-01-29",
-    "age_days": 89,
+    "age_days": 92,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
@@ -1780,21 +668,7 @@
     ],
     "provider": "Florida Diagnostic Imaging Center, Inc.",
     "dos": "2025-01-30",
-    "age_days": 88,
-    "provider_validation": {
-      "is_valid": true,
-      "missing_fields": [],
-      "null_fields": []
-    }
-  },
-  {
-    "filename": "20250213_1016.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "MRI Associates of Sarasota, LLC",
-    "dos": "2025-02-03",
-    "age_days": 84,
+    "age_days": 91,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
@@ -1808,7 +682,7 @@
     ],
     "provider": "INSTITUTE OF DIAGNOSTIC IMAGING",
     "dos": "2025-02-03",
-    "age_days": 84,
+    "age_days": 87,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
@@ -1822,7 +696,7 @@
     ],
     "provider": "Radiology Associates of Hartford",
     "dos": "2025-02-04",
-    "age_days": 83,
+    "age_days": 86,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
@@ -1836,27 +710,11 @@
     ],
     "provider": "Halo Diagnostic - Indian Wells",
     "dos": "2025-02-06",
-    "age_days": 81,
+    "age_days": 84,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
       "null_fields": []
-    }
-  },
-  {
-    "filename": "20250319_105819046.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "Prime Imaging Chattanooga Outpatient Center",
-    "dos": "2025-02-06",
-    "age_days": 81,
-    "provider_validation": {
-      "is_valid": false,
-      "missing_fields": [],
-      "null_fields": [
-        "Billing Name"
-      ]
     }
   },
   {
@@ -1866,7 +724,7 @@
     ],
     "provider": "Shoals Radiology Associates",
     "dos": "2025-02-07",
-    "age_days": 80,
+    "age_days": 83,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
@@ -1880,7 +738,7 @@
     ],
     "provider": "JACKSONVILLE DIAGNOSTIC IMAGING LLC",
     "dos": "2025-02-07",
-    "age_days": 80,
+    "age_days": 83,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
@@ -1894,7 +752,7 @@
     ],
     "provider": "RADIOLOGY & IMAGING SPECIALISTS OF LAKELAND",
     "dos": "2025-02-07",
-    "age_days": 80,
+    "age_days": 83,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
@@ -1908,7 +766,7 @@
     ],
     "provider": "Millennium Radiology LLC",
     "dos": "2025-02-10",
-    "age_days": 77,
+    "age_days": 80,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
@@ -1922,7 +780,21 @@
     ],
     "provider": "Radiology Imaging Associates",
     "dos": "2025-02-10",
-    "age_days": 77,
+    "age_days": 80,
+    "provider_validation": {
+      "is_valid": true,
+      "missing_fields": [],
+      "null_fields": []
+    }
+  },
+  {
+    "filename": "20250421_000028_01_082.json",
+    "failure_types": [
+      "RATE_MISSING"
+    ],
+    "provider": "Halo Diagnostic - Indio",
+    "dos": "2025-02-10",
+    "age_days": 80,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
@@ -1936,7 +808,7 @@
     ],
     "provider": "Alfa Diagnostic Imaging Center",
     "dos": "2025-02-11",
-    "age_days": 76,
+    "age_days": 79,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
@@ -1950,7 +822,7 @@
     ],
     "provider": "AMERICAN HEALTH IMAGING OF GEORGIA, LLC",
     "dos": "2025-02-17",
-    "age_days": 70,
+    "age_days": 73,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
@@ -1966,65 +838,11 @@
     ],
     "provider": "MRI Associates of Winter Haven, LLC",
     "dos": "2025-02-19",
-    "age_days": 68,
+    "age_days": 71,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
       "null_fields": []
-    }
-  },
-  {
-    "filename": "20250325_124337084.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "SCLTDI JV LLC",
-    "dos": "2025-02-19",
-    "age_days": 68,
-    "provider_validation": {
-      "is_valid": true,
-      "missing_fields": [],
-      "null_fields": []
-    }
-  },
-  {
-    "filename": "20250224_1082.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "Foot Ankle and Knee MRI Inc - Cooper City",
-    "dos": "2025-02-20",
-    "age_days": 67,
-    "provider_validation": {
-      "is_valid": false,
-      "missing_fields": [],
-      "null_fields": [
-        "Billing Address 1",
-        "Billing Address City",
-        "Billing Address Postal Code",
-        "Billing Address State",
-        "Billing Name"
-      ]
-    }
-  },
-  {
-    "filename": "20250224_1083.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "Foot Ankle and Knee MRI Inc - Cooper City",
-    "dos": "2025-02-20",
-    "age_days": 67,
-    "provider_validation": {
-      "is_valid": false,
-      "missing_fields": [],
-      "null_fields": [
-        "Billing Address 1",
-        "Billing Address City",
-        "Billing Address Postal Code",
-        "Billing Address State",
-        "Billing Name"
-      ]
     }
   },
   {
@@ -2034,49 +852,7 @@
     ],
     "provider": "ATLANTIC MEDICAL IMAGING",
     "dos": "2025-02-20",
-    "age_days": 67,
-    "provider_validation": {
-      "is_valid": true,
-      "missing_fields": [],
-      "null_fields": []
-    }
-  },
-  {
-    "filename": "20250319_114129025.json",
-    "failure_types": [
-      "TOO_MANY_UNITS"
-    ],
-    "provider": "KHURANA RADIOLOGY MD PA DBA AD",
-    "dos": "2025-02-24",
-    "age_days": 63,
-    "provider_validation": {
-      "is_valid": true,
-      "missing_fields": [],
-      "null_fields": []
-    }
-  },
-  {
-    "filename": "20250319_114129120.json",
-    "failure_types": [
-      "TOO_MANY_UNITS"
-    ],
-    "provider": "PRECISION IMAGING ST AUGUSTINE LLC",
-    "dos": "2025-02-24",
-    "age_days": 63,
-    "provider_validation": {
-      "is_valid": true,
-      "missing_fields": [],
-      "null_fields": []
-    }
-  },
-  {
-    "filename": "20250325_124337016.json",
-    "failure_types": [
-      "TOO_MANY_UNITS"
-    ],
-    "provider": "Tower Imaging LLC",
-    "dos": "2025-02-24",
-    "age_days": 63,
+    "age_days": 70,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
@@ -2090,7 +866,7 @@
     ],
     "provider": "MRI Associates of Winter Haven, LLC",
     "dos": "2025-02-25",
-    "age_days": 62,
+    "age_days": 65,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
@@ -2104,7 +880,7 @@
     ],
     "provider": "Florida Diagnostic Imaging Center, Inc.",
     "dos": "2025-02-25",
-    "age_days": 62,
+    "age_days": 65,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
@@ -2118,49 +894,7 @@
     ],
     "provider": "South Florida Diagnostic Imaging",
     "dos": "2025-02-25",
-    "age_days": 62,
-    "provider_validation": {
-      "is_valid": true,
-      "missing_fields": [],
-      "null_fields": []
-    }
-  },
-  {
-    "filename": "20250325_124337059.json",
-    "failure_types": [
-      "TOO_MANY_UNITS"
-    ],
-    "provider": "MEDICAL DIAGNOSTIC SVCS, LTD",
-    "dos": "2025-02-25",
-    "age_days": 62,
-    "provider_validation": {
-      "is_valid": true,
-      "missing_fields": [],
-      "null_fields": []
-    }
-  },
-  {
-    "filename": "20250325_124337008.json",
-    "failure_types": [
-      "TOO_MANY_UNITS"
-    ],
-    "provider": "Tower Imaging LLC",
-    "dos": "2025-02-26",
-    "age_days": 61,
-    "provider_validation": {
-      "is_valid": true,
-      "missing_fields": [],
-      "null_fields": []
-    }
-  },
-  {
-    "filename": "20250319_114129058.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "Bowes Imaging Center",
-    "dos": "2025-02-27",
-    "age_days": 60,
+    "age_days": 65,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
@@ -2174,7 +908,7 @@
     ],
     "provider": "Mecklenburg Diagnostic Imaging",
     "dos": "2025-02-27",
-    "age_days": 60,
+    "age_days": 63,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
@@ -2188,7 +922,7 @@
     ],
     "provider": "Roseville Diagnostic Imaging",
     "dos": "2025-02-28",
-    "age_days": 59,
+    "age_days": 62,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
@@ -2202,7 +936,7 @@
     ],
     "provider": "Premier Radiology",
     "dos": "2025-02-28",
-    "age_days": 59,
+    "age_days": 62,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
@@ -2216,7 +950,7 @@
     ],
     "provider": "St. Alphonsus",
     "dos": "2025-03-01",
-    "age_days": 58,
+    "age_days": 61,
     "provider_validation": {
       "is_valid": false,
       "missing_fields": [],
@@ -2231,19 +965,13 @@
       "RATE_MISSING",
       "RATE_MISSING"
     ],
-    "provider": "Bright Light Medical Imaging - Wheaton",
+    "provider": "Bright Light Medical Imaging",
     "dos": "2025-03-03",
-    "age_days": 56,
+    "age_days": 59,
     "provider_validation": {
-      "is_valid": false,
+      "is_valid": true,
       "missing_fields": [],
-      "null_fields": [
-        "Billing Address 1",
-        "Billing Address City",
-        "Billing Address Postal Code",
-        "Billing Address State",
-        "Billing Name"
-      ]
+      "null_fields": []
     }
   },
   {
@@ -2253,7 +981,7 @@
     ],
     "provider": "Shoals Radiology Associates",
     "dos": "2025-03-03",
-    "age_days": 56,
+    "age_days": 59,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
@@ -2267,7 +995,7 @@
     ],
     "provider": "Shoals Radiology Associates",
     "dos": "2025-03-03",
-    "age_days": 56,
+    "age_days": 59,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
@@ -2281,7 +1009,7 @@
     ],
     "provider": "Shoals Radiology Associates",
     "dos": "2025-03-03",
-    "age_days": 56,
+    "age_days": 59,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
@@ -2295,7 +1023,7 @@
     ],
     "provider": "Shoals Radiology Associates",
     "dos": "2025-03-03",
-    "age_days": 56,
+    "age_days": 59,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
@@ -2307,19 +1035,13 @@
     "failure_types": [
       "RATE_MISSING"
     ],
-    "provider": "Akumin Imaging Texas, LLC\ndba Southwest X-Ray",
+    "provider": "Akumin Imaging Texas LLC",
     "dos": "2025-03-04",
-    "age_days": 55,
+    "age_days": 58,
     "provider_validation": {
-      "is_valid": false,
+      "is_valid": true,
       "missing_fields": [],
-      "null_fields": [
-        "Billing Address 1",
-        "Billing Address City",
-        "Billing Address Postal Code",
-        "Billing Address State",
-        "Billing Name"
-      ]
+      "null_fields": []
     }
   },
   {
@@ -2329,7 +1051,7 @@
     ],
     "provider": "ANDERSON DIAGNOSTIC IMAGING INC",
     "dos": "2025-03-04",
-    "age_days": 55,
+    "age_days": 58,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
@@ -2343,7 +1065,7 @@
     ],
     "provider": "Mecklenburg Diagnostic Imaging",
     "dos": "2025-03-04",
-    "age_days": 55,
+    "age_days": 58,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
@@ -2357,22 +1079,7 @@
     ],
     "provider": "NORTHEAST OPEN MRI",
     "dos": "2025-03-04",
-    "age_days": 55,
-    "provider_validation": {
-      "is_valid": true,
-      "missing_fields": [],
-      "null_fields": []
-    }
-  },
-  {
-    "filename": "20250319_105819110.json",
-    "failure_types": [
-      "TOO_MANY_UNITS",
-      "TOO_MANY_UNITS"
-    ],
-    "provider": "MRI Associates of Winter Haven, LLC",
-    "dos": "2025-03-05",
-    "age_days": 54,
+    "age_days": 58,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
@@ -2384,18 +1091,13 @@
     "failure_types": [
       "RATE_MISSING"
     ],
-    "provider": "Diagnostic Imaging Centers, Pa - Overland Park",
+    "provider": "Diagnostic Imaging Centers, PA",
     "dos": "2025-03-05",
-    "age_days": 54,
+    "age_days": 57,
     "provider_validation": {
-      "is_valid": false,
+      "is_valid": true,
       "missing_fields": [],
-      "null_fields": [
-        "Billing Address City",
-        "Billing Address Postal Code",
-        "Billing Address State",
-        "Billing Name"
-      ]
+      "null_fields": []
     }
   },
   {
@@ -2403,19 +1105,13 @@
     "failure_types": [
       "RATE_MISSING"
     ],
-    "provider": "Desert Radiology",
+    "provider": "Ellis Bandt Birkin Kollins Wong PLLC",
     "dos": "2025-03-07",
-    "age_days": 52,
+    "age_days": 55,
     "provider_validation": {
-      "is_valid": false,
+      "is_valid": true,
       "missing_fields": [],
-      "null_fields": [
-        "Billing Address 1",
-        "Billing Address City",
-        "Billing Address Postal Code",
-        "Billing Address State",
-        "Billing Name"
-      ]
+      "null_fields": []
     }
   },
   {
@@ -2425,7 +1121,7 @@
     ],
     "provider": "Tower Imaging LLC",
     "dos": "2025-03-07",
-    "age_days": 52,
+    "age_days": 55,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
@@ -2439,7 +1135,7 @@
     ],
     "provider": "Nassau Open MRI",
     "dos": "2025-03-08",
-    "age_days": 51,
+    "age_days": 54,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
@@ -2453,7 +1149,7 @@
     ],
     "provider": "INDIAN RIVER MRI INC",
     "dos": "2025-03-10",
-    "age_days": 49,
+    "age_days": 52,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
@@ -2461,13 +1157,13 @@
     }
   },
   {
-    "filename": "20250321_135655020.json",
+    "filename": "20250421_000028_01_068.json",
     "failure_types": [
-      "TOO_MANY_UNITS"
+      "UNMATCHED_CPT"
     ],
-    "provider": "PRECISION IMAGING ST AUGUSTINE LLC",
-    "dos": "2025-03-12",
-    "age_days": 47,
+    "provider": "Clermont Radiology",
+    "dos": "2025-03-11",
+    "age_days": 51,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
@@ -2481,7 +1177,7 @@
     ],
     "provider": "ANDERSON DIAGNOSTIC IMAGING INC",
     "dos": "2025-03-12",
-    "age_days": 47,
+    "age_days": 50,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
@@ -2495,7 +1191,7 @@
     ],
     "provider": "ATLANTIC RADIOLOGY ASSOCIATES",
     "dos": "2025-03-12",
-    "age_days": 47,
+    "age_days": 50,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
@@ -2507,25 +1203,9 @@
     "failure_types": [
       "RATE_MISSING"
     ],
-    "provider": "Fort Wayne Open Mri",
+    "provider": "Community Open MRI of Auburn",
     "dos": "2025-03-12",
-    "age_days": 47,
-    "provider_validation": {
-      "is_valid": false,
-      "missing_fields": [],
-      "null_fields": [
-        "Billing Name"
-      ]
-    }
-  },
-  {
-    "filename": "20250408_154635064.json",
-    "failure_types": [
-      "TOO_MANY_UNITS"
-    ],
-    "provider": "Tower Imaging LLC",
-    "dos": "2025-03-12",
-    "age_days": 47,
+    "age_days": 50,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
@@ -2537,19 +1217,13 @@
     "failure_types": [
       "RATE_MISSING"
     ],
-    "provider": "Munster Open MRI & Imaging",
+    "provider": "Munster Open MRI",
     "dos": "2025-03-13",
-    "age_days": 46,
+    "age_days": 49,
     "provider_validation": {
-      "is_valid": false,
+      "is_valid": true,
       "missing_fields": [],
-      "null_fields": [
-        "Billing Address 1",
-        "Billing Address City",
-        "Billing Address Postal Code",
-        "Billing Address State",
-        "Billing Name"
-      ]
+      "null_fields": []
     }
   },
   {
@@ -2559,7 +1233,7 @@
     ],
     "provider": "HEALTH DIAGNOSTICS OF CALIFOR",
     "dos": "2025-03-14",
-    "age_days": 45,
+    "age_days": 48,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
@@ -2573,56 +1247,7 @@
     ],
     "provider": "Presbyterian Imaging Centers",
     "dos": "2025-03-14",
-    "age_days": 45,
-    "provider_validation": {
-      "is_valid": true,
-      "missing_fields": [],
-      "null_fields": []
-    }
-  },
-  {
-    "filename": "20250408_154635026.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "American Health Imaging",
-    "dos": "2025-03-14",
-    "age_days": 45,
-    "provider_validation": {
-      "is_valid": false,
-      "missing_fields": [],
-      "null_fields": [
-        "Billing Address 1",
-        "Billing Address City",
-        "Billing Address Postal Code",
-        "Billing Address State",
-        "Billing Name"
-      ]
-    }
-  },
-  {
-    "filename": "20250321_135655057.json",
-    "failure_types": [
-      "TOO_MANY_UNITS",
-      "TOO_MANY_UNITS"
-    ],
-    "provider": "MONUMENT 9A IMAGING",
-    "dos": "2025-03-15",
-    "age_days": 44,
-    "provider_validation": {
-      "is_valid": true,
-      "missing_fields": [],
-      "null_fields": []
-    }
-  },
-  {
-    "filename": "20250408_154523087.json",
-    "failure_types": [
-      "TOO_MANY_UNITS"
-    ],
-    "provider": "JOHNSON COUNTY IMAGING",
-    "dos": "2025-03-15",
-    "age_days": 44,
+    "age_days": 48,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
@@ -2634,19 +1259,13 @@
     "failure_types": [
       "RATE_MISSING"
     ],
-    "provider": "Touchstone Imaging - Uptown",
+    "provider": "SCLTDI JV LLC",
     "dos": "2025-03-15",
-    "age_days": 44,
+    "age_days": 47,
     "provider_validation": {
-      "is_valid": false,
+      "is_valid": true,
       "missing_fields": [],
-      "null_fields": [
-        "Billing Address 1",
-        "Billing Address City",
-        "Billing Address Postal Code",
-        "Billing Address State",
-        "Billing Name"
-      ]
+      "null_fields": []
     }
   },
   {
@@ -2654,29 +1273,9 @@
     "failure_types": [
       "RATE_MISSING"
     ],
-    "provider": "Fort Pierce Imaging Center",
+    "provider": "Radiology Imaging Associates",
     "dos": "2025-03-16",
-    "age_days": 43,
-    "provider_validation": {
-      "is_valid": false,
-      "missing_fields": [],
-      "null_fields": [
-        "Billing Address 1",
-        "Billing Address City",
-        "Billing Address Postal Code",
-        "Billing Address State",
-        "Billing Name"
-      ]
-    }
-  },
-  {
-    "filename": "20250325_124127002.json",
-    "failure_types": [
-      "TOO_MANY_UNITS"
-    ],
-    "provider": "ADVANCED IMAGING CONCEPTS PL",
-    "dos": "2025-03-17",
-    "age_days": 42,
+    "age_days": 46,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
@@ -2690,7 +1289,7 @@
     ],
     "provider": "Halo Diagnostic - Indio",
     "dos": "2025-03-17",
-    "age_days": 42,
+    "age_days": 45,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
@@ -2698,13 +1297,13 @@
     }
   },
   {
-    "filename": "20250403_093311015.json",
+    "filename": "20250421_000028_01_106.json",
     "failure_types": [
-      "TOO_MANY_UNITS"
+      "RATE_MISSING"
     ],
-    "provider": "MRI Associates of Venice, LLC",
-    "dos": "2025-03-18",
-    "age_days": 41,
+    "provider": "PLAZA RADIOLOGY LLC",
+    "dos": "2025-03-17",
+    "age_days": 45,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
@@ -2716,35 +1315,13 @@
     "failure_types": [
       "RATE_MISSING"
     ],
-    "provider": "Northwest Radiology Network PC - Greenwood",
+    "provider": "Northwest Radiology Network",
     "dos": "2025-03-18",
-    "age_days": 41,
+    "age_days": 44,
     "provider_validation": {
-      "is_valid": false,
+      "is_valid": true,
       "missing_fields": [],
-      "null_fields": [
-        "Billing Address 1",
-        "Billing Address City",
-        "Billing Address Postal Code",
-        "Billing Address State",
-        "Billing Name"
-      ]
-    }
-  },
-  {
-    "filename": "20250408_154523085.json",
-    "failure_types": [
-      "RATE_MISSING"
-    ],
-    "provider": "American Health Imaging of Rome",
-    "dos": "2025-03-18",
-    "age_days": 41,
-    "provider_validation": {
-      "is_valid": false,
-      "missing_fields": [],
-      "null_fields": [
-        "Billing Name"
-      ]
+      "null_fields": []
     }
   },
   {
@@ -2754,7 +1331,7 @@
     ],
     "provider": "Expert MRI, PC",
     "dos": "2025-03-18",
-    "age_days": 41,
+    "age_days": 44,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
@@ -2768,7 +1345,7 @@
     ],
     "provider": "South Florida Diagnostic Imaging",
     "dos": "2025-03-19",
-    "age_days": 40,
+    "age_days": 43,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
@@ -2782,7 +1359,7 @@
     ],
     "provider": "South Florida Diagnostic Imaging",
     "dos": "2025-03-19",
-    "age_days": 40,
+    "age_days": 43,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
@@ -2796,7 +1373,7 @@
     ],
     "provider": "Diagnostic Radiology Associates",
     "dos": "2025-03-20",
-    "age_days": 39,
+    "age_days": 42,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
@@ -2810,7 +1387,7 @@
     ],
     "provider": "Nassau Open MRI",
     "dos": "2025-03-20",
-    "age_days": 39,
+    "age_days": 42,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
@@ -2822,29 +1399,9 @@
     "failure_types": [
       "RATE_MISSING"
     ],
-    "provider": "Rayus Radiology - Smyrna",
+    "provider": "Rayus Radiology",
     "dos": "2025-03-20",
-    "age_days": 39,
-    "provider_validation": {
-      "is_valid": false,
-      "missing_fields": [],
-      "null_fields": [
-        "Billing Address 1",
-        "Billing Address City",
-        "Billing Address Postal Code",
-        "Billing Address State",
-        "Billing Name"
-      ]
-    }
-  },
-  {
-    "filename": "20250403_093314026.json",
-    "failure_types": [
-      "TOO_MANY_UNITS"
-    ],
-    "provider": "MRI ASSOCIATES OF LAKELAND LLC",
-    "dos": "2025-03-20",
-    "age_days": 39,
+    "age_days": 42,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
@@ -2856,19 +1413,13 @@
     "failure_types": [
       "RATE_MISSING"
     ],
-    "provider": "Rayus Radiology - Smyrna",
+    "provider": "Rayus Radiology",
     "dos": "2025-03-20",
-    "age_days": 39,
+    "age_days": 42,
     "provider_validation": {
-      "is_valid": false,
+      "is_valid": true,
       "missing_fields": [],
-      "null_fields": [
-        "Billing Address 1",
-        "Billing Address City",
-        "Billing Address Postal Code",
-        "Billing Address State",
-        "Billing Name"
-      ]
+      "null_fields": []
     }
   },
   {
@@ -2878,7 +1429,7 @@
     ],
     "provider": "SimonMed Imaging FL LLC",
     "dos": "2025-03-21",
-    "age_days": 38,
+    "age_days": 41,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
@@ -2892,21 +1443,7 @@
     ],
     "provider": "CHESTERFIELD IMAGING LLC",
     "dos": "2025-03-22",
-    "age_days": 37,
-    "provider_validation": {
-      "is_valid": true,
-      "missing_fields": [],
-      "null_fields": []
-    }
-  },
-  {
-    "filename": "20250408_154523032.json",
-    "failure_types": [
-      "TOO_MANY_UNITS"
-    ],
-    "provider": "CHESTERFIELD IMAGING LLC",
-    "dos": "2025-03-22",
-    "age_days": 37,
+    "age_days": 40,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
@@ -2920,7 +1457,37 @@
     ],
     "provider": "SimonMed Imaging FL LLC",
     "dos": "2025-03-22",
-    "age_days": 37,
+    "age_days": 40,
+    "provider_validation": {
+      "is_valid": true,
+      "missing_fields": [],
+      "null_fields": []
+    }
+  },
+  {
+    "filename": "20250419_230540_01_014.json",
+    "failure_types": [
+      "RATE_MISSING",
+      "RATE_MISSING"
+    ],
+    "provider": "INSTITUTE OF DIAGNOSTIC IMAGING",
+    "dos": "2025-03-22",
+    "age_days": 40,
+    "provider_validation": {
+      "is_valid": true,
+      "missing_fields": [],
+      "null_fields": []
+    }
+  },
+  {
+    "filename": "20250421_000028_01_014.json",
+    "failure_types": [
+      "RATE_MISSING",
+      "RATE_MISSING"
+    ],
+    "provider": "INSTITUTE OF DIAGNOSTIC IMAGING",
+    "dos": "2025-03-22",
+    "age_days": 40,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
@@ -2932,19 +1499,13 @@
     "failure_types": [
       "RATE_MISSING"
     ],
-    "provider": "Envision Imaging Bountiful",
+    "provider": "ENVISION IMAGING BOUNTIFUL",
     "dos": "2025-03-25",
-    "age_days": 34,
+    "age_days": 37,
     "provider_validation": {
-      "is_valid": false,
+      "is_valid": true,
       "missing_fields": [],
-      "null_fields": [
-        "Billing Address 1",
-        "Billing Address City",
-        "Billing Address Postal Code",
-        "Billing Address State",
-        "Billing Name"
-      ]
+      "null_fields": []
     }
   },
   {
@@ -2954,7 +1515,7 @@
     ],
     "provider": "Affordable Medical Imaging",
     "dos": "2025-03-25",
-    "age_days": 34,
+    "age_days": 37,
     "provider_validation": {
       "is_valid": false,
       "missing_fields": [],
@@ -2968,27 +1529,13 @@
     }
   },
   {
-    "filename": "20250403_093314054.json",
-    "failure_types": [
-      "TOO_MANY_UNITS"
-    ],
-    "provider": "MONUMENT 9A IMAGING",
-    "dos": "2025-03-26",
-    "age_days": 33,
-    "provider_validation": {
-      "is_valid": true,
-      "missing_fields": [],
-      "null_fields": []
-    }
-  },
-  {
     "filename": "20250408_154523058.json",
     "failure_types": [
       "RATE_MISSING"
     ],
     "provider": "ODI Diagnostic Imaging",
     "dos": "2025-03-26",
-    "age_days": 33,
+    "age_days": 36,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
@@ -2996,13 +1543,32 @@
     }
   },
   {
-    "filename": "20250408_154523039.json",
+    "filename": "20250421_000028_01_039.json",
     "failure_types": [
+      "UNMATCHED_CPT"
+    ],
+    "provider": "Unknown Provider",
+    "dos": "2025-03-26",
+    "age_days": 36,
+    "provider_validation": {
+      "is_valid": false,
+      "missing_fields": [],
+      "null_fields": [],
+      "error": "argument of type 'NoneType' is not iterable"
+    }
+  },
+  {
+    "filename": "20250421_000028_01_047.json",
+    "failure_types": [
+      "RATE_MISSING",
+      "RATE_MISSING",
+      "RATE_MISSING",
+      "RATE_MISSING",
       "RATE_MISSING"
     ],
-    "provider": "MRI Associates of Brandon, LLC",
-    "dos": "2025-03-28",
-    "age_days": 31,
+    "provider": "SimonMed Imaging FL LLC",
+    "dos": "2025-03-26",
+    "age_days": 36,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
@@ -3010,17 +1576,18 @@
     }
   },
   {
-    "filename": "20250408_154523052.json",
+    "filename": "20250421_000028_01_066.json",
     "failure_types": [
-      "RATE_MISSING"
+      "UNMATCHED_CPT"
     ],
-    "provider": "MRI Associates of Brandon, LLC",
-    "dos": "2025-03-28",
-    "age_days": 31,
+    "provider": "Unknown Provider",
+    "dos": "2025-03-27",
+    "age_days": 35,
     "provider_validation": {
-      "is_valid": true,
+      "is_valid": false,
       "missing_fields": [],
-      "null_fields": []
+      "null_fields": [],
+      "error": "argument of type 'NoneType' is not iterable"
     }
   },
   {
@@ -3031,7 +1598,7 @@
     ],
     "provider": "Expresscare of Belleview",
     "dos": "2025-03-28",
-    "age_days": 31,
+    "age_days": 34,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
@@ -3045,7 +1612,21 @@
     ],
     "provider": "SimonMed Imaging FL LLC",
     "dos": "2025-04-01",
-    "age_days": 27,
+    "age_days": 30,
+    "provider_validation": {
+      "is_valid": true,
+      "missing_fields": [],
+      "null_fields": []
+    }
+  },
+  {
+    "filename": "20250421_000028_01_056.json",
+    "failure_types": [
+      "UNMATCHED_CPT"
+    ],
+    "provider": "SimonMed Imaging FL LLC",
+    "dos": "2025-04-01",
+    "age_days": 30,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
@@ -3057,19 +1638,41 @@
     "failure_types": [
       "RATE_MISSING"
     ],
-    "provider": "Midwest Imaging of Springfield",
+    "provider": "MRI of Springfield",
     "dos": "2025-04-02",
-    "age_days": 26,
+    "age_days": 29,
     "provider_validation": {
-      "is_valid": false,
+      "is_valid": true,
       "missing_fields": [],
-      "null_fields": [
-        "Billing Address 1",
-        "Billing Address City",
-        "Billing Address Postal Code",
-        "Billing Address State",
-        "Billing Name"
-      ]
+      "null_fields": []
+    }
+  },
+  {
+    "filename": "20250421_000028_01_120.json",
+    "failure_types": [
+      "UNMATCHED_CPT"
+    ],
+    "provider": "NSI MELBOURNE",
+    "dos": "2025-04-02",
+    "age_days": 29,
+    "provider_validation": {
+      "is_valid": true,
+      "missing_fields": [],
+      "null_fields": []
+    }
+  },
+  {
+    "filename": "20250421_000028_01_122.json",
+    "failure_types": [
+      "UNMATCHED_CPT"
+    ],
+    "provider": "NSI MELBOURNE",
+    "dos": "2025-04-02",
+    "age_days": 29,
+    "provider_validation": {
+      "is_valid": true,
+      "missing_fields": [],
+      "null_fields": []
     }
   },
   {
@@ -3079,7 +1682,7 @@
     ],
     "provider": "Bright Light Medical Imaging - Melrose Park",
     "dos": "2025-04-03",
-    "age_days": 25,
+    "age_days": 28,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
@@ -3087,13 +1690,13 @@
     }
   },
   {
-    "filename": "20250419_230540_01_017.json",
+    "filename": "20250421_000028_01_107.json",
     "failure_types": [
-      "RATE_MISSING"
+      "UNMATCHED_CPT"
     ],
-    "provider": "UNIVERSITY DIAGNOSTIC INSTITUTE",
+    "provider": "INMED DIAGNOSTICS SERVICES SC",
     "dos": "2025-04-03",
-    "age_days": 25,
+    "age_days": 28,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
@@ -3101,13 +1704,45 @@
     }
   },
   {
-    "filename": "20250421_000028_01_017.json",
+    "filename": "20250421_000028_01_100.json",
+    "failure_types": [
+      "UNMATCHED_CPT",
+      "UNMATCHED_CPT",
+      "TOO_MANY_UNITS"
+    ],
+    "provider": "MRI Associates of Winter Haven, LLC",
+    "dos": "2025-04-08",
+    "age_days": 23,
+    "provider_validation": {
+      "is_valid": true,
+      "missing_fields": [],
+      "null_fields": []
+    }
+  },
+  {
+    "filename": "20250421_000028_01_101.json",
+    "failure_types": [
+      "UNMATCHED_CPT",
+      "UNMATCHED_CPT",
+      "TOO_MANY_UNITS"
+    ],
+    "provider": "MRI Associates of Winter Haven, LLC",
+    "dos": "2025-04-08",
+    "age_days": 23,
+    "provider_validation": {
+      "is_valid": true,
+      "missing_fields": [],
+      "null_fields": []
+    }
+  },
+  {
+    "filename": "20250421_000028_01_074.json",
     "failure_types": [
       "RATE_MISSING"
     ],
-    "provider": "UNIVERSITY DIAGNOSTIC INSTITUTE",
-    "dos": "2025-04-03",
-    "age_days": 25,
+    "provider": "GRIFFIN IMAGING LLC ROCK STREET",
+    "dos": "2025-04-11",
+    "age_days": 20,
     "provider_validation": {
       "is_valid": true,
       "missing_fields": [],
