@@ -1,0 +1,6 @@
+2025-05-01 02:12:09,915 - INFO - Starting import from C:\Users\ChristopherCato\Downloads\li_export_5.1.csv to C:\Users\ChristopherCato\OneDrive - clarity-dx.com\code\bill_review\filemaker.db
+2025-05-01 02:12:10,214 - INFO - Found 24 duplicate FMRs
+2025-05-01 02:12:10,214 - INFO - Processing 3308 orders and 4440 line items
+2025-05-01 02:13:24,060 - INFO - Orders inserted: 3308
+2025-05-01 02:13:24,062 - INFO - Line items inserted: 2594, updated: 1846
+2025-05-01 02:13:24,212 - INFO - Import completed successfully

@@ -26,9 +26,12 @@ def get_proc_desc(cursor, proc_cd):
 def process_json_file(s3_client, bucket_name, file_key, conn):
     try:
         # Skip if file is not directly under mapped/
-        if not file_key.startswith('mapped/') or '/' in file_key.replace('mapped/', ''):
+        
+        if os.path.dirname(file_key) != "data/hcfa_json/valid/mapped":
             print(f"Skipping {file_key} - not directly under mapped directory")
             return
+
+
             
         # Download JSON file from S3
         response = s3_client.get_object(Bucket=bucket_name, Key=file_key)

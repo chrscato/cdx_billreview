@@ -48,13 +48,19 @@ S3_BUCKET = os.getenv('S3_BUCKET')
 def get_s3_json(key):
     """Get JSON data from S3."""
     try:
+        logger.info(f"Attempting to get JSON from S3 with key: {key}")
         response = s3_client.get_object(Bucket=S3_BUCKET, Key=key)
-        return json.loads(response['Body'].read().decode('utf-8'))
+        logger.info(f"Successfully retrieved object from S3")
+        data = json.loads(response['Body'].read().decode('utf-8'))
+        logger.info(f"Successfully parsed JSON data")
+        return data
     except s3_client.exceptions.NoSuchKey:
         logger.error(f"File not found in S3: {key}")
         return None
     except Exception as e:
         logger.error(f"Error getting JSON from S3: {str(e)}")
+        logger.error(f"Error type: {type(e)}")
+        logger.error(f"Error details: {str(e)}")
         return None
 
 def upload_json_to_s3(json_data, key):
@@ -1185,6 +1191,8 @@ def confirmMoveToStaging():
 @processing_bp.route('/processing/fails/<filename>/update-filemaker', methods=['POST'])
 def update_filemaker_data(filename):
     try:
+        logger.info(f"Starting update_filemaker_data for filename: {filename}")
+        
         # Get form data
         billing_name = request.form.get('billing_name')
         billing_address_1 = request.form.get('billing_address_1')
@@ -1194,9 +1202,12 @@ def update_filemaker_data(filename):
         tin = request.form.get('tin')
         npi = request.form.get('npi')
 
+        logger.info(f"Form data received: billing_name={billing_name}, npi={npi}")
+
         # Validate required fields
         if not all([billing_name, billing_address_1, billing_address_city, 
                    billing_address_state, billing_address_postal_code, tin, npi]):
+            logger.error("Missing required form fields")
             return jsonify({
                 'success': False, 
                 'error': 'All fields are required'
@@ -1204,6 +1215,7 @@ def update_filemaker_data(filename):
 
         # Get the current JSON data
         source_key = f'data/hcfa_json/valid/mapped/staging/fails/{filename}'
+        logger.info(f"Attempting to get JSON data from S3 with key: {source_key}")
         json_data = get_s3_json(source_key)
         
         if json_data is None:
@@ -1213,7 +1225,7 @@ def update_filemaker_data(filename):
                 'error': f'Could not find or read JSON file: {filename}'
             }), 404
 
-        # Debug logging for JSON structure
+        logger.info(f"Successfully retrieved JSON data for {filename}")
         logger.debug(f"JSON data structure: {json.dumps(json_data, indent=2)}")
 
         # Check if filemaker section exists
@@ -1240,6 +1252,8 @@ def update_filemaker_data(filename):
                 'success': False,
                 'error': 'No provider PrimaryKey found in JSON data'
             }), 400
+
+        logger.info(f"Found provider key: {provider_key}")
 
         # Update the FileMaker database with proper transaction handling
         try:
