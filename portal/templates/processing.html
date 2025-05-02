@@ -38,10 +38,10 @@
                 <div class="panel-body">
                     <p>Files that failed validation during processing.</p>
                     <div class="btn-group" role="group">
-                        <a href="{{ url_for('processing.list_fail_files') }}" class="btn btn-danger">
+                        <a href="/processing/fails" class="btn btn-danger">
                             <i class="fas fa-list me-2"></i>View Failed Files
                         </a>
-                        <a href="{{ url_for('processing.summary_dashboard') }}" class="btn btn-outline-danger">
+                        <a href="/processing/summary" class="btn btn-outline-danger">
                             <i class="fas fa-chart-bar me-2"></i>View Summary
                         </a>
                     </div>

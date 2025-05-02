@@ -1,0 +1,29 @@
+[
+  {
+    "filename": "test1.json",
+    "provider": "Test Provider 1",
+    "failure_types": ["RATE_MISSING"],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 1
+  },
+  {
+    "filename": "test2.json",
+    "provider": "Test Provider 2",
+    "failure_types": ["UNMATCHED_CPT", "TOO_MANY_UNITS"],
+    "provider_validation": {
+      "is_valid": false
+    },
+    "age_days": 2
+  },
+  {
+    "filename": "test3.json",
+    "provider": "Test Provider 1",
+    "failure_types": ["RATE_MISSING", "RATE_MISSING"],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 3
+  }
+] 

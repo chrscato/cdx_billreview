@@ -132,4 +132,86 @@ def assign_filemaker_order(filename):
         return jsonify({'success': True})
 
     except Exception as e:
-        return jsonify({'success': False, 'error': str(e)}), 500 
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@preprocessing.route('/processing/summary')
+def summary_dashboard():
+    """Render the summary dashboard with failure statistics."""
+    try:
+        # Try to get the failed summary data from S3 first
+        summary_data = []
+        try:
+            bucket_name = os.getenv('S3_BUCKET')
+            if bucket_name:
+                summary_path = 'data/hcfa_json/valid/failed_summary.json'
+                
+                s3_client = boto3.client(
+                    's3',
+                    aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
+                    aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'),
+                    region_name=os.getenv('AWS_DEFAULT_REGION')
+                )
+                
+                response = s3_client.get_object(Bucket=bucket_name, Key=summary_path)
+                summary_data = json.loads(response['Body'].read().decode('utf-8'))
+        except Exception as e:
+            print(f"Error reading summary data from S3: {str(e)}")
+            # Try to read from local file as fallback
+            try:
+                local_path = os.path.join('portal', 'data', 'failed_summary.json')
+                if os.path.exists(local_path):
+                    with open(local_path, 'r') as f:
+                        summary_data = json.load(f)
+                    print(f"Successfully loaded summary data from {local_path}")
+                else:
+                    print(f"Local file not found at {local_path}")
+            except Exception as e:
+                print(f"Error reading local summary data: {str(e)}")
+                summary_data = []
+            
+        return render_template('processing/summary.html', summary_json=summary_data)
+        
+    except Exception as e:
+        flash(f"Error loading summary dashboard: {str(e)}", "error")
+        return redirect(url_for('preprocessing.index'))
+
+@preprocessing.route('/processing/fails')
+def list_fail_files():
+    """List all failed files with their details."""
+    try:
+        # Try to get the failed summary data from S3 first
+        fail_data = []
+        try:
+            bucket_name = os.getenv('S3_BUCKET')
+            if bucket_name:
+                summary_path = 'data/hcfa_json/valid/failed_summary.json'
+                
+                s3_client = boto3.client(
+                    's3',
+                    aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
+                    aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'),
+                    region_name=os.getenv('AWS_DEFAULT_REGION')
+                )
+                
+                response = s3_client.get_object(Bucket=bucket_name, Key=summary_path)
+                fail_data = json.loads(response['Body'].read().decode('utf-8'))
+        except Exception as e:
+            print(f"Error reading fail data from S3: {str(e)}")
+            # Try to read from local file as fallback
+            try:
+                local_path = os.path.join('portal', 'data', 'failed_summary.json')
+                if os.path.exists(local_path):
+                    with open(local_path, 'r') as f:
+                        fail_data = json.load(f)
+                    print(f"Successfully loaded fail data from {local_path}")
+                else:
+                    print(f"Local file not found at {local_path}")
+            except Exception as e:
+                print(f"Error reading local fail data: {str(e)}")
+                fail_data = []
+            
+        return render_template('processing/fails.html', fail_data=fail_data)
+        
+    except Exception as e:
+        flash(f"Error loading failed files: {str(e)}", "error")
+        return redirect(url_for('preprocessing.index')) 
