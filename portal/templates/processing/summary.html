@@ -76,15 +76,35 @@
     }
     // Keep the "All" option, clear others
     select.length = 1; 
-    [...new Set(options)] // Get unique options
-      .filter(opt => opt) // Remove null/undefined options
-      .sort() // Sort alphabetically
-      .forEach(opt => {
-        const el = document.createElement('option');
-        el.value = opt;
-        el.textContent = opt;
-        select.appendChild(el);
-    });
+    
+    // For failure types, we want to show all unique types regardless of duplicates
+    if (id === "filter-failure-type") {
+        const uniqueTypes = new Set();
+        options.forEach(opt => {
+            if (Array.isArray(opt)) {
+                opt.forEach(type => uniqueTypes.add(type));
+            } else if (opt) {
+                uniqueTypes.add(opt);
+            }
+        });
+        [...uniqueTypes].sort().forEach(opt => {
+            const el = document.createElement('option');
+            el.value = opt;
+            el.textContent = opt;
+            select.appendChild(el);
+        });
+    } else {
+        // For other dropdowns (like provider), use the original logic
+        [...new Set(options)]
+            .filter(opt => opt)
+            .sort()
+            .forEach(opt => {
+                const el = document.createElement('option');
+                el.value = opt;
+                el.textContent = opt;
+                select.appendChild(el);
+            });
+    }
   }
 
   // Replace the old renderSummaryResults function
