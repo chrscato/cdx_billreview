@@ -12,7 +12,7 @@ from utils.validators import validate_record
 from data.excel_manager import initialize_excel_file, load_historical_duplicates, append_to_excel
 from processors.document_processor import generate_document
 from processors.eobr_processor import collect_additional_eobr_data
-from data.db_manager import check_if_item_paid, update_payment_info, list_line_items
+from data.db_manager import check_if_item_paid, update_payment_info, list_line_items, check_if_order_has_payments
 from data.db_logger import db_logger
 
 def setup_folder_structure():
@@ -228,20 +228,10 @@ def process_s3_json_files(bucket_name, prefix):
             # Adapt record to expected format
             adapted_record = adapt_record_format(record, filename)
             
-            # Check if any line item has already been paid
+            # Check if order has any payments
             order_id = adapted_record.get("order_id")
-            already_paid = False
-            
-            for line in adapted_record.get("data", {}).get("line_items", []):
-                line_item_id = line.get("payment_id", {}).get("line_item_id")
-                
-                if line_item_id and check_if_item_paid(line_item_id, order_id):
-                    print(f"Skipping file {filename}: Line item {line_item_id} has already been paid. [Order ID: {order_id}]")
-                    print(f"  [DEBUG] Line: {line}")
-                    already_paid = True
-                    break
-            
-            if already_paid:
+            if order_id and check_if_order_has_payments(order_id):
+                print(f"Skipping file {filename}: Order {order_id} has already been paid.")
                 skipped_count += 1
                 continue
             
