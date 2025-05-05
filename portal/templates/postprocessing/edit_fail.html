@@ -1,65 +1,369 @@
-{% extends "main-layout.html" %}
+{% extends "base.html" %}
 
-{% block title %}Edit Failed File - Postprocessing{% endblock %}
+{% block title %}Edit Postprocessing Fail - Bill Review Portal{% endblock %}
 
-{% block main %}
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>Edit Failed File</h1>
-        <a href="{{ url_for('postprocessing.fails') }}" class="btn btn-secondary">
-            <i class="fas fa-arrow-left"></i> Back to Summary
-        </a>
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="d-flex align-items-center">
+            <h1 class="mb-0">{{ filename }}</h1>
+            <div class="ms-3">
+                <span class="badge bg-secondary">{{ current_index }} of {{ total_files }}</span>
+                {% if fails_count > 0 %}
+                <span class="badge bg-danger ms-2">{{ fails_count }} total</span>
+                {% endif %}
+            </div>
+        </div>
+        <div class="d-flex gap-2">
+            {% if prev_file %}
+            <a href="{{ url_for('postprocessing.view_fail_file', filename=prev_file) }}{% if filter_query %}{{ filter_query }}{% endif %}" 
+               class="btn btn-outline-secondary">
+                <i class="fas fa-chevron-left me-1"></i>Previous
+            </a>
+            {% endif %}
+            <a href="{{ url_for('postprocessing.list_fail_files') }}{% if filter_query %}{{ filter_query }}{% endif %}" class="btn btn-outline-secondary">
+                Back to List
+            </a>
+            {% if next_file %}
+            <a href="{{ url_for('postprocessing.view_fail_file', filename=next_file) }}{% if filter_query %}{{ filter_query }}{% endif %}" 
+               class="btn btn-outline-secondary">
+                Next<i class="fas fa-chevron-right ms-1"></i>
+            </a>
+            {% endif %}
+            <button id="view-pdf" class="btn btn-outline-primary">
+                <i class="fas fa-file-pdf me-1"></i>View PDF
+            </button>
+            <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#escalateModal">
+                <i class="fas fa-exclamation-triangle me-1"></i>Escalate
+            </button>
+            <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#denyModal">
+                <i class="fas fa-ban me-1"></i>Deny Bill
+            </button>
+            <button type="button" class="btn btn-warning" data-toggle="modal" data-target="#garbageModal">
+                <i class="fas fa-trash me-1"></i>Send to Garbage
+            </button>
+        </div>
     </div>
 
-    <div class="card mb-4">
-        <div class="card-header">
-            <h5 class="card-title mb-0">File Information</h5>
+    <!-- Validation Information Section -->
+    <div class="mb-4">
+        <div class="card mb-3">
+            <div class="card-header bg-danger text-white">
+                <h3 class="card-title mb-0">Validation Failures</h3>
         </div>
         <div class="card-body">
-            <div class="row">
-                <div class="col-md-6">
-                    <p><strong>Filename:</strong> {{ file.filename }}</p>
-                    <p><strong>Provider:</strong> {{ file.provider }}</p>
-                    <p><strong>Age:</strong> {{ file.age_days }} days</p>
-                </div>
-                <div class="col-md-6">
-                    <p><strong>Failure Types:</strong></p>
-                    {% for failure in file.failure_types %}
-                    <span class="badge bg-danger">{{ failure }}</span>
+                <ul class="list-group">
+                    {% for reason in json_data.validation_info.failure_reasons %}
+                        <li class="list-group-item list-group-item-danger">{{ reason }}</li>
                     {% endfor %}
-                </div>
+                </ul>
             </div>
         </div>
     </div>
 
-    <div class="card">
-        <div class="card-header">
-            <h5 class="card-title mb-0">File Content</h5>
+    <form method="POST" action="{{ url_for('postprocessing.save_fail', filename=filename) }}">
+        <!-- Add hidden field for filter parameters -->
+        {% if filter_params %}
+        <input type="hidden" name="filter_params" value="{{ filter_params|tojson }}">
+        {% endif %}
+        
+        <div class="row">
+            <!-- LEFT SIDE: HCFA Data -->
+            <div class="col-md-6">
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h3 class="card-title mb-0">HCFA Information</h3>
         </div>
         <div class="card-body">
-            <form method="POST" action="{{ url_for('postprocessing.save_fail', filename=file.filename) }}">
-                <div class="mb-3">
-                    <label for="fileContent" class="form-label">Edit JSON Content</label>
-                    <textarea class="form-control" id="fileContent" name="content" rows="20" style="font-family: monospace;">{{ file.content }}</textarea>
+                        <!-- Patient Info Section -->
+                        <div class="mb-4">
+                            <h4>Patient Information</h4>
+                            <div class="row g-3">
+                                <div class="col-md-12">
+                                    <label class="form-label">Patient Name</label>
+                                    <input type="text" class="form-control" name="patient_info[patient_name]" 
+                                           value="{{ json_data.patient_info.patient_name }}">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Date of Birth</label>
+                                    <input type="text" class="form-control" name="patient_info[patient_dob]" 
+                                           value="{{ json_data.patient_info.patient_dob }}">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">ZIP Code</label>
+                                    <input type="text" class="form-control" name="patient_info[patient_zip]" 
+                                           value="{{ json_data.patient_info.patient_zip }}">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Billing Info Section -->
+                        <div class="mb-4">
+                            <h4>Billing Information</h4>
+                            <div class="row g-3">
+                                <div class="col-md-12">
+                                    <label class="form-label">Provider Name</label>
+                                    <input type="text" class="form-control" name="billing_info[billing_provider_name]" 
+                                           value="{{ json_data.billing_info.billing_provider_name }}">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Provider NPI</label>
+                                    <input type="text" class="form-control" name="billing_info[billing_provider_npi]" 
+                                           value="{{ json_data.billing_info.billing_provider_npi }}">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Provider TIN</label>
+                                    <input type="text" class="form-control" name="billing_info[billing_provider_tin]" 
+                                           value="{{ json_data.billing_info.billing_provider_tin }}">
+                                </div>
+                                <div class="col-md-12">
+                                    <label class="form-label">Provider Address</label>
+                                    <input type="text" class="form-control" name="billing_info[billing_provider_address]" 
+                                           value="{{ json_data.billing_info.billing_provider_address }}">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Account Number</label>
+                                    <input type="text" class="form-control" name="billing_info[patient_account_no]" 
+                                           value="{{ json_data.billing_info.patient_account_no }}">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Total Charge</label>
+                                    <input type="text" class="form-control" name="billing_info[total_charge]" 
+                                           value="{{ json_data.billing_info.total_charge }}">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Service Lines Section -->
+                        <div class="mb-4">
+                            <h4>Service Lines</h4>
+                            <div id="hcfa-service-lines">
+                                {% for line in json_data.service_lines %}
+                                <div class="service-line border rounded p-3 mb-3" data-index="{{ loop.index0 }}">
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label">CPT Code</label>
+                                            <input type="text" class="form-control" 
+                                                   name="service_lines[{{ loop.index0 }}][cpt_code]" 
+                                                   value="{{ line.cpt_code }}">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label">Charge Amount</label>
+                                            <input type="text" class="form-control" 
+                                                   name="service_lines[{{ loop.index0 }}][charge_amount]" 
+                                                   value="{{ line.charge_amount }}">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label">Date of Service</label>
+                                            <input type="text" class="form-control" 
+                                                   name="service_lines[{{ loop.index0 }}][date_of_service]" 
+                                                   value="{{ line.date_of_service }}" readonly>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label">Units</label>
+                                            <input type="text" class="form-control" 
+                                                   name="service_lines[{{ loop.index0 }}][units]" 
+                                                   value="{{ line.units }}">
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label">Place of Service</label>
+                                            <input type="text" class="form-control" 
+                                                   name="service_lines[{{ loop.index0 }}][place_of_service]" 
+                                                   value="{{ line.place_of_service }}" readonly>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label">Diagnosis</label>
+                                            <input type="text" class="form-control" 
+                                                   name="service_lines[{{ loop.index0 }}][diagnosis_pointer]" 
+                                                   value="{{ line.diagnosis_pointer }}" readonly>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label">Modifiers</label>
+                                            <input type="text" class="form-control" 
+                                                   name="service_lines[{{ loop.index0 }}][modifiers]" 
+                                                   value="{{ line.modifiers|join(',') if line.modifiers else '' }}">
+                                        </div>
+                                        <div class="col-md-8">
+                                            <label class="form-label">Procedure Description</label>
+                                            <input type="text" class="form-control" 
+                                                   value="{{ line.proc_desc }}" readonly>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label">Category</label>
+                                            <input type="text" class="form-control" 
+                                                   value="{{ line.category }}" readonly>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <!-- Mapping Info Section -->
+                        <div class="mb-4">
+                            <h4>Mapping Information</h4>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Order ID</label>
+                                    <input type="text" class="form-control" value="{{ json_data.mapping_info.order_id }}" readonly>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">FileMaker Number</label>
+                                    <input type="text" class="form-control" value="{{ json_data.mapping_info.filemaker_number }}" readonly>
+                                </div>
+                                <div class="col-md-12">
+                                    <label class="form-label">Mapping Date</label>
+                                    <input type="text" class="form-control" value="{{ json_data.mapping_info.mapping_date }}" readonly>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="d-flex justify-content-between">
-                    <button type="submit" class="btn btn-primary">Save Changes</button>
-                    <a href="{{ url_for('postprocessing.move_fail', filename=file.filename) }}" class="btn btn-success">
-                        Move to Ready for Process
-                    </a>
+            </div>
+
+            <!-- RIGHT SIDE: FileMaker Data -->
+            <div class="col-md-6">
+                <div class="card mb-4">
+                    <div class="card-header bg-success text-white">
+                        <h3 class="card-title mb-0">FileMaker Information</h3>
+                    </div>
+                    <div class="card-body">
+                        <!-- Order Section -->
+                        <div class="mb-4">
+                            <h4>Order Details</h4>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Order ID</label>
+                                    <input type="text" class="form-control" value="{{ json_data.filemaker.order.Order_ID }}" readonly>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">FileMaker Record Number</label>
+                                    <input type="text" class="form-control" value="{{ json_data.filemaker.order.FileMaker_Record_Number }}" readonly>
+                                </div>
+                                <div class="col-md-8">
+                                    <label class="form-label">Patient Name</label>
+                                    <input type="text" class="form-control" value="{{ json_data.filemaker.order.PatientName }}" readonly>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Date of Birth</label>
+                                    <input type="text" class="form-control" value="{{ json_data.filemaker.order.Patient_DOB }}" readonly>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            </form>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-12">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save me-1"></i>Save Changes
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Escalate Modal -->
+<div class="modal fade" id="escalateModal" tabindex="-1" role="dialog" aria-labelledby="escalateModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="escalateModalLabel">Escalate Bill</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="escalateForm" method="POST" action="{{ url_for('postprocessing.escalate_fail_file', filename=filename) }}">
+                    <div class="form-group">
+                        <label for="escalation_reason">Reason for Escalation</label>
+                        <textarea class="form-control" id="escalation_reason" name="escalation_reason" rows="3" required></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <button type="submit" form="escalateForm" class="btn btn-danger">Escalate</button>
+            </div>
         </div>
     </div>
 </div>
 
-<style>
-textarea {
-    white-space: pre;
-    font-family: monospace;
-}
-.badge {
-    margin-right: 5px;
-}
-</style>
+<!-- Deny Modal -->
+<div class="modal fade" id="denyModal" tabindex="-1" role="dialog" aria-labelledby="denyModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="denyModalLabel">Deny Bill</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="denyForm" method="POST" action="{{ url_for('postprocessing.deny_fail_file', filename=filename) }}">
+                    <div class="form-group">
+                        <label for="denial_reason">Reason for Denial</label>
+                        <textarea class="form-control" id="denial_reason" name="denial_reason" rows="3" required></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <button type="submit" form="denyForm" class="btn btn-danger">Deny</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Garbage Modal -->
+<div class="modal fade" id="garbageModal" tabindex="-1" role="dialog" aria-labelledby="garbageModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="garbageModalLabel">Send to Garbage</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="garbageForm" method="POST" action="{{ url_for('postprocessing.send_to_garbage', filename=filename) }}">
+                    <div class="form-group">
+                        <label for="garbage_reason">Reason for Sending to Garbage</label>
+                        <textarea class="form-control" id="garbage_reason" name="garbage_reason" rows="3" required></textarea>
+                </div>
+            </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <button type="submit" form="garbageForm" class="btn btn-warning">Send to Garbage</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // View PDF button handler
+    document.getElementById('view-pdf').addEventListener('click', function() {
+        fetch(`{{ url_for('postprocessing.get_fail_pdf_url', filename=filename) }}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.url) {
+                    window.open(data.url, '_blank');
+                } else {
+                    alert('Error: Could not generate PDF URL');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error: Could not generate PDF URL');
+            });
+    });
+});
+</script>
 {% endblock %} 

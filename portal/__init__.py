@@ -108,5 +108,50 @@ def create_app():
         except Exception as e:
             logger.error(f"Error during summary refresh: {str(e)}")
             return 1
+
+    @app.cli.command('refresh-postprocess-fails')
+    def refresh_postprocess_fails_command():
+        """Refresh the postprocess_fails_summary.json file from S3 fails directory."""
+        try:
+            logger.info("Starting postprocess fails summary refresh...")
+            
+            # Get the project root directory
+            project_root = Path(__file__).resolve().parents[1]
+            
+            # Path to the generate_postprocess_fails_summary.py script
+            script_path = project_root / 'postprocess' / 'utils' / 'generate_postprocess_fails_summary.py'
+            
+            # Ensure the script exists
+            if not script_path.exists():
+                logger.error(f"Refresh script not found at {script_path}")
+                sys.exit(1)
+            
+            # Execute the script as a subprocess
+            result = subprocess.run(
+                [sys.executable, str(script_path)],
+                capture_output=True,
+                text=True
+            )
+            
+            # Log the output
+            if result.stdout:
+                for line in result.stdout.strip().split('\n'):
+                    logger.info(f"Script output: {line}")
+                    
+            if result.stderr:
+                for line in result.stderr.strip().split('\n'):
+                    logger.error(f"Script error: {line}")
+            
+            # Check the return code
+            if result.returncode == 0:
+                logger.info("Postprocess fails summary refresh completed successfully")
+            else:
+                logger.error(f"Postprocess fails summary refresh failed with exit code {result.returncode}")
+                
+            return result.returncode
+            
+        except Exception as e:
+            logger.error(f"Error during postprocess fails summary refresh: {str(e)}")
+            return 1
     
     return app 
