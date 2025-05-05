@@ -1,0 +1,65 @@
+{% extends "main-layout.html" %}
+
+{% block title %}Edit Failed File - Postprocessing{% endblock %}
+
+{% block main %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Edit Failed File</h1>
+        <a href="{{ url_for('postprocessing.fails') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Summary
+        </a>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="card-title mb-0">File Information</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>Filename:</strong> {{ file.filename }}</p>
+                    <p><strong>Provider:</strong> {{ file.provider }}</p>
+                    <p><strong>Age:</strong> {{ file.age_days }} days</p>
+                </div>
+                <div class="col-md-6">
+                    <p><strong>Failure Types:</strong></p>
+                    {% for failure in file.failure_types %}
+                    <span class="badge bg-danger">{{ failure }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h5 class="card-title mb-0">File Content</h5>
+        </div>
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('postprocessing.save_fail', filename=file.filename) }}">
+                <div class="mb-3">
+                    <label for="fileContent" class="form-label">Edit JSON Content</label>
+                    <textarea class="form-control" id="fileContent" name="content" rows="20" style="font-family: monospace;">{{ file.content }}</textarea>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                    <a href="{{ url_for('postprocessing.move_fail', filename=file.filename) }}" class="btn btn-success">
+                        Move to Ready for Process
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+textarea {
+    white-space: pre;
+    font-family: monospace;
+}
+.badge {
+    margin-right: 5px;
+}
+</style>
+{% endblock %} 

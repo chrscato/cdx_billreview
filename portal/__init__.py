@@ -25,6 +25,10 @@ def create_app():
     app.config['REMEMBER_COOKIE_SECURE'] = False  # Set to True if using HTTPS
     app.config['REMEMBER_COOKIE_HTTPONLY'] = True
     
+    # Set default directories
+    app.config['FAILS_DIR'] = os.path.join(app.root_path, 'data', 'fails')
+    app.config['READYFORPROCESS_DIR'] = os.path.join(app.root_path, 'data', 'readyforprocess')
+    
     # Initialize Flask-Login
     login_manager = LoginManager()
     login_manager.init_app(app)

@@ -28,13 +28,6 @@ logging.basicConfig(
     ]
 )
 
-def generate_order_id(fmr, patient_info):
-    last_name = patient_info.get('Patient_Last_Name', '')
-    first_name = patient_info.get('Patient_First_Name', '')
-    patient_name = patient_info.get('PatientName', '')
-    name_part = f"{last_name}{first_name}".strip() if last_name or first_name else patient_name.strip() if patient_name else "UNKNOWN"
-    name_part = re.sub(r'[^a-zA-Z0-9]', '', name_part)[:10].upper()
-    return f"ORD-{fmr}-{name_part}"
 
 def clean_and_insert_from_csv(csv_path, db_path):
     if not os.path.exists(csv_path):
@@ -103,7 +96,11 @@ def clean_and_insert_from_csv(csv_path, db_path):
                     'Patient_First_Name': row.get('Patient_First_Name'),
                     'PatientName': row.get('PatientName')
                 }
-                order_id = generate_order_id(fmr, patient_info)
+                order_id = row.get('Order_ID')
+                if not order_id:
+                    skipped_rows += 1
+                    continue
+
                 if fmr in order_id_map:
                     if order_id not in order_id_map[fmr]:
                         order_id_map[fmr].append(order_id)
@@ -267,7 +264,7 @@ if __name__ == "__main__":
         csv_path = sys.argv[1]
         db_path = sys.argv[2]
     else:
-        csv_path = r"C:\Users\ChristopherCato\Downloads\li_export_5.1.csv"
+        csv_path = r"C:\Users\ChristopherCato\Downloads\5.csv"
         db_path = r"C:\Users\ChristopherCato\OneDrive - clarity-dx.com\code\bill_review\filemaker.db"
     logging.info(f"Starting import from {csv_path} to {db_path}")
     success = clean_and_insert_from_csv(csv_path, db_path)

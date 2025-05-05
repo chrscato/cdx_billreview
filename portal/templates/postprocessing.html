@@ -7,15 +7,63 @@
     <h1>Postprocessing</h1>
     <p class="lead">Review and finalize your processed bills.</p>
     <hr>
+
+    <!-- Fails Summary Card -->
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0">Failed Files Summary</h5>
+            <a href="{{ url_for('postprocessing.fails') }}" class="btn btn-primary btn-sm">
+                View All Failed Files
+            </a>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <h6>Total Failed Files</h6>
+                        <h3>{{ stats.total_files }}</h3>
+                    </div>
+                </div>
+                {% for failure_type, count in stats.failure_types.items() %}
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <h6>{{ failure_type }}</h6>
+                        <h3>{{ count }}</h3>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Coming Soon Panel -->
     <div class="panel">
         <div class="panel-heading">
             <h5 class="panel-title">Coming Soon</h5>
         </div>
         <div class="panel-body">
             <div class="alert alert-info mb-0">
-                This section will be implemented soon with bill finalization features.
+                Additional bill finalization features will be implemented soon.
             </div>
         </div>
     </div>
 </div>
+
+<style>
+.stat-card {
+    text-align: center;
+    padding: 15px;
+    border-radius: 5px;
+    background-color: #f8f9fa;
+    margin-bottom: 15px;
+}
+.stat-card h6 {
+    color: #6c757d;
+    margin-bottom: 5px;
+}
+.stat-card h3 {
+    margin: 0;
+    color: #0d6efd;
+}
+</style>
 {% endblock %} 

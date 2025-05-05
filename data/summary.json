@@ -1,0 +1,1380 @@
+[
+  {
+    "filename": "20241217_1028.json",
+    "provider": "RICHMOND COMMUNITY HOSPITAL",
+    "failure_types": [
+      "RATE_MISSING"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20241217_1042.json",
+    "provider": "PARTNERS IMAGING CENTER",
+    "failure_types": [
+      "RATE_MISSING"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20241217_1060.json",
+    "provider": "ADVANTACARE MULTI-SPECIALTY GROUP, LLC",
+    "failure_types": [],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20241217_1077.json",
+    "provider": "WINCHESTER OPEN MRI",
+    "failure_types": [
+      "RATE_MISSING"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20241217_1083.json",
+    "provider": "Ochsner Imaging Center",
+    "failure_types": [],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20241217_1087.json",
+    "provider": "Goldoro Developments, Inc",
+    "failure_types": [
+      "RATE_MISSING"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20241217_1095.json",
+    "provider": "Tower Imaging LLC",
+    "failure_types": [
+      "RATE_MISSING"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20241217_1099.json",
+    "provider": "Tower Imaging LLC",
+    "failure_types": [
+      "RATE_MISSING"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20241217_1106.json",
+    "provider": "Tower Imaging LLC",
+    "failure_types": [
+      "RATE_MISSING"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20241217_1110.json",
+    "provider": "RADIOLOGY & IMAGING SPECIALISTS OF LAKELAND",
+    "failure_types": [
+      "INVALID_UNITS"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20241217_1124.json",
+    "provider": "ST MARYS HOSPITAL",
+    "failure_types": [
+      "RATE_MISSING"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20241217_1128.json",
+    "provider": "WINCHESTER OPEN MRI",
+    "failure_types": [
+      "RATE_MISSING"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20241217_1143.json",
+    "provider": "RADIOLOGY ASSOC. OF RICHMOND",
+    "failure_types": [
+      "INVALID_TIN"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20241217_1168.json",
+    "provider": "METROLINA NEURODIAGNOSTIC CENTER",
+    "failure_types": [],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20241217_1210.json",
+    "provider": "Radiology Regional",
+    "failure_types": [
+      "RATE_MISSING"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20241217_1280.json",
+    "provider": "Indian River Health Services",
+    "failure_types": [
+      "RATE_MISSING"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250103_1023.json",
+    "provider": "Bright Light Medical Imaging - Melrose Park",
+    "failure_types": [
+      "INVALID_UNITS"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250109_1016.json",
+    "provider": "NEBRASKA HEALTH IMAGING LLC",
+    "failure_types": [
+      "RATE_MISSING"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250109_1017.json",
+    "provider": "ODC Huntsville",
+    "failure_types": [
+      "RATE_MISSING"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250109_1021.json",
+    "provider": "HOLMDEL IMAGING LLC",
+    "failure_types": [
+      "RATE_MISSING"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250109_1022.json",
+    "provider": "Diagnostic Health MRI of GADS",
+    "failure_types": [
+      "RATE_MISSING"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250109_1053.json",
+    "provider": "SimonMed Imaging FL LLC",
+    "failure_types": [
+      "RATE_MISSING"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250109_1113.json",
+    "provider": "Tower Imaging LLC",
+    "failure_types": [
+      "RATE_MISSING"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250112_1003.json",
+    "provider": "KHURANA RADIOLOGY MD PA DBA AD",
+    "failure_types": [
+      "RATE_MISSING"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250112_1018.json",
+    "provider": "UNITED HEALTH SERVICES",
+    "failure_types": [
+      "RATE_MISSING"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250112_1039.json",
+    "provider": "CHESTERFIELD IMAGING LLC",
+    "failure_types": [
+      "RATE_MISSING"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250114_1006.json",
+    "provider": "SIMONMED IMAGING FLORIDA LLC",
+    "failure_types": [],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250114_1028.json",
+    "provider": "SimonMed Imaging FL LLC",
+    "failure_types": [
+      "INVALID_UNITS"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250125_1002.json",
+    "provider": "METROLINA NEURODIAGNOSTIC CENTER",
+    "failure_types": [],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250125_1017.json",
+    "provider": "Hollywood Diagnostics Center",
+    "failure_types": [],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250129_1047.json",
+    "provider": "KROST, STUART B. M.D., P.A.",
+    "failure_types": [
+      "RATE_MISSING"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250129_1081.json",
+    "provider": "KROST, STUART B. M.D., P.A.",
+    "failure_types": [
+      "RATE_MISSING"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250129_1082.json",
+    "provider": "MRI of Southfield",
+    "failure_types": [
+      "RATE_MISSING"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250129_1086.json",
+    "provider": "AMERICAN HEALTH IMAGING OF GREENVILLE",
+    "failure_types": [],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250129_1113.json",
+    "provider": "GOOD SAMARITAN MED CTR",
+    "failure_types": [],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250129_1136.json",
+    "provider": "WINCHESTER OPEN MRI",
+    "failure_types": [
+      "RATE_MISSING"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250129_1139.json",
+    "provider": "WINCHESTER OPEN MRI",
+    "failure_types": [
+      "RATE_MISSING"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250204_1003.json",
+    "provider": "SimonMed Imaging FL LLC",
+    "failure_types": [],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250204_1036.json",
+    "provider": "ST FRANCIS MEDICAL CENTER",
+    "failure_types": [],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250204_1047.json",
+    "provider": "Radiology Associates of Hartford",
+    "failure_types": [],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250204_1052.json",
+    "provider": "OUTATIENT IMAGING ATLANTA",
+    "failure_types": [],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250204_1053.json",
+    "provider": "Mobile Open MRI, LLC",
+    "failure_types": [
+      "RATE_MISSING"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250204_1067.json",
+    "provider": "CHESTERFIELD IMAGING LLC",
+    "failure_types": [
+      "RATE_MISSING"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250204_1079.json",
+    "provider": "Tower Imaging LLC",
+    "failure_types": [],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250204_1080.json",
+    "provider": "Tower Imaging LLC",
+    "failure_types": [
+      "RATE_MISSING"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250206_1007.json",
+    "provider": "SMI IMAGING LLC",
+    "failure_types": [],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250208_1008.json",
+    "provider": "KROST, STUART B. M.D., P.A.",
+    "failure_types": [
+      "RATE_MISSING"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250212_1022.json",
+    "provider": "RADIOLOGY ASSOC. OF RICHMOND",
+    "failure_types": [
+      "INVALID_TIN"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250212_1032.json",
+    "provider": "EXPERT MRI, PC",
+    "failure_types": [],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250212_1033.json",
+    "provider": "EXPERT MRI, PC",
+    "failure_types": [],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250213_1033.json",
+    "provider": "ODC OF KNOXVILLE",
+    "failure_types": [
+      "RATE_MISSING"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250224_1015.json",
+    "provider": "SIMONMED IMAGING FLORIDA LLC",
+    "failure_types": [
+      "RATE_MISSING"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250224_1018.json",
+    "provider": "SIMONMED IMAGING FLORIDA LLC",
+    "failure_types": [],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250224_1019.json",
+    "provider": "SimonMed Imaging FL LLC",
+    "failure_types": [
+      "RATE_MISSING"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250224_1048.json",
+    "provider": "Radiology Associates of Venice",
+    "failure_types": [
+      "RATE_MISSING"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250224_1050.json",
+    "provider": "RADIOLOGY & IMAGING SPECIALISTS OF LAKELAND",
+    "failure_types": [
+      "RATE_MISSING"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250224_1075.json",
+    "provider": "MRI Associates of Winter Haven, LLC",
+    "failure_types": [
+      "RATE_MISSING"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250224_1082.json",
+    "provider": null,
+    "failure_types": [
+      "MISSING_BILLING_INFO"
+    ],
+    "provider_validation": {
+      "is_valid": false
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250224_1085.json",
+    "provider": "KROST, STUART B. M.D., P.A.",
+    "failure_types": [
+      "INVALID_UNITS"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250224_1108.json",
+    "provider": "ADVANCED IMAGING CONCEPTS PL",
+    "failure_types": [
+      "INVALID_UNITS"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250225_1000.json",
+    "provider": "Tower Imaging LLC dba TGH Imaging",
+    "failure_types": [
+      "INVALID_UNITS"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250225_1004.json",
+    "provider": "Tower Imaging LLC",
+    "failure_types": [
+      "INVALID_UNITS"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250225_1016.json",
+    "provider": null,
+    "failure_types": [
+      "MISSING_BILLING_INFO"
+    ],
+    "provider_validation": {
+      "is_valid": false
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250225_1070.json",
+    "provider": "Mecklenburg Diagnostic Imaging",
+    "failure_types": [
+      "RATE_MISSING"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250226_1003.json",
+    "provider": "MRI Associates of Brandon, LLC",
+    "failure_types": [
+      "INVALID_UNITS"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250319_105819046.json",
+    "provider": null,
+    "failure_types": [
+      "MISSING_BILLING_INFO"
+    ],
+    "provider_validation": {
+      "is_valid": false
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250319_105819053.json",
+    "provider": "Global Neuro & Spine Institute",
+    "failure_types": [
+      "RATE_MISSING"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250319_105819070.json",
+    "provider": "Precision Occupational Medical",
+    "failure_types": [
+      "RATE_MISSING"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250319_105819082.json",
+    "provider": "MONUMENT 9A IMAGING",
+    "failure_types": [
+      "INVALID_UNITS"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250319_105819093.json",
+    "provider": "RADIOLOGY & IMAGING SPECIALISTS OF LAKELAND",
+    "failure_types": [
+      "RATE_MISSING"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250319_105819103.json",
+    "provider": "Mobile Open MRI, LLC",
+    "failure_types": [
+      "RATE_MISSING"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250319_105819110.json",
+    "provider": "MRI Associates of Winter Haven, LLC",
+    "failure_types": [
+      "RATE_MISSING"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250319_105819114.json",
+    "provider": "Ultimate Diagnositc Center",
+    "failure_types": [
+      "INVALID_UNITS"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250319_105819124.json",
+    "provider": "SIMONMED IMAGING FLORIDA LLC",
+    "failure_types": [],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250319_105819125.json",
+    "provider": "SimonMed Imaging FL LLC",
+    "failure_types": [
+      "INVALID_UNITS"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250319_105819146.json",
+    "provider": "AMERICAN HEALTH IMAGING OF GREENVILLE",
+    "failure_types": [],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250319_114129025.json",
+    "provider": "KHURANA RADIOLOGY MD PA DBA AD",
+    "failure_types": [
+      "RATE_MISSING"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250319_114129033.json",
+    "provider": "MRI Associates of Winter Haven, LLC",
+    "failure_types": [
+      "RATE_MISSING"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250319_114129037.json",
+    "provider": "RAYUS RADIOLOGY",
+    "failure_types": [
+      "RATE_MISSING"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250319_114129056.json",
+    "provider": "Allegiance Imaging & Radiology",
+    "failure_types": [
+      "INVALID_UNITS"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250319_114129057.json",
+    "provider": "Specialty Spine, Sports & Pain Medicine",
+    "failure_types": [
+      "INVALID_CHARGE"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250319_114129060.json",
+    "provider": "Expert MRI, PC",
+    "failure_types": [
+      "INVALID_DOS"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250319_114129063.json",
+    "provider": "SimonMed Imaging FL LLC",
+    "failure_types": [
+      "RATE_MISSING"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250319_114129074.json",
+    "provider": "SimonMed Imaging FL LLC",
+    "failure_types": [
+      "RATE_MISSING"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250319_114129116.json",
+    "provider": "American Health Imaging of Georgia LLC",
+    "failure_types": [
+      "INVALID_UNITS"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250319_114129153.json",
+    "provider": "American Health Imaging of Georgia LLC",
+    "failure_types": [
+      "RATE_MISSING"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250321_135655002.json",
+    "provider": "Elite Imaging, LLC",
+    "failure_types": [
+      "INVALID_UNITS"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250321_135655037.json",
+    "provider": "KROST, STUART B. M.D., P.A.",
+    "failure_types": [
+      "RATE_MISSING"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250321_135655039.json",
+    "provider": "KROST, STUART B. M.D., P.A.",
+    "failure_types": [
+      "RATE_MISSING"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250321_135655047.json",
+    "provider": "Spring Hill MRI",
+    "failure_types": [
+      "RATE_MISSING"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250321_135655057.json",
+    "provider": "MONUMENT 9A IMAGING",
+    "failure_types": [
+      "RATE_MISSING"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250325_124127027.json",
+    "provider": "Touchstone Imaging - Round Rock",
+    "failure_types": [
+      "RATE_MISSING"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250325_124127036.json",
+    "provider": "RIVERSIDE IMAGING SPECIALISTS",
+    "failure_types": [
+      "INVALID_UNITS"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250325_124127040.json",
+    "provider": "WINCHESTER OPEN MRI",
+    "failure_types": [
+      "RATE_MISSING"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250325_124337005.json",
+    "provider": "Tower Imaging LLC",
+    "failure_types": [
+      "INVALID_UNITS"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250325_124337006.json",
+    "provider": "Tower Imaging LLC dba TGH Imaging",
+    "failure_types": [
+      "INVALID_UNITS"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250325_124337015.json",
+    "provider": "Tower Imaging LLC dba TGH Imaging",
+    "failure_types": [
+      "RATE_MISSING"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250325_124337020.json",
+    "provider": "Florida Diagnostic Imaging Center, Inc.",
+    "failure_types": [
+      "RATE_MISSING"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250325_124337033.json",
+    "provider": "SimonMed Imaging FL LLC",
+    "failure_types": [
+      "RATE_MISSING"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250325_124337042.json",
+    "provider": "EXPERT MRI, PC",
+    "failure_types": [],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250325_124337043.json",
+    "provider": "EXPERT MRI, PC",
+    "failure_types": [],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250325_124337062.json",
+    "provider": "Elite Imaging, LLC",
+    "failure_types": [
+      "INVALID_UNITS"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250325_124337063.json",
+    "provider": "RADIOLOGY ASSOCIATES OF VENICE",
+    "failure_types": [],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250325_124413006.json",
+    "provider": null,
+    "failure_types": [
+      "MISSING_BILLING_INFO"
+    ],
+    "provider_validation": {
+      "is_valid": false
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250325_124413007.json",
+    "provider": "EXPERT MRI, PC",
+    "failure_types": [],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250325_124413008.json",
+    "provider": "EXPERT MRI, PC",
+    "failure_types": [],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250325_124413019.json",
+    "provider": "SimonMed Imaging FL LLC",
+    "failure_types": [
+      "RATE_MISSING"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250325_124413033.json",
+    "provider": "SimonMed Imaging FL LLC",
+    "failure_types": [
+      "RATE_MISSING"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250325_124413053.json",
+    "provider": "OUTATIENT IMAGING ATLANTA",
+    "failure_types": [
+      "RATE_MISSING"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250403_093311017.json",
+    "provider": "Mecklenburg Diagnostic Imaging",
+    "failure_types": [
+      "RATE_MISSING"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250403_093311045.json",
+    "provider": "SimonMed Imaging FL LLC",
+    "failure_types": [
+      "INVALID_UNITS"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250403_093314013.json",
+    "provider": "RAYUS RADIOLOGY",
+    "failure_types": [
+      "RATE_MISSING"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250403_093314054.json",
+    "provider": "MONUMENT 9A IMAGING",
+    "failure_types": [
+      "RATE_MISSING"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250403_093314056.json",
+    "provider": "NSI MELBOURNE",
+    "failure_types": [
+      "INVALID_UNITS"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250408_154523030.json",
+    "provider": "Radiology Regional",
+    "failure_types": [
+      "INVALID_UNITS"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250408_154523032.json",
+    "provider": "CHESTERFIELD IMAGING LLC",
+    "failure_types": [
+      "RATE_MISSING"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250408_154523072.json",
+    "provider": "AMERICAN HEALTH IMAGING OF ALABAMA LLC",
+    "failure_types": [
+      "RATE_MISSING"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250408_154523085.json",
+    "provider": "American Health Imaging of Georgia LLC",
+    "failure_types": [],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250408_154523087.json",
+    "provider": "JOHNSON COUNTY IMAGING",
+    "failure_types": [
+      "RATE_MISSING"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250408_154523093.json",
+    "provider": "Radiology Regional",
+    "failure_types": [
+      "RATE_MISSING"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250408_154523098.json",
+    "provider": "THE MEDICAL IMAGING PARTNERSHIP JA",
+    "failure_types": [
+      "INVALID_UNITS"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250408_154635026.json",
+    "provider": "American Health Imaging of Georgia LLC",
+    "failure_types": [],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250408_154635037.json",
+    "provider": "Bright Light Medical Imaging - Melrose Park",
+    "failure_types": [
+      "RATE_MISSING"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250408_154635044.json",
+    "provider": "IOWA DIAGNOSTIC IMAGING",
+    "failure_types": [
+      "INVALID_UNITS"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250408_154635056.json",
+    "provider": null,
+    "failure_types": [
+      "MISSING_BILLING_INFO"
+    ],
+    "provider_validation": {
+      "is_valid": false
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250419_230540_01_024.json",
+    "provider": "INSTITUTE OF DIAGNOSTIC IMAGING",
+    "failure_types": [
+      "INVALID_UNITS"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250421_000028_01_100.json",
+    "provider": "MRI Associates of Winter Haven, LLC",
+    "failure_types": [
+      "RATE_MISSING"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250421_000028_01_101.json",
+    "provider": "MRI Associates of Winter Haven, LLC",
+    "failure_types": [
+      "RATE_MISSING"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250421_000028_01_116.json",
+    "provider": "RAYUS RADIOLOGY",
+    "failure_types": [
+      "RATE_MISSING"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  },
+  {
+    "filename": "20250421_000028_01_123.json",
+    "provider": "Elite Imaging, LLC",
+    "failure_types": [
+      "RATE_MISSING"
+    ],
+    "provider_validation": {
+      "is_valid": true
+    },
+    "age_days": 0
+  }
+]

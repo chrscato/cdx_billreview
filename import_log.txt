@@ -4,3 +4,15 @@
 2025-05-01 02:13:24,060 - INFO - Orders inserted: 3308
 2025-05-01 02:13:24,062 - INFO - Line items inserted: 2594, updated: 1846
 2025-05-01 02:13:24,212 - INFO - Import completed successfully
+2025-05-04 17:26:51,447 - INFO - Starting import from C:\Users\ChristopherCato\Downloads\5.csv to C:\Users\ChristopherCato\OneDrive - clarity-dx.com\code\bill_review\filemaker.db
+2025-05-04 17:26:51,549 - INFO - Found 0 duplicate FMRs
+2025-05-04 17:26:51,550 - INFO - Processing 0 orders and 0 line items
+2025-05-04 17:26:51,551 - INFO - Orders inserted: 0
+2025-05-04 17:26:51,551 - INFO - Line items inserted: 0, updated: 0
+2025-05-04 17:26:51,551 - INFO - Import completed successfully
+2025-05-04 17:28:34,247 - INFO - Starting import from C:\Users\ChristopherCato\Downloads\5.csv to C:\Users\ChristopherCato\OneDrive - clarity-dx.com\code\bill_review\filemaker.db
+2025-05-04 17:28:34,443 - INFO - Found 27 duplicate FMRs
+2025-05-04 17:28:34,459 - INFO - Processing 2006 orders and 4039 line items
+2025-05-04 17:29:10,253 - INFO - Orders inserted: 2006
+2025-05-04 17:29:10,254 - INFO - Line items inserted: 3929, updated: 110
+2025-05-04 17:29:10,258 - INFO - Import completed successfully

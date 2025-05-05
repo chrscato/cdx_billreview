@@ -25,7 +25,7 @@
                         <a href="{{ url_for('processing.processing') }}"><i class="fas fa-cogs me-2"></i> Processing</a>
                     </li>
                     <li class="{{ 'active' if request.path.startswith('/postprocessing') }}">
-                        <a href="{{ url_for('postprocessing.postprocessing') }}"><i class="fas fa-file-export me-2"></i> Postprocessing</a>
+                        <a href="{{ url_for('postprocessing.index') }}"><i class="fas fa-file-export me-2"></i> Postprocessing</a>
                     </li>
                 </ul>
                 <ul class="nav navbar-nav navbar-right">

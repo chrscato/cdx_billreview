@@ -1,0 +1,99 @@
+{% extends "main-layout.html" %}
+
+{% block title %}Failed Files - Postprocessing{% endblock %}
+
+{% block main %}
+<div class="container mt-4">
+    <h1>Failed Files Summary</h1>
+    <p class="lead">Review and manage failed validation files.</p>
+    <hr>
+
+    <!-- Statistics Panel -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="card-title mb-0">Failure Statistics</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <h6>Total Failed Files</h6>
+                        <h3>{{ stats.total_files }}</h3>
+                    </div>
+                </div>
+                {% for failure_type, count in stats.failure_types.items() %}
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <h6>{{ failure_type }}</h6>
+                        <h3>{{ count }}</h3>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Files Table -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="card-title mb-0">Failed Files</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Filename</th>
+                            <th>Provider</th>
+                            <th>Age (days)</th>
+                            <th>Failure Types</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for file in files %}
+                        <tr>
+                            <td>{{ file.filename }}</td>
+                            <td>{{ file.provider }}</td>
+                            <td>{{ file.age_days }}</td>
+                            <td>
+                                {% for failure in file.failure_types %}
+                                <span class="badge bg-danger">{{ failure }}</span>
+                                {% endfor %}
+                            </td>
+                            <td>
+                                <a href="{{ url_for('postprocessing.edit_fail', filename=file.filename) }}" 
+                                   class="btn btn-sm btn-primary">
+                                    View Details
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.stat-card {
+    text-align: center;
+    padding: 15px;
+    border-radius: 5px;
+    background-color: #f8f9fa;
+    margin-bottom: 15px;
+}
+.stat-card h6 {
+    color: #6c757d;
+    margin-bottom: 5px;
+}
+.stat-card h3 {
+    margin: 0;
+    color: #0d6efd;
+}
+.badge {
+    margin-right: 5px;
+}
+</style>
+{% endblock %} 

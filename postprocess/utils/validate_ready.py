@@ -23,6 +23,8 @@ logger = logging.getLogger(__name__)
 # Directories
 READY_DIR = 'data/hcfa_json/readyforprocess/'
 EOBR_READY_DIR = 'data/hcfa_json/EOBR_ready/'
+FAILS_DIR = 'data/hcfa_json/readyforprocess/fails/'
+LOCAL_DATA_DIR = os.path.join(project_root, 'data')
 
 # Database configuration
 PROC_DB_PATH = os.getenv("PROC_DB_PATH", "filemaker.db")
@@ -171,6 +173,24 @@ def validate_rates(data: Dict[str, Any]) -> Dict[str, Any]:
     
     return results
 
+def clean_modifiers(modifiers: List[str]) -> List[str]:
+    """Clean and normalize modifiers, keeping only TC/26 and LT/RT if present."""
+    if not modifiers:
+        return []
+        
+    # Keep only allowed modifiers
+    allowed_mods = {'LT', 'RT', '26', 'TC'}
+    cleaned = [mod for mod in modifiers if mod in allowed_mods]
+    
+    # If we have both TC and 26, keep only the first one
+    if 'TC' in cleaned and '26' in cleaned:
+        cleaned = [mod for mod in cleaned if mod != '26']
+    
+    # If we have both LT and RT, keep only the first one
+    if 'LT' in cleaned and 'RT' in cleaned:
+        cleaned = [mod for mod in cleaned if mod != 'RT']
+    
+    return cleaned
 
 def validate_field_formats(data: Dict[str, Any]) -> List[str]:
     """
@@ -234,12 +254,13 @@ def validate_field_formats(data: Dict[str, Any]) -> List[str]:
             if not parsed:
                 errors.append(f"Service line {idx+1}: Invalid date_of_service format ({dos})")
 
-        # 5.2 Validate modifiers
+        # 5.2 Clean and normalize modifiers
         modifiers = line.get('modifiers', [])
         if modifiers:
-            allowed_mods = {'LT', 'RT', '26', 'TC'}
-            if not all(mod in allowed_mods for mod in modifiers):
-                errors.append(f"Service line {idx+1}: Invalid modifier(s) {modifiers}")
+            cleaned_modifiers = clean_modifiers(modifiers)
+            if cleaned_modifiers != modifiers:
+                line['modifiers'] = cleaned_modifiers
+                logger.info(f"Cleaned modifiers in service line {idx+1}: {modifiers} -> {cleaned_modifiers}")
 
         # 5.3 Validate charge_amount
         charge = line.get('charge_amount')
@@ -311,6 +332,74 @@ def validate_json_structure(data: Dict[str, Any]) -> List[str]:
     
     return errors
 
+def categorize_failures(validation_errors: List[str], rate_results: Optional[Dict[str, Any]]) -> List[str]:
+    """Categorize validation errors into standardized failure types."""
+    failure_types = []
+    
+    # Check for rate-related failures
+    if rate_results and not rate_results['rate_check_passed']:
+        if rate_results['missing_rates']:
+            failure_types.append('RATE_MISSING')
+        if any('Missing provider TIN' in err for err in rate_results['errors']):
+            failure_types.append('MISSING_TIN')
+        if any('Missing Order ID' in err for err in rate_results['errors']):
+            failure_types.append('MISSING_ORDER_ID')
+    
+    # Check for structure and format errors
+    for error in validation_errors:
+        if 'Invalid TIN format' in error:
+            failure_types.append('INVALID_TIN')
+        elif 'Missing required billing field' in error:
+            failure_types.append('MISSING_BILLING_INFO')
+        elif 'Invalid patient DOB format' in error:
+            failure_types.append('INVALID_DOB')
+        elif 'Invalid date_of_service format' in error:
+            failure_types.append('INVALID_DOS')
+        elif 'Invalid modifier' in error:
+            failure_types.append('INVALID_MODIFIER')
+        elif 'Charge amount not positive' in error:
+            failure_types.append('INVALID_CHARGE')
+        elif 'Units must be a positive integer' in error:
+            failure_types.append('INVALID_UNITS')
+        elif 'Missing required field' in error:
+            failure_types.append('MISSING_REQUIRED_FIELD')
+    
+    return list(set(failure_types))  # Remove duplicates
+
+def generate_failure_summary(file_key: str, data: Dict[str, Any], validation_errors: List[str], 
+                           rate_results: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+    """Generate a summary entry for a failed validation."""
+    provider_name = data.get('filemaker', {}).get('provider', {}).get('Billing Name', 'Unknown Provider')
+    
+    # Check provider validation
+    provider_validation = {
+        'is_valid': True
+    }
+    billing_fields = ['Billing Address 1', 'Billing Address City', 'Billing Address State', 
+                     'Billing Address Postal Code', 'Billing Name']
+    for field in billing_fields:
+        if not data.get('filemaker', {}).get('provider', {}).get(field):
+            provider_validation['is_valid'] = False
+            break
+    
+    # Calculate file age in days
+    file_date = data.get('filemaker', {}).get('order', {}).get('Order_Date')
+    age_days = 0
+    if file_date:
+        try:
+            file_dt = datetime.strptime(file_date, '%Y-%m-%d')
+            age_days = (datetime.now() - file_dt).days
+        except:
+            pass
+    
+    return {
+        'filename': os.path.basename(file_key),
+        'provider': provider_name,
+        'failure_types': categorize_failures(validation_errors, rate_results),
+        'provider_validation': provider_validation,
+        'age_days': age_days
+    }
+
 def validate_ready_files(test_files: List[str] = None) -> Dict[str, Any]:
     """
     Validate files in the readyforprocess directory.
@@ -324,7 +413,8 @@ def validate_ready_files(test_files: List[str] = None) -> Dict[str, Any]:
         'invalid_files': 0,
         'file_details': {},
         'summary_errors': [],
-        'moved_files': []
+        'moved_files': [],
+        'failed_files': []
     }
     
     try:
@@ -382,22 +472,13 @@ def validate_ready_files(test_files: List[str] = None) -> Dict[str, Any]:
                             'status': 'PASS'
                         }
 
-                        # Print the updated JSON before uploading/moving
-                        logger.info(f"\nUpdated JSON for {file_key} (to be moved):\n" + json.dumps(original_data, indent=2))
-
                         # Move to EOBR_ready
                         target_key = file_key.replace(READY_DIR, EOBR_READY_DIR)
-                        logger.info(f"Destination S3 key: {target_key}")
-
-                        # Upload updated JSON to new location
                         upload_json_to_s3(original_data, target_key)
-
-                        # Delete from original location after successful upload
                         delete(file_key)
                         
                         file_results['moved'] = True
                         results['moved_files'].append(file_key)
-                        logger.info(f"Moved {file_key} to {target_key}")
                     else:
                         file_results['valid'] = False
                         if rate_results['missing_rates']:
@@ -405,6 +486,18 @@ def validate_ready_files(test_files: List[str] = None) -> Dict[str, Any]:
                                 f"Missing rates for CPTs: {', '.join(item['cpt'] for item in rate_results['missing_rates'])}"
                             )
                         file_results['errors'].extend(rate_results['errors'])
+                
+                # Handle failed files
+                if not file_results['valid']:
+                    # Generate failure summary
+                    failure_summary = generate_failure_summary(file_key, data, validation_errors, file_results['rate_check'])
+                    results['failed_files'].append(failure_summary)
+                    
+                    # Move to fails directory
+                    target_key = file_key.replace(READY_DIR, FAILS_DIR)
+                    upload_json_to_s3(data, target_key)
+                    delete(file_key)
+                    logger.info(f"Moved failed file {file_key} to {target_key}")
                 
                 # Update counts
                 if file_results['valid']:
@@ -424,6 +517,14 @@ def validate_ready_files(test_files: List[str] = None) -> Dict[str, Any]:
             # Store file results
             results['file_details'][file_key] = file_results
             
+        # Generate and save failure summary locally
+        if results['failed_files']:
+            summary_path = os.path.join(LOCAL_DATA_DIR, 'summary.json')
+            os.makedirs(os.path.dirname(summary_path), exist_ok=True)
+            with open(summary_path, 'w') as f:
+                json.dump(results['failed_files'], f, indent=2)
+            logger.info(f"Generated failure summary at {summary_path}")
+            
     except Exception as e:
         results['summary_errors'].append(f"Error during validation: {str(e)}")
         logger.error(f"Error during validation: {str(e)}")
@@ -431,135 +532,32 @@ def validate_ready_files(test_files: List[str] = None) -> Dict[str, Any]:
     return results
 
 def print_validation_report(results: Dict[str, Any]):
-    """Print a detailed validation report."""
-    logger.info("\nValidation Report")
+    """Print a summary validation report."""
+    logger.info("\nValidation Summary Report")
     logger.info("=" * 50)
     logger.info(f"Total Files: {results['total_files']}")
     logger.info(f"Valid Files: {results['valid_files']}")
     logger.info(f"Invalid Files: {results['invalid_files']}")
     logger.info(f"Moved to EOBR_ready: {len(results.get('moved_files', []))}")
     
-    if results['moved_files']:
-        logger.info("\nMoved Files:")
-        for file_key in results['moved_files']:
-            logger.info(f"  - {file_key}")
-    
     if results['summary_errors']:
         logger.info("\nSummary Errors:")
         for error in results['summary_errors']:
             logger.error(f"  - {error}")
     
-    if results['invalid_files'] > 0:
-        logger.info("\nInvalid Files Details:")
-        for file_key, details in results['file_details'].items():
-            if not details['valid']:
-                logger.error(f"\nFile: {file_key}")
-                for error in details['errors']:
-                    logger.error(f"  - Error: {error}")
-                
-                # Print rate check details if available
-                if details.get('rate_check'):
-                    rate_check = details['rate_check']
-                    if rate_check.get('ancillary_cpts'):
-                        logger.info("\n  Ancillary CPTs (Rate = $0.00):")
-                        for cpt in rate_check['ancillary_cpts']:
-                            logger.info(f"    - {cpt}")
-                            
-                    if rate_check['missing_rates']:
-                        logger.error("\n  Rate Check Failures:")
-                        for missing in rate_check['missing_rates']:
-                            logger.error(f"    - Missing rate for CPT {missing['cpt']}"
-                                       f" (modifier: {missing['modifier'] or 'None'},"
-                                       f" network: {missing['network']}")
-                    
-                    if rate_check.get('found_rates'):
-                        logger.info("\n  Found Rates:")
-                        for cpt, rate_info in rate_check['found_rates'].items():
-                            logger.info(f"    - CPT {cpt}: ${rate_info['rate']:.2f}"
-                                      f" (modifier: {rate_info['modifier'] or 'None'},"
-                                      f" source: {rate_info['source']})")
+    # Count total errors across all files
+    total_errors = sum(len(details['errors']) for details in results['file_details'].values())
+    if total_errors > 0:
+        logger.info(f"\nTotal Validation Errors: {total_errors}")
     
-    if results['valid_files'] > 0:
-        logger.info("\nValid Files:")
-        for file_key, details in results['file_details'].items():
-            if details['valid']:
-                logger.info(f"\nFile: {file_key}")
-                if details.get('rate_check'):
-                    rate_check = details['rate_check']
-                    if rate_check.get('ancillary_cpts'):
-                        logger.info("  Ancillary CPTs (Rate = $0.00):")
-                        for cpt in rate_check['ancillary_cpts']:
-                            logger.info(f"    - {cpt}")
-                            
-                    if rate_check.get('found_rates'):
-                        logger.info("  Found Rates:")
-                        for cpt, rate_info in rate_check['found_rates'].items():
-                            if rate_info['source'] != 'Ancillary':
-                                logger.info(f"    - CPT {cpt}: ${rate_info['rate']:.2f}"
-                                          f" (modifier: {rate_info['modifier'] or 'None'},"
-                                          f" source: {rate_info['source']})")
-
-# ADDITION: print_validation_report
-def print_validation_report(results: Dict[str, Any]):
-    logger.info("\nValidation Report")
-    logger.info("=" * 50)
-    logger.info(f"Total Files: {results['total_files']}")
-    logger.info(f"Valid Files: {results['valid_files']}")
-    logger.info(f"Invalid Files: {results['invalid_files']}")
-    logger.info(f"Moved to EOBR_ready: {len(results.get('moved_files', []))}")
-
-    if results['moved_files']:
-        logger.info("\nMoved Files:")
-        for file_key in results['moved_files']:
-            logger.info(f"  - {file_key}")
-
-    if results['summary_errors']:
-        logger.info("\nSummary Errors:")
-        for error in results['summary_errors']:
-            logger.error(f"  - {error}")
-
-    if results['invalid_files'] > 0:
-        logger.info("\nInvalid Files Details:")
-        for file_key, details in results['file_details'].items():
-            if not details['valid']:
-                logger.error(f"\nFile: {file_key}")
-                for error in details['errors']:
-                    logger.error(f"  - Error: {error}")
-
-                if details.get('rate_check'):
-                    rate_check = details['rate_check']
-                    if rate_check.get('ancillary_cpts'):
-                        logger.info("\n  Ancillary CPTs (Rate = $0.00):")
-                        for cpt in rate_check['ancillary_cpts']:
-                            logger.info(f"    - {cpt}")
-
-                    if rate_check['missing_rates']:
-                        logger.error("\n  Rate Check Failures:")
-                        for missing in rate_check['missing_rates']:
-                            logger.error(f"    - Missing rate for CPT {missing['cpt']} (modifier: {missing['modifier'] or 'None'}, network: {missing['network']})")
-
-                    if rate_check.get('found_rates'):
-                        logger.info("\n  Found Rates:")
-                        for cpt, rate_info in rate_check['found_rates'].items():
-                            logger.info(f"    - CPT {cpt}: ${rate_info['rate']:.2f} (modifier: {rate_info['modifier'] or 'None'}, source: {rate_info['source']})")
-
-    if results['valid_files'] > 0:
-        logger.info("\nValid Files:")
-        for file_key, details in results['file_details'].items():
-            if details['valid']:
-                logger.info(f"\nFile: {file_key}")
-                if details.get('rate_check'):
-                    rate_check = details['rate_check']
-                    if rate_check.get('ancillary_cpts'):
-                        logger.info("  Ancillary CPTs (Rate = $0.00):")
-                        for cpt in rate_check['ancillary_cpts']:
-                            logger.info(f"    - {cpt}")
-
-                    if rate_check.get('found_rates'):
-                        logger.info("  Found Rates:")
-                        for cpt, rate_info in rate_check['found_rates'].items():
-                            if rate_info['source'] != 'Ancillary':
-                                logger.info(f"    - CPT {cpt}: ${rate_info['rate']:.2f} (modifier: {rate_info['modifier'] or 'None'}, source: {rate_info['source']})")
+    # Count total missing rates
+    total_missing_rates = sum(
+        len(details['rate_check']['missing_rates']) 
+        for details in results['file_details'].values() 
+        if details.get('rate_check') and 'missing_rates' in details['rate_check']
+    )
+    if total_missing_rates > 0:
+        logger.info(f"Total Missing Rates: {total_missing_rates}")
 
 # ADDITION: main entry point
 if __name__ == "__main__":
